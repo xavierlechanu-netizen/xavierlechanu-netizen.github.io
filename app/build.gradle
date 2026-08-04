@@ -160,10 +160,10 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-    lintOptions {
+    lint {
         checkReleaseBuilds false
     }
 }
@@ -214,6 +214,6 @@ dependencies {
     
     // Mise à jour 2.7.2 pour corriger les API obsolètes (WebViewFallbackActivity)
     implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.2'
-    // Requis pour l'API EdgeToEdge (Android 15)
-    implementation 'androidx.activity:activity:1.9.0'
+    // Requis pour l'API EdgeToEdge (Android 15+)
+    implementation 'androidx.activity:activity:1.10.1'
 }

@@ -2153,11 +2153,11 @@ setInterval(checkNightMode, 60000);
 checkNightMode();
 // --- CHANNELS DE COMMUNICATION ---
 if (!window.watchChannel) {
-  window.watchChannel = new BroadcastChannel(" mon50cc_watch_sync\);
- window.watchChannel.onmessage = function(event) {
- if (event.data.type === \SOS_TRIGGERED\ && window.sosActivate) {
- console.log(\SOS triggered from smartwatch!\);
- window.sosActivate();
- }
- };
+  window.watchChannel = new BroadcastChannel("mon50cc_watch_sync");
+  window.watchChannel.onmessage = function(event) {
+    if (event.data.type === "SOS_TRIGGERED" && window.sosActivate) {
+      console.log("SOS triggered from smartwatch!");
+      window.sosActivate();
+    }
+  };
 }

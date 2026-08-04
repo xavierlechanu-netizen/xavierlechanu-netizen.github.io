@@ -5,18 +5,26 @@ if (typeof firebase !== "undefined" && typeof CONFIG !== "undefined") {
   }
 }
 
-// --- SECURITY HELPERS ---
-window.secureSetItem = function (key, value) {
+// --- CACHE HELPERS (localStorage wrappers — PAS de chiffrement) ---
+// NOTE SÉCURITÉ : Ces fonctions sont de simples wrappers localStorage.
+// Ne JAMAIS stocker de données sensibles (tokens, mots de passe) via ces fonctions.
+// L'authentification repose exclusivement sur Firebase Auth (OWASP A02).
+window.cacheSetItem = function (key, value) {
   localStorage.setItem(key, value);
 };
 
-window.secureGetItem = function (key) {
+window.cacheGetItem = function (key) {
   return localStorage.getItem(key);
 };
 
-window.secureRemoveItem = function (key) {
+window.cacheRemoveItem = function (key) {
   localStorage.removeItem(key);
 };
+
+// Rétrocompatibilité — à supprimer dans une future version
+window.secureSetItem = window.cacheSetItem;
+window.secureGetItem = window.cacheGetItem;
+window.secureRemoveItem = window.cacheRemoveItem;
 
 window.getSyncKey = function () {
   // Return an empty string or fixed value since we removed NeuralCrypto
@@ -65,15 +73,11 @@ window.login = async function (username, password) {
     // Mettre à jour la session locale
     const session = { ...userData, uid: user.uid, lastSeen: Date.now() };
 
-    if (session.role === "admin" || username.toLowerCase() === "admin") {
-      session.totalDistance = 1542.5;
-      session.completedChallengesCount = 45;
-      localStorage.setItem("braveCoins", "500.00");
-      localStorage.setItem("mon50_tokens", "500.00");
-      localStorage.setItem("pilot_xp", "25000");
-    }
+    // NOTE SÉCURITÉ : Le rôle admin est déterminé EXCLUSIVEMENT par le champ
+    // 'role' dans Firestore, jamais par le pseudo. Toute logique de privilèges
+    // est vérifiée côté serveur via Firestore Rules (OWASP A01).
 
-    secureSetItem("session", JSON.stringify(session));
+    cacheSetItem("session", JSON.stringify(session));
     window.session = session;
 
     window.location.href = session.role === "admin" ? "admin.html" : "app.html";
@@ -125,7 +129,7 @@ window.register = async function (username, password, brand, model) {
     await firebase.firestore().collection("users").doc(user.uid).set(profile);
 
     // Session locale
-    secureSetItem("session", JSON.stringify(profile));
+    cacheSetItem("session", JSON.stringify(profile));
     window.session = profile;
 
     window.location.href = "app.html";
@@ -141,7 +145,7 @@ window.logout = async function () {
       await firebase.auth().signOut();
     }
   } catch (e) {}
-  secureRemoveItem("session");
+  cacheRemoveItem("session");
   window.location.href = "login.html";
 };
 
@@ -171,7 +175,7 @@ function bufferToBase64url(buffer) {
 
 window.registerBiometric = async function () {
   try {
-    const sessionStr = window.secureGetItem("session");
+    const sessionStr = window.cacheGetItem("session");
     if (!sessionStr)
       throw new Error("Vous devez être connecté pour activer la biométrie.");
     const session = JSON.parse(sessionStr);
@@ -221,8 +225,8 @@ window.registerBiometric = async function () {
     }
 
     // Sauvegarde Locale (pour permettre le login depuis cet appareil)
-    window.secureSetItem("fido2_cred", credentialId);
-    window.secureSetItem("fido2_uid", session.uid);
+    window.cacheSetItem("fido2_cred", credentialId);
+    window.cacheSetItem("fido2_uid", session.uid);
 
     alert(
       "✅ Appareil sécurisé ! Vous pourrez désormais vous connecter avec votre visage ou empreinte.",
@@ -242,12 +246,34 @@ window.registerBiometric = async function () {
 
 window.loginBiometric = async function () {
   try {
-    const storedCredId = window.secureGetItem("fido2_cred");
-    const storedUid = window.secureGetItem("fido2_uid");
+    const storedCredId = window.cacheGetItem("fido2_cred");
+    const storedUid = window.cacheGetItem("fido2_uid");
 
     if (!storedCredId || !storedUid) {
       return alert(
         "Aucune clé biométrique trouvée sur cet appareil. Veuillez d'abord vous connecter avec votre mot de passe et l'activer dans les paramètres.",
+      );
+    }
+
+    // SÉCURITÉ FIDO2 (OWASP A01 + FIDO2 Certification) :
+    // Vérifier que l'utilisateur a une session Firebase Auth ACTIVE.
+    // Le biométrique sert de 2FA / déverrouillage rapide, PAS de remplacement
+    // complet de l'authentification Firebase. Sans cette vérification,
+    // n'importe quel credential WebAuthn permettrait d'accéder à un profil.
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      return alert(
+        "Session expirée. Veuillez d'abord vous reconnecter avec votre mot de passe, puis utilisez la biométrie pour les connexions rapides.",
+      );
+    }
+
+    // Vérifier que l'UID Firebase Auth correspond à l'UID du credential stocké
+    if (currentUser.uid !== storedUid) {
+      console.warn("[FIDO2] UID mismatch: credential UID ≠ Firebase Auth UID");
+      window.cacheRemoveItem("fido2_cred");
+      window.cacheRemoveItem("fido2_uid");
+      return alert(
+        "Clé biométrique invalide pour ce compte. Veuillez la réenregistrer.",
       );
     }
 
@@ -271,29 +297,26 @@ window.loginBiometric = async function () {
     const assertion = await navigator.credentials.get({ publicKey: options });
 
     if (assertion) {
-      // MVP Authentication Bypass via Local Verification
+      // L'assertion WebAuthn a été validée localement par l'authenticator.
+      // L'utilisateur a prouvé sa présence biométrique sur cet appareil.
+      // Firebase Auth est déjà actif (vérifié ci-dessus), on rafraîchit la session.
 
-      // On récupère le profil complet depuis Firestore en simulant la connexion
-      if (typeof firebase !== "undefined") {
-        const doc = await firebase
-          .firestore()
-          .collection("users")
-          .doc(storedUid)
-          .get();
-        if (doc.exists) {
-          const profile = doc.data();
-          secureSetItem(
-            "session",
-            JSON.stringify({ ...profile, uid: storedUid }),
-          );
-          window.session = profile;
-          window.location.href =
-            profile.role === "admin" ? "admin.html" : "app.html";
-        } else {
-          throw new Error("Profil introuvable.");
-        }
+      const doc = await firebase
+        .firestore()
+        .collection("users")
+        .doc(currentUser.uid)
+        .get();
+      if (doc.exists) {
+        const profile = doc.data();
+        cacheSetItem(
+          "session",
+          JSON.stringify({ ...profile, uid: currentUser.uid }),
+        );
+        window.session = profile;
+        window.location.href =
+          profile.role === "admin" ? "admin.html" : "app.html";
       } else {
-        throw new Error("Firebase non initialisé.");
+        throw new Error("Profil introuvable dans Firestore.");
       }
     }
   } catch (e) {
@@ -305,7 +328,7 @@ window.loginBiometric = async function () {
 // --- AUTH GUARD ---
 
 window.checkAuth = function (requireAdmin = false) {
-  const rawSession = secureGetItem("session");
+  const rawSession = cacheGetItem("session");
   if (!rawSession) {
     window.location.href = "login.html";
     return null;
@@ -350,7 +373,7 @@ if (typeof firebase !== "undefined" && firebase.auth()) {
           .get();
         if (doc.exists) {
           const profile = doc.data();
-          secureSetItem(
+          cacheSetItem(
             "session",
             JSON.stringify({ ...profile, uid: user.uid }),
           );

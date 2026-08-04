@@ -45,6 +45,24 @@ function setCorsHeaders(res) {
     res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
+// ─── Firebase Auth Token Verification (OWASP A01 / CIS Control 6) ─────────
+// Vérifie que l'appelant est authentifié via Firebase Auth.
+// Retourne l'UID décodé ou null si le token est invalide/manquant.
+async function verifyAuthToken(req) {
+    const authHeader = req.headers.authorization || "";
+    if (!authHeader.startsWith("Bearer ")) {
+        return null;
+    }
+    const idToken = authHeader.split("Bearer ")[1];
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        return decodedToken;
+    } catch (e) {
+        console.warn("[Auth] Token verification failed:", e.message);
+        return null;
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. createRevolutOrder
 //    Crée un ordre de paiement Revolut et retourne le token au client.
@@ -295,18 +313,24 @@ exports.sendEmergencySOS = onRequest(
         if (req.method === "OPTIONS") return res.status(204).send("");
         if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-        const { user_id, location, contacts, message } = req.body;
+        // Sécurité : Vérifier le token Firebase Auth (OWASP A01)
+        const authUser = await verifyAuthToken(req);
+        if (!authUser) {
+            return res.status(401).json({ error: "Authentification requise." });
+        }
+
+        const { location, contacts, message } = req.body;
 
         try {
             await db.collection("sos_alerts").add({
-                user_id: user_id || "anonymous",
+                user_id: authUser.uid,
                 location: location || "Unknown",
                 contacts: contacts || [],
                 message: message || "SOS Alert",
                 status: "sent_simulation",
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
-            console.log(`[SOS] Alert sent to ${contacts?.length || 0} contacts for user ${user_id}`);
+            console.log(`[SOS] Alert sent to ${contacts?.length || 0} contacts for user ${authUser.uid}`);
             return res.status(200).json({ success: true, message: "SOS envoyé avec succès." });
         } catch(e) {
             console.error("[SOS] Error", e);
@@ -326,9 +350,22 @@ exports.deleteUserAccount = onRequest(
         if (req.method === "OPTIONS") return res.status(204).send("");
         if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
+        // Sécurité CRITIQUE : Vérifier le token Firebase Auth (OWASP A01)
+        // et que l'utilisateur ne peut supprimer que SON PROPRE compte.
+        const authUser = await verifyAuthToken(req);
+        if (!authUser) {
+            return res.status(401).json({ error: "Authentification requise." });
+        }
+
         const { user_id } = req.body;
         if (!user_id) {
             return res.status(400).json({ error: "user_id is required" });
+        }
+
+        // Seul l'utilisateur lui-même peut supprimer son compte (RGPD droit à l'oubli)
+        if (authUser.uid !== user_id) {
+            console.warn(`[RGPD] Tentative de suppression du compte ${user_id} par ${authUser.uid} — REFUSÉ`);
+            return res.status(403).json({ error: "Accès refusé : vous ne pouvez supprimer que votre propre compte." });
         }
 
         try {
@@ -409,17 +446,23 @@ exports.triggerAntiTheftAlert = onRequest(
         if (req.method === "OPTIONS") return res.status(204).send("");
         if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
-        const { user_id, force, location } = req.body;
+        // Sécurité : Vérifier le token Firebase Auth
+        const authUser = await verifyAuthToken(req);
+        if (!authUser) {
+            return res.status(401).json({ error: "Authentification requise." });
+        }
+
+        const { force, location } = req.body;
 
         try {
             await db.collection("theft_alerts").add({
-                user_id: user_id || "anonymous",
+                user_id: authUser.uid,
                 force: force || 0,
                 location: location || "Unknown",
                 status: "active",
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
-            console.log(`[ANTI-THEFT] Alert registered for user ${user_id} with force ${force}G`);
+            console.log(`[ANTI-THEFT] Alert registered for user ${authUser.uid} with force ${force}G`);
             return res.status(200).json({ success: true, message: "Alerte de vol transmise aux serveurs avec succès." });
         } catch(e) {
             console.error("[ANTI-THEFT] Error", e);
@@ -505,6 +548,12 @@ exports.askJarvisGemini = onRequest(
             return res.status(400).json({ error: "history and systemPrompt are required" });
         }
 
+        // Sécurité : Vérifier le token Firebase Auth pour éviter l'abus de l'API Gemini (coûts)
+        const authUser = await verifyAuthToken(req);
+        if (!authUser) {
+            return res.status(401).json({ error: "Authentification requise." });
+        }
+
         const apiKey = GEMINI_API_KEY.value();
         if (!apiKey) {
             return res.status(500).json({ error: "Clé API Gemini non configurée." });
@@ -562,6 +611,12 @@ exports.reportToNotion = onRequest(
             const { title, description, category, priority } = req.body;
             if (!title) {
                 return res.status(400).json({ error: "Le paramètre 'title' est requis." });
+            }
+
+            // Sécurité : Vérifier le token Firebase Auth pour éviter le spam de tickets
+            const authUser = await verifyAuthToken(req);
+            if (!authUser) {
+                return res.status(401).json({ error: "Authentification requise." });
             }
 
             const notion = new Client({ auth: NOTION_API_KEY.value() });

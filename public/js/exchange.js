@@ -240,6 +240,33 @@ window.ExchangeMarket = {
       return;
     }
 
+    // Sécurité (CIS 16.10) : Validation du domaine de l'URL photo
+    // pour prévenir l'injection d'URLs malveillantes dans les balises <img>
+    if (photoUrl) {
+      try {
+        const urlObj = new URL(photoUrl);
+        const allowedDomains = [
+          "firebasestorage.googleapis.com",
+          "i.imgur.com",
+          "imgur.com",
+          "storage.googleapis.com",
+          "lh3.googleusercontent.com",
+          "mon50ccetmoi.com",
+        ];
+        const hostname = urlObj.hostname.toLowerCase();
+        const isDomainAllowed = allowedDomains.some(
+          (d) => hostname === d || hostname.endsWith("." + d)
+        );
+        if (!isDomainAllowed || !urlObj.protocol.startsWith("https")) {
+          alert("Lien photo non autorisé. Utilisez un hébergeur validé (Firebase Storage, Imgur, etc.).");
+          return;
+        }
+      } catch (e) {
+        alert("Lien photo invalide.");
+        return;
+      }
+    }
+
     const listing = {
       title: title,
       description: description,
@@ -354,11 +381,32 @@ window.ExchangeMarket = {
   /**
    * Supprime une annonce (uniquement par son auteur).
    */
-  deleteListing: async function (listingId, seller) {
-    if (!window.session || window.session.username !== seller) {
-      alert("Vous ne pouvez supprimer que vos propres annonces.");
+  deleteListing: async function (listingId) {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("Vous devez être connecté pour supprimer une annonce.");
       return;
     }
+
+    // Sécurité (OWASP A01) : Vérifier via Firestore que le sellerUid
+    // correspond à l'UID Firebase Auth de l'utilisateur connecté.
+    // On ne fait JAMAIS confiance au username côté client.
+    try {
+      const listingDoc = await window.db.collection("exchange_listings").doc(listingId).get();
+      if (!listingDoc.exists) {
+        alert("Annonce introuvable.");
+        return;
+      }
+      if (listingDoc.data().sellerUid !== user.uid) {
+        alert("Vous ne pouvez supprimer que vos propres annonces.");
+        return;
+      }
+    } catch (e) {
+      console.error("[ExchangeMarket] Vérification propriétaire échouée :", e);
+      alert("Erreur de vérification.");
+      return;
+    }
+
     if (!confirm("Voulez-vous vraiment supprimer cette annonce ?")) return;
 
     try {
@@ -513,7 +561,7 @@ window.ExchangeMarket = {
           </div>
           ${
             isOwner
-              ? `<button class="buy-btn" style="background:linear-gradient(135deg, #ff4d4d, #cc0000);" onclick="ExchangeMarket.deleteListing('${listing.id}', '${listing.seller}')"><i class="fa-solid fa-trash-can"></i> Supprimer</button>`
+              ? `<button class="buy-btn" style="background:linear-gradient(135deg, #ff4d4d, #cc0000);" onclick="ExchangeMarket.deleteListing('${listing.id}')"><i class="fa-solid fa-trash-can"></i> Supprimer</button>`
               : isReserved
               ? `<button class="buy-btn" style="background:#333; color:#777; cursor:not-allowed;" disabled><i class="fa-solid fa-lock"></i> Indisponible</button>`
               : `<div style="display:flex; gap:8px;">

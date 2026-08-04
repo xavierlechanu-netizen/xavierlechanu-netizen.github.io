@@ -256,3 +256,78 @@ body.day-mode .btn-insurance {
     0% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 40px #0055ff, 0 0 80px #0055ff; }
     100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 10px #0055ff; }
 }
+
+/* --- CYBERPUNK DOCK BUTTONS --- */
+.dock-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                filter 0.2s ease,
+                background 0.2s ease;
+    position: relative;
+}
+
+.dock-btn:hover {
+    transform: scale(1.25);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.dock-btn:active {
+    transform: scale(0.9);
+}
+
+/* Variantes de couleur */
+.dock-btn--sos {
+    color: #ff0055;
+}
+.dock-btn--sos i {
+    filter: drop-shadow(0 0 5px #ff0055);
+}
+.dock-btn--sos:hover i {
+    filter: drop-shadow(0 0 12px #ff0055);
+}
+
+.dock-btn--gold {
+    color: #cca300;
+}
+.dock-btn--gold i {
+    filter: drop-shadow(0 0 5px #cca300);
+}
+.dock-btn--gold:hover i {
+    filter: drop-shadow(0 0 12px #ffb700);
+}
+
+.dock-btn--cyan {
+    color: #00f2ff;
+}
+.dock-btn--cyan i {
+    filter: drop-shadow(0 0 5px #00f2ff);
+}
+.dock-btn--cyan:hover i {
+    filter: drop-shadow(0 0 12px #00f2ff);
+}
+
+.dock-btn--green {
+    color: #00ff88;
+}
+.dock-btn--green i {
+    filter: drop-shadow(0 0 5px #00ff88);
+}
+.dock-btn--green:hover i {
+    filter: drop-shadow(0 0 12px #00ff88);
+}
+
+.dock-btn--purple {
+    color: #b700ff;
+}
+.dock-btn--purple i {
+    filter: drop-shadow(0 0 5px #b700ff);
+}
+.dock-btn--purple:hover i {
+    filter: drop-shadow(0 0 12px #b700ff);
+}
+
