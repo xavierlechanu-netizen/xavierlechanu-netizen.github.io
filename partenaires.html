@@ -1912,8 +1912,10 @@
               ' <span class="badge" style="background:#ff8800; color:#fff; font-size:0.75rem; padding:4px 8px; border-radius:20px; margin-left:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Partenaire non recommandé</span>';
           }
 
+          const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+          
           document.getElementById("partner-name-display").innerHTML =
-            id + badgeHtml;
+            escapeHTML(id) + badgeHtml;
 
           document.getElementById("login-overlay").style.display = "none";
           document.getElementById("dashboard").style.display = "flex";
@@ -1965,12 +1967,12 @@
           return;
         }
 
-        // Simuler l'ajout visuel
-        const tbody = document.getElementById("agent-list");
-        const tr = document.createElement("tr");
+        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+        const safeName = escapeHTML(name);
+        const safeEmail = escapeHTML(email);
         tr.innerHTML = `
-                <td>${name}</td>
-                <td>${email}</td>
+                <td>${safeName}</td>
+                <td>${safeEmail}</td>
                 <td><span class="badge pending">Invitation envoyée</span></td>
                 <td><button class="btn-action" style="background:#ff3333;" onclick="this.closest('tr').remove()">Révoquer</button></td>
             `;
@@ -2023,17 +2025,22 @@
         const tbody = document.getElementById("campaigns-table-body");
         const tr = document.createElement("tr");
 
-        let displayTitle = `"${title}"`;
+        const escapeHTMLTitle = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+        let displayTitle = `"${escapeHTMLTitle(title)}"`;
         if (isFlash) {
           displayTitle += ` <span style="background:var(--accent); color:#000; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold; margin-left:10px;"><i class="fa-solid fa-stopwatch"></i> Flash 48h</span>`;
         }
 
+        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+        const safeLocation = escapeHTML(location);
+        const safeCpa = escapeHTML(cpa);
+
         tr.innerHTML = `
                 <td>${displayTitle}</td>
-                <td>${location}</td>
+                <td>${safeLocation}</td>
                 <td>0</td>
                 <td>0 (0%)</td>
-                <td>${cpa} € / Lead</td>
+                <td>${safeCpa} € / Lead</td>
             `;
         tbody.insertBefore(tr, tbody.firstChild);
 

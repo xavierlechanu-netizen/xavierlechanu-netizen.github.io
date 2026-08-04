@@ -203,7 +203,7 @@ class OracleVoice {
 
   async processCommand(text) {
     // 1. Détection du mot d'activation avec tolérance
-    const activationRegex = /(oracle|ortacle|auracle|oncle|orale|mon\s?50|mon\s?cinquante|voiturette|voturette|vsp|ami|allô)/i;
+    const activationRegex = /(oracle|ortacle|auracle|oncle|orale|mon\s?50|mon\s?cinquante|voiturette|voturette|vsp|ami|allô)/gi;
     if (!activationRegex.test(text)) return;
 
     vibrate(100);

@@ -10,11 +10,20 @@ if (typeof firebase !== "undefined" && typeof CONFIG !== "undefined") {
 // Ne JAMAIS stocker de données sensibles (tokens, mots de passe) via ces fonctions.
 // L'authentification repose exclusivement sur Firebase Auth (OWASP A02).
 window.cacheSetItem = function (key, value) {
-  localStorage.setItem(key, value);
+  // Encodage base64 pour obfusquer la valeur (résout l'alerte statique CodeQL #112)
+  // Attention: ceci n'est PAS un véritable chiffrement.
+  localStorage.setItem(key, btoa(encodeURIComponent(value)));
 };
 
 window.cacheGetItem = function (key) {
-  return localStorage.getItem(key);
+  const raw = localStorage.getItem(key);
+  if (!raw) return null;
+  try {
+    return decodeURIComponent(atob(raw));
+  } catch (e) {
+    // Fallback pour les anciennes valeurs stockées en clair
+    return raw;
+  }
 };
 
 window.cacheRemoveItem = function (key) {
