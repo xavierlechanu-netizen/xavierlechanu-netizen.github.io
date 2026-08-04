@@ -91,25 +91,38 @@ window.JarvisChat = {
         msgDiv.style.display = "inline-block";
         msgDiv.style.clear = "both";
 
+        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+
+        const safeSender = escapeHTML(sender);
+        const safeText = escapeHTML(text);
+
         if (type === "user") {
             msgDiv.style.background = "rgba(0, 242, 255, 0.15)";
             msgDiv.style.border = "1px solid rgba(0, 242, 255, 0.4)";
             msgDiv.style.float = "right";
-            msgDiv.innerHTML = `<strong style="color: #00f2ff;">${sender}</strong><br/>${text}`;
+            msgDiv.innerHTML = `<strong style="color: #00f2ff;">${safeSender}</strong><br/>${safeText}`;
         } else if (type === "ai") {
             msgDiv.style.background = "rgba(255, 255, 255, 0.05)";
             msgDiv.style.border = "1px solid rgba(255, 255, 255, 0.1)";
             msgDiv.style.float = "left";
             
-            // Formatage basique (gras)
-            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Formatage basique (gras) — appliqué APRÈS échappement pour éviter XSS
+            let formattedText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
-            msgDiv.innerHTML = `<strong style="color: #ffd700;"><i class="fa-solid fa-microchip"></i> ${sender}</strong><br/>${formattedText}`;
+            msgDiv.innerHTML = `<strong style="color: #ffd700;"><i class="fa-solid fa-microchip"></i> ${safeSender}</strong><br/>${formattedText}`;
         } else {
             msgDiv.style.background = "rgba(255, 0, 0, 0.1)";
             msgDiv.style.border = "1px solid rgba(255, 0, 0, 0.4)";
             msgDiv.style.float = "left";
-            msgDiv.innerHTML = `<strong style="color: #ff4444;">${sender}</strong><br/>${text}`;
+            msgDiv.innerHTML = `<strong style="color: #ff4444;">${safeSender}</strong><br/>${safeText}`;
         }
 
         const wrapper = document.createElement("div");

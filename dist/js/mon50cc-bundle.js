@@ -5042,13 +5042,13 @@ setInterval(checkNightMode, 60000);
 checkNightMode();
 // --- CHANNELS DE COMMUNICATION ---
 if (!window.watchChannel) {
-  window.watchChannel = new BroadcastChannel(" mon50cc_watch_sync\);
- window.watchChannel.onmessage = function(event) {
- if (event.data.type === \SOS_TRIGGERED\ && window.sosActivate) {
- console.log(\SOS triggered from smartwatch!\);
- window.sosActivate();
- }
- };
+  window.watchChannel = new BroadcastChannel("mon50cc_watch_sync");
+  window.watchChannel.onmessage = function(event) {
+    if (event.data.type === "SOS_TRIGGERED" && window.sosActivate) {
+      console.log("SOS triggered from smartwatch!");
+      window.sosActivate();
+    }
+  };
 }
 
 
@@ -6875,15 +6875,20 @@ function generateRideCard() {
   overlay.style =
     "position:fixed; top:0; left:0; width:100%; height:100%; z-index:20000; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; text-align:center; background:radial-gradient(circle, #1a1a1a, #000);";
 
+  const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+  const rawOdo = document.getElementById("odometer")?.textContent || "0";
+  const safeOdo = escapeHTML(rawOdo);
+  const safeVmax = escapeHTML(window.session.vMax || 0);
+
   overlay.innerHTML = `
         <div style="border:2px solid var(--accent); padding:40px; border-radius:20px; box-shadow:0 0 50px var(--accent-glow); background:rgba(0,0,0,0.8);">
             <h1 style="font-size:2rem; color:var(--accent); margin-bottom:5px;">RIDE COMPLETE</h1>
             <p style="color:#888; letter-spacing:3px; margin-bottom:30px; font-size:0.8rem;">NETIZEN INTERCEPTOR V26</p>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:40px;">
-                <div><span style="font-size:0.6rem; color:#666; display:block;">DISTANCE</span><strong style="font-size:1.2rem; color:#fff;">${document.getElementById("odometer")?.textContent || "0"} KM</strong></div>
+                <div><span style="font-size:0.6rem; color:#666; display:block;">DISTANCE</span><strong style="font-size:1.2rem; color:#fff;">${safeOdo} KM</strong></div>
                 <div><span style="font-size:0.6rem; color:#666; display:block;">MAX LEAN</span><strong style="font-size:1.2rem; color:#ff4d4d;">${window.maxLeanAngle || 0}°</strong></div>
-                <div><span style="font-size:0.6rem; color:#666; display:block;">V-MAX</span><strong style="font-size:1.2rem; color:var(--neon-blue);">${window.session.vMax || 0} KM/H</strong></div>
+                <div><span style="font-size:0.6rem; color:#666; display:block;">V-MAX</span><strong style="font-size:1.2rem; color:var(--neon-blue);">${safeVmax} KM/H</strong></div>
                 <div><span style="font-size:0.6rem; color:#666; display:block;">STATUS</span><strong style="font-size:1rem; color:#2ecc71;">LEGEND</strong></div>
             </div>
             
@@ -14715,6 +14720,33 @@ window.ExchangeMarket = {
       return;
     }
 
+    // Sécurité (CIS 16.10) : Validation du domaine de l'URL photo
+    // pour prévenir l'injection d'URLs malveillantes dans les balises <img>
+    if (photoUrl) {
+      try {
+        const urlObj = new URL(photoUrl);
+        const allowedDomains = [
+          "firebasestorage.googleapis.com",
+          "i.imgur.com",
+          "imgur.com",
+          "storage.googleapis.com",
+          "lh3.googleusercontent.com",
+          "mon50ccetmoi.com",
+        ];
+        const hostname = urlObj.hostname.toLowerCase();
+        const isDomainAllowed = allowedDomains.some(
+          (d) => hostname === d || hostname.endsWith("." + d)
+        );
+        if (!isDomainAllowed || !urlObj.protocol.startsWith("https")) {
+          alert("Lien photo non autorisé. Utilisez un hébergeur validé (Firebase Storage, Imgur, etc.).");
+          return;
+        }
+      } catch (e) {
+        alert("Lien photo invalide.");
+        return;
+      }
+    }
+
     const listing = {
       title: title,
       description: description,
@@ -14829,11 +14861,32 @@ window.ExchangeMarket = {
   /**
    * Supprime une annonce (uniquement par son auteur).
    */
-  deleteListing: async function (listingId, seller) {
-    if (!window.session || window.session.username !== seller) {
-      alert("Vous ne pouvez supprimer que vos propres annonces.");
+  deleteListing: async function (listingId) {
+    const user = firebase.auth().currentUser;
+    if (!user) {
+      alert("Vous devez être connecté pour supprimer une annonce.");
       return;
     }
+
+    // Sécurité (OWASP A01) : Vérifier via Firestore que le sellerUid
+    // correspond à l'UID Firebase Auth de l'utilisateur connecté.
+    // On ne fait JAMAIS confiance au username côté client.
+    try {
+      const listingDoc = await window.db.collection("exchange_listings").doc(listingId).get();
+      if (!listingDoc.exists) {
+        alert("Annonce introuvable.");
+        return;
+      }
+      if (listingDoc.data().sellerUid !== user.uid) {
+        alert("Vous ne pouvez supprimer que vos propres annonces.");
+        return;
+      }
+    } catch (e) {
+      console.error("[ExchangeMarket] Vérification propriétaire échouée :", e);
+      alert("Erreur de vérification.");
+      return;
+    }
+
     if (!confirm("Voulez-vous vraiment supprimer cette annonce ?")) return;
 
     try {
@@ -14988,7 +15041,7 @@ window.ExchangeMarket = {
           </div>
           ${
             isOwner
-              ? `<button class="buy-btn" style="background:linear-gradient(135deg, #ff4d4d, #cc0000);" onclick="ExchangeMarket.deleteListing('${listing.id}', '${listing.seller}')"><i class="fa-solid fa-trash-can"></i> Supprimer</button>`
+              ? `<button class="buy-btn" style="background:linear-gradient(135deg, #ff4d4d, #cc0000);" onclick="ExchangeMarket.deleteListing('${listing.id}')"><i class="fa-solid fa-trash-can"></i> Supprimer</button>`
               : isReserved
               ? `<button class="buy-btn" style="background:#333; color:#777; cursor:not-allowed;" disabled><i class="fa-solid fa-lock"></i> Indisponible</button>`
               : `<div style="display:flex; gap:8px;">
@@ -16525,25 +16578,38 @@ window.JarvisChat = {
         msgDiv.style.display = "inline-block";
         msgDiv.style.clear = "both";
 
+        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag)
+        );
+
+        const safeSender = escapeHTML(sender);
+        const safeText = escapeHTML(text);
+
         if (type === "user") {
             msgDiv.style.background = "rgba(0, 242, 255, 0.15)";
             msgDiv.style.border = "1px solid rgba(0, 242, 255, 0.4)";
             msgDiv.style.float = "right";
-            msgDiv.innerHTML = `<strong style="color: #00f2ff;">${sender}</strong><br/>${text}`;
+            msgDiv.innerHTML = `<strong style="color: #00f2ff;">${safeSender}</strong><br/>${safeText}`;
         } else if (type === "ai") {
             msgDiv.style.background = "rgba(255, 255, 255, 0.05)";
             msgDiv.style.border = "1px solid rgba(255, 255, 255, 0.1)";
             msgDiv.style.float = "left";
             
-            // Formatage basique (gras)
-            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Formatage basique (gras) — appliqué APRÈS échappement pour éviter XSS
+            let formattedText = safeText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
-            msgDiv.innerHTML = `<strong style="color: #ffd700;"><i class="fa-solid fa-microchip"></i> ${sender}</strong><br/>${formattedText}`;
+            msgDiv.innerHTML = `<strong style="color: #ffd700;"><i class="fa-solid fa-microchip"></i> ${safeSender}</strong><br/>${formattedText}`;
         } else {
             msgDiv.style.background = "rgba(255, 0, 0, 0.1)";
             msgDiv.style.border = "1px solid rgba(255, 0, 0, 0.4)";
             msgDiv.style.float = "left";
-            msgDiv.innerHTML = `<strong style="color: #ff4444;">${sender}</strong><br/>${text}`;
+            msgDiv.innerHTML = `<strong style="color: #ff4444;">${safeSender}</strong><br/>${safeText}`;
         }
 
         const wrapper = document.createElement("div");

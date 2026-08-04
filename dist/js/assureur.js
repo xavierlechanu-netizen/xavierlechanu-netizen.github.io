@@ -175,8 +175,9 @@ async function searchCase() {
     }
   } catch (err) {
     console.error(err);
+    const safeMsg = String(err.message).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
     statusEl.innerHTML =
-      '<span class="error">Erreur technique : ' + err.message + "</span>";
+      '<span class="error">Erreur technique : ' + safeMsg + "</span>";
   }
 }
 
@@ -241,7 +242,8 @@ async function payReport() {
     });
   } catch (err) {
     console.error(err);
-    statusEl.innerHTML = '<span class="error">' + err.message + "</span>";
+    const safeMsg = String(err.message).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+    statusEl.innerHTML = '<span class="error">' + safeMsg + "</span>";
     payBtn.disabled = false;
     payBtn.innerHTML =
       "Payer par virement (Revolut) " + currentPrice.toFixed(2) + "€";
@@ -255,7 +257,8 @@ function showExpertTelemetry(caseId, reportType = "EXPERT") {
   // Mettre à jour le titre avec le type de rapport
   const titleEl = document.querySelector("#expert-dashboard h3");
   if (titleEl) {
-    titleEl.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> TÉLÉMÉTRIE BLACKBOX : <span id="telemetry-id">${caseId}</span> <span style="font-size:0.6em; background:#ffb703; color:#000; padding:2px 8px; border-radius:10px; margin-left:10px; vertical-align:middle;">RAPPORT ${reportType}</span>`;
+    const safeCaseId = String(caseId).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+    titleEl.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> TÉLÉMÉTRIE BLACKBOX : <span id="telemetry-id">${safeCaseId}</span> <span style="font-size:0.6em; background:#ffb703; color:#000; padding:2px 8px; border-radius:10px; margin-left:10px; vertical-align:middle;">RAPPORT ${reportType}</span>`;
   }
 
   // Génération de fausses données d'accident pour la démo

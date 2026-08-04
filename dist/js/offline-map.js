@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OfflineMapManager â€” mon50ccetmoi v100.00-GOLD
  * Gestion complète des cartes hors ligne avec Leaflet + OpenStreetMap
  * Basculement automatique : Google Maps (online) ←” Leaflet (offline)
@@ -389,11 +389,13 @@ window.OfflineMapManager = (function () {
 
     container.innerHTML = zones
       .map((z, idx) => {
-        const safeName = (z.name || "")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+        const safeName = escapeHTML(z.name || "");
+        const safeTiles = escapeHTML(z.tiles);
+        const safeMb = escapeHTML(z.estimatedMb);
+        const safeDate = escapeHTML(z.date);
+        const safeRadius = escapeHTML(z.radiusKm);
+        
         return `
             <div style="
                 background:rgba(0,20,40,0.8);
@@ -410,8 +412,8 @@ window.OfflineMapManager = (function () {
                 </div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-weight:bold;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeName}</div>
-                    <div style="font-size:0.65rem;color:#666;margin-top:2px;">${z.tiles} tuiles • ~${z.estimatedMb} Mo • ${z.date}</div>
-                    <div style="font-size:0.65rem;color:#444;">Rayon: ${z.radiusKm} km</div>
+                    <div style="font-size:0.65rem;color:#666;margin-top:2px;">${safeTiles} tuiles • ~${safeMb} Mo • ${safeDate}</div>
+                    <div style="font-size:0.65rem;color:#444;">Rayon: ${safeRadius} km</div>
                 </div>
                 <button onclick="window.OfflineMapManager.deleteZone(${idx})" style="
                     background:rgba(255,0,85,0.15);
