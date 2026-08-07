@@ -6,6 +6,17 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ---
 
+## [101.00.04] — 2026-08-07 — 🚀 Signature Automatique & AAB (Google Play)
+
+### Ajouté
+- **Signature Automatique de l'App Bundle** : Mise en place de la configuration automatique (`signingConfigs`) dans Gradle pour que le fichier `.aab` soit automatiquement signé avec le keystore officiel (`new-upload-keystore.jks`) lors du processus de compilation.
+- **Gestion sécurisée des mots de passe** : Séparation des mots de passe dans le fichier non-versionné `local.properties` pour sécuriser l'accès au keystore.
+
+### Amélioré
+- **Déploiement Google Play** : Le workflow de compilation natif (`bundleRelease`) est désormais 100% prêt pour la Google Play Console avec une validation de signature native.
+
+---
+
 ## [100.50.03] — 2026-06-28 — 🎨 Nouvelle Identité Cyberpunk & Refonte Graphique
 
 ### Ajouté
