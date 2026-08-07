@@ -21,7 +21,7 @@ const CONFIG = {
 
   // Firebase Cloud Database (Firestore)
   FIREBASE: {
-    apiKey: "AIzaSyAOQgK8GO4DgR1jLwxCaHek1oM-cBUoYSw",
+    apiKey: "AIzaSyBufZ5hmzEoDoOZ9YofpHvL3HJDbuEOc7I",
     authDomain: "mon50ccetmoi.firebaseapp.com",
     projectId: "mon50ccetmoi",
     storageBucket: "mon50ccetmoi.firebasestorage.app",
