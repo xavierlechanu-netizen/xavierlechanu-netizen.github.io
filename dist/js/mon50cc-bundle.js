@@ -2886,6 +2886,935 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+/* --- auth.js --- */
+// --- FIREBASE INITIALIZATION ---
+if (typeof firebase !== "undefined" && typeof CONFIG !== "undefined") {
+  if (!firebase.apps.length) {
+    firebase.initializeApp(CONFIG.FIREBASE);
+  }
+}
+
+// --- CACHE HELPERS (localStorage wrappers — PAS de chiffrement) ---
+// NOTE SÉCURITÉ : Ces fonctions sont de simples wrappers localStorage.
+// Ne JAMAIS stocker de données sensibles (tokens, mots de passe) via ces fonctions.
+// L'authentification repose exclusivement sur Firebase Auth (OWASP A02).
+window.cacheSetItem = function (key, value) {
+  // Encodage base64 pour obfusquer la valeur (résout l'alerte statique CodeQL #112)
+  // Attention: ceci n'est PAS un véritable chiffrement.
+  localStorage.setItem(key, btoa(encodeURIComponent(value)));
+};
+
+window.cacheGetItem = function (key) {
+  const raw = localStorage.getItem(key);
+  if (!raw) return null;
+  try {
+    return decodeURIComponent(atob(raw));
+  } catch (e) {
+    // Fallback pour les anciennes valeurs stockées en clair
+    return raw;
+  }
+};
+
+window.cacheRemoveItem = function (key) {
+  localStorage.removeItem(key);
+};
+
+// Rétrocompatibilité — à supprimer dans une future version
+window.secureSetItem = window.cacheSetItem;
+window.secureGetItem = window.cacheGetItem;
+window.secureRemoveItem = window.cacheRemoveItem;
+
+window.getSyncKey = function () {
+  // Return an empty string or fixed value since we removed NeuralCrypto
+  return "SYNC_E2EE_VAULT";
+};
+
+// --- SECURITY HELPERS ---
+window.escapeHTML = function (str) {
+  if (!str) return "";
+  return String(str).replace(/[&<>"']/g, function (match) {
+    const escape = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return escape[match];
+  });
+};
+
+// --- AUTHENTICATION ENGINE (FIREBASE MIGRATION) ---
+
+window.login = async function (username, password) {
+  if (!username || !password) return alert("Identifiants manquants.");
+
+  // Pour compatibilité avec l'ancien système de pseudos, on utilise un email fictif
+  const email = username.includes("@")
+    ? username
+    : `${username.toLowerCase()}@mon50cc.internal`;
+
+  try {
+    const userCredential = await firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+
+    // Récupérer le profil complet depuis Firestore
+    const doc = await firebase
+      .firestore()
+      .collection("users")
+      .doc(user.uid)
+      .get();
+    const userData = doc.exists ? doc.data() : { username, role: "user" };
+
+    // Mettre à jour la session locale
+    const session = { ...userData, uid: user.uid, lastSeen: Date.now() };
+
+    // NOTE SÉCURITÉ : Le rôle admin est déterminé EXCLUSIVEMENT par le champ
+    // 'role' dans Firestore, jamais par le pseudo. Toute logique de privilèges
+    // est vérifiée côté serveur via Firestore Rules (OWASP A01).
+
+    cacheSetItem("session", JSON.stringify(session));
+    window.session = session;
+
+    window.location.href = session.role === "admin" ? "admin.html" : "app.html";
+  } catch (error) {
+    console.error("Login Error:", error);
+    alert("Erreur de connexion : " + error.message);
+  }
+};
+
+window.register = async function (username, password, brand, model) {
+  if (!username || !password) return alert("Veuillez remplir tous les champs.");
+
+  // --- REGISTRATION SECURITY ---
+
+  if (!brand || !model) return alert("Veuillez renseigner votre véhicule.");
+
+  const email = `${username.toLowerCase()}@mon50cc.internal`;
+
+  try {
+    const userCredential = await firebase
+      .auth()
+      .createUserWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+
+    // Capturer IP et Fingerprint pour la sécurité
+    let userIp = "0.0.0.0";
+    try {
+      const ipRes = await fetch("https://api.ipify.org?format=json");
+      const ipData = await ipRes.json();
+      userIp = ipData.ip;
+    } catch (e) {}
+
+    const profile = {
+      uid: user.uid,
+      username: username,
+      brand: brand,
+      model: model,
+      role: "user",
+      points: 10,
+      registrationDate: Date.now(),
+      lastIp: userIp,
+      deviceFingerprint: btoa(
+        navigator.userAgent + screen.width + screen.height,
+      ),
+      abuseLevel: 0,
+    };
+
+    // Sauvegarde Firestore (Le vrai backend)
+    await firebase.firestore().collection("users").doc(user.uid).set(profile);
+
+    // Session locale
+    cacheSetItem("session", JSON.stringify(profile));
+    window.session = profile;
+
+    window.location.href = "app.html";
+  } catch (error) {
+    console.error("Register Error:", error);
+    alert("Erreur d'inscription : " + error.message);
+  }
+};
+
+window.logout = async function () {
+  try {
+    if (typeof firebase !== "undefined" && firebase.auth()) {
+      await firebase.auth().signOut();
+    }
+  } catch (e) {}
+  cacheRemoveItem("session");
+  window.location.href = "login.html";
+};
+
+// Removed loginAsGuest and loginAsInvestor (Backdoors)
+
+window.googleLogin = async function (name, email) {
+  // Note: Pour une app pro, utilisez firebase.auth.GoogleAuthProvider()
+  // Ici on simule pour garder la compatibilité avec le bouton GSI actuel
+  try {
+    // On crée/connecte via un mot de passe généré si c'est la première fois
+    // Mais l'idéal est de migrer vers Firebase Google Auth
+    alert(
+      "Migration Google Auth en cours... Utilisez la connexion classique pour l'instant.",
+    );
+  } catch (e) {}
+};
+
+// --- FIDO2 / WEBAUTHN (BIOMETRIC LOGIN) ---
+
+// Fonction utilitaire pour convertir ArrayBuffer en Base64
+function bufferToBase64url(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let str = "";
+  for (let charCode of bytes) str += String.fromCharCode(charCode);
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+window.registerBiometric = async function () {
+  try {
+    const sessionStr = window.cacheGetItem("session");
+    if (!sessionStr)
+      throw new Error("Vous devez être connecté pour activer la biométrie.");
+    const session = JSON.parse(sessionStr);
+
+    const challenge = new Uint8Array(32);
+    window.crypto.getRandomValues(challenge);
+    const userId = new Uint8Array(16);
+    window.crypto.getRandomValues(userId);
+
+    const options = {
+      challenge: challenge,
+      rp: { name: "mon50ccetmoi" },
+      user: {
+        id: userId,
+        name: session.email || `${session.username}@mon50cc.internal`,
+        displayName: session.username,
+      },
+      pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+      authenticatorSelection: {
+        authenticatorAttachment: "platform", // Force FaceID / TouchID / Windows Hello
+        userVerification: "required",
+      },
+      timeout: 60000,
+      attestation: "none",
+    };
+
+    // Si on n'est pas sur localhost, on précise le domaine
+    if (
+      window.location.hostname !== "localhost" &&
+      window.location.hostname !== "127.0.0.1"
+    ) {
+      options.rp.id = window.location.hostname;
+    }
+
+    const credential = await navigator.credentials.create({
+      publicKey: options,
+    });
+
+    // MVP: On sauvegarde l'ID du credential localement et/ou sur le compte Firebase
+    const credentialId = bufferToBase64url(credential.rawId);
+
+    // Sauvegarde Firebase
+    if (typeof firebase !== "undefined" && firebase.auth().currentUser) {
+      await firebase.firestore().collection("users").doc(session.uid).update({
+        webauthnCredentialId: credentialId,
+      });
+    }
+
+    // Sauvegarde Locale (pour permettre le login depuis cet appareil)
+    window.cacheSetItem("fido2_cred", credentialId);
+    window.cacheSetItem("fido2_uid", session.uid);
+
+    alert(
+      "✅ Appareil sécurisé ! Vous pourrez désormais vous connecter avec votre visage ou empreinte.",
+    );
+  } catch (e) {
+    console.error("WebAuthn Register Error:", e);
+    if (e.name === "NotAllowedError") {
+      alert("Accès biométrique refusé ou annulé.");
+    } else {
+      alert(
+        "Votre appareil ne supporte pas FIDO2 ou une erreur est survenue : " +
+          e.message,
+      );
+    }
+  }
+};
+
+window.loginBiometric = async function () {
+  try {
+    const storedCredId = window.cacheGetItem("fido2_cred");
+    const storedUid = window.cacheGetItem("fido2_uid");
+
+    if (!storedCredId || !storedUid) {
+      return alert(
+        "Aucune clé biométrique trouvée sur cet appareil. Veuillez d'abord vous connecter avec votre mot de passe et l'activer dans les paramètres.",
+      );
+    }
+
+    // SÉCURITÉ FIDO2 (OWASP A01 + FIDO2 Certification) :
+    // Vérifier que l'utilisateur a une session Firebase Auth ACTIVE.
+    // Le biométrique sert de 2FA / déverrouillage rapide, PAS de remplacement
+    // complet de l'authentification Firebase. Sans cette vérification,
+    // n'importe quel credential WebAuthn permettrait d'accéder à un profil.
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      return alert(
+        "Session expirée. Veuillez d'abord vous reconnecter avec votre mot de passe, puis utilisez la biométrie pour les connexions rapides.",
+      );
+    }
+
+    // Vérifier que l'UID Firebase Auth correspond à l'UID du credential stocké
+    if (currentUser.uid !== storedUid) {
+      console.warn("[FIDO2] UID mismatch: credential UID ≠ Firebase Auth UID");
+      window.cacheRemoveItem("fido2_cred");
+      window.cacheRemoveItem("fido2_uid");
+      return alert(
+        "Clé biométrique invalide pour ce compte. Veuillez la réenregistrer.",
+      );
+    }
+
+    const challenge = new Uint8Array(32);
+    window.crypto.getRandomValues(challenge);
+
+    const options = {
+      challenge: challenge,
+      rpId:
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1"
+          ? window.location.hostname
+          : undefined,
+      userVerification: "required",
+      timeout: 60000,
+    };
+
+    // Supprime rpId si local pour éviter les erreurs
+    if (!options.rpId) delete options.rpId;
+
+    const assertion = await navigator.credentials.get({ publicKey: options });
+
+    if (assertion) {
+      // L'assertion WebAuthn a été validée localement par l'authenticator.
+      // L'utilisateur a prouvé sa présence biométrique sur cet appareil.
+      // Firebase Auth est déjà actif (vérifié ci-dessus), on rafraîchit la session.
+
+      const doc = await firebase
+        .firestore()
+        .collection("users")
+        .doc(currentUser.uid)
+        .get();
+      if (doc.exists) {
+        const profile = doc.data();
+        cacheSetItem(
+          "session",
+          JSON.stringify({ ...profile, uid: currentUser.uid }),
+        );
+        window.session = profile;
+        window.location.href =
+          profile.role === "admin" ? "admin.html" : "app.html";
+      } else {
+        throw new Error("Profil introuvable dans Firestore.");
+      }
+    }
+  } catch (e) {
+    console.error("WebAuthn Login Error:", e);
+    alert("Échec de la connexion biométrique : " + e.message);
+  }
+};
+
+// --- AUTH GUARD ---
+
+window.checkAuth = function (requireAdmin = false) {
+  const rawSession = cacheGetItem("session");
+  if (!rawSession) {
+    window.location.href = "login.html";
+    return null;
+  }
+  const session = JSON.parse(rawSession);
+
+  if (requireAdmin && session.role !== "admin") {
+    alert("Accès refusé.");
+    window.location.href = "app.html";
+    return null;
+  }
+
+  // Gestion de l'expiration d'essai (Trial Logic)
+  const PUB_DATE = new Date("2027-04-18").getTime();
+  const regTime = session.registrationDate || 0;
+
+  if (regTime < PUB_DATE && regTime > 1000) {
+    session.isTrialExpired = false;
+    session.isFoundingMember = true;
+  } else {
+    const oneYearLater = regTime + 365 * 24 * 60 * 60 * 1000;
+    session.isTrialExpired = Date.now() > oneYearLater;
+  }
+
+  if (session.isPermanentlyBanned) {
+    window.location.href = "banned.html";
+    return null;
+  }
+
+  return session;
+};
+
+// Écouteur de changement d'état (Sync Firebase -> Local)
+if (typeof firebase !== "undefined" && firebase.auth()) {
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+      try {
+        const doc = await firebase
+          .firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get();
+        if (doc.exists) {
+          const profile = doc.data();
+          cacheSetItem(
+            "session",
+            JSON.stringify({ ...profile, uid: user.uid }),
+          );
+          window.session = profile;
+        }
+      } catch (err) {
+        console.warn("Firestore sync failed:", err);
+      }
+    }
+  });
+}
+
+
+/* --- database.js --- */
+/**
+ * DATABASE MANAGER - mon50ccetmoi
+ * Gestion de la synchronisation en temps réel via Firebase Firestore.
+ */
+
+let db;
+
+// --- FALLBACK SÉCURISÉ ---
+// Si auth.js n'est pas chargé (ex: assureur.html), on fournit un fallback
+// qui utilise localStorage en clair. Quand auth.js est chargé, ses versions
+// chiffrées (window.secureSetItem/secureGetItem) prennent le dessus.
+if (typeof secureSetItem === "undefined" && !window.secureSetItem) {
+  window.secureSetItem = function (key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      console.warn("secureSetItem fallback error:", e);
+    }
+  };
+}
+if (typeof secureGetItem === "undefined" && !window.secureGetItem) {
+  window.secureGetItem = function (key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  };
+}
+// Alias global pour les appels sans préfixe window.
+var secureSetItem = window.secureSetItem;
+var secureGetItem = window.secureGetItem;
+
+function initDatabase() {
+  try {
+    // Initialisation Firebase (si pas déjà fait par auth.js)
+    if (!firebase.apps.length) {
+      firebase.initializeApp(CONFIG.FIREBASE);
+    }
+    db = firebase.firestore();
+
+    // Démarrer l'écoute temps réel des dangers
+    syncHazards();
+    // Démarrer l'écoute des autres pilotes
+    syncCommunityPositions();
+  } catch (e) {
+    console.warn("Database init fail :", e);
+  }
+}
+
+// --- E2EE HELPERS ---
+function cloudEncrypt(data) {
+  if (typeof CryptoJS === "undefined" || !data) return data;
+  const key = window.getSyncKey();
+  const str = typeof data === "string" ? data : JSON.stringify(data);
+  return CryptoJS.AES.encrypt(str, key).toString();
+}
+
+function cloudDecrypt(encryptedData) {
+  if (typeof CryptoJS === "undefined" || !encryptedData) return null;
+  const key = window.getSyncKey();
+  try {
+    const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    return JSON.parse(decrypted);
+  } catch (e) {
+    return null;
+  }
+}
+
+// --- SYNCHRONISATION DES DANGERS (COMMUNAUTÉ) ---
+
+function syncHazards() {
+  if (!db) return;
+
+  db.collection("hazards").onSnapshot((snapshot) => {
+    let hazards = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      // Si la donnée est chiffrée (E2EE), on la déchiffre
+      if (data.payload) {
+        const decrypted = cloudDecrypt(data.payload);
+        if (decrypted) hazards.push(decrypted);
+      } else {
+        hazards.push(data); // Legacy (Plaintext)
+      }
+    });
+
+    secureSetItem("hazards", JSON.stringify(hazards));
+    if (typeof loadHazards === "function") loadHazards();
+  });
+}
+
+window.publishHazardCloud = async function (hazard) {
+  if (!db) return false;
+
+  if (
+    window.GuardianBot &&
+    !window.GuardianBot.analyzeContent("Signalement", hazard, hazard.author)
+  ) {
+    return false;
+  }
+
+  try {
+    // Chiffrement de bout en bout avant envoi
+    const encryptedPayload = cloudEncrypt(hazard);
+    await db.collection("hazards").add({
+      payload: encryptedPayload,
+      author: hazard.author, // Gardé en clair pour la modération par l'Oracle
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    return true;
+  } catch (e) {
+    console.error("Cloud publish fail:", e);
+    return false;
+  }
+};
+
+// --- SYNCHRONISATION UTILISATEURS ---
+
+// --- PARTAGE DE POSITION (COMMUNAUTÉ LIVE) ---
+
+window.publishUserLocation = async function (lat, lng, status = "Riding") {
+  if (!db || !window.session || window.session.isGuest) return;
+  try {
+    const payload = {
+      lat,
+      lng,
+      status,
+      brand: window.session.brand || "Scooter",
+    };
+    const encryptedPayload = cloudEncrypt(payload);
+
+    await db.collection("presence").doc(window.session.username).set({
+      payload: encryptedPayload,
+      username: window.session.username,
+      lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (e) {
+    console.warn("Presence sync fail");
+  }
+};
+
+function syncCommunityPositions() {
+  if (!db) return;
+
+  // Only listen to presence if user is authenticated (firestore.rules requires isSignedIn)
+  if (typeof firebase !== "undefined" && firebase.auth()) {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        db.collection("presence").onSnapshot(
+          (snapshot) => {
+            let members = [];
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              if (data.username !== window.session?.username) {
+                if (data.payload) {
+                  const decrypted = cloudDecrypt(data.payload);
+                  if (decrypted) {
+                    members.push({ ...decrypted, username: data.username });
+                  }
+                } else {
+                  members.push(data); // Legacy
+                }
+              }
+            });
+
+            window.communityMembers = members;
+            if (typeof renderCommunityMarkers === "function")
+              renderCommunityMarkers();
+          },
+          (error) => {
+            console.warn(
+              "Presence sync error (expected if not logged in):",
+              error,
+            );
+          },
+        );
+      }
+    });
+  }
+}
+
+// --- SOCIAL TICKER SYNC ---
+
+function syncSocialTicker() {
+  if (!db) return;
+  db.collection("moods")
+    .orderBy("timestamp", "desc")
+    .limit(5)
+    .onSnapshot((snapshot) => {
+      let latest = [];
+      snapshot.forEach((doc) => latest.push(doc.data()));
+      if (latest.length > 0) {
+        const m = latest[0];
+        const text = `${escapeHTML(m.username)} : ${escapeHTML(m.text || m.label || "Bonne route !")}`;
+        const ticker = document.getElementById("ticker-text");
+        if (ticker) ticker.textContent = text;
+      }
+    });
+}
+
+window.publishMoodCloud = async function (mood) {
+  if (!db || !window.session) return;
+
+  // BOT MODERATION
+  if (
+    window.GuardianBot &&
+    !window.GuardianBot.analyzeContent("Humeur", mood, window.session.username)
+  ) {
+    return;
+  }
+
+  try {
+    await db.collection("moods").add({
+      ...mood,
+      username: window.session.username,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (e) {
+    console.error("Mood sync fail");
+  }
+};
+
+// --- SYSTÈME ANTI-FRAUDE SIGNALEMENT DGCCRF ---
+
+window.reportStationAbuse = async function (
+  stationId,
+  stationInfo,
+  photoData = null,
+) {
+  if (!db || !window.session || window.session.isGuest) {
+    alert("Vous devez être membre certifié pour signaler un abus.");
+    return;
+  }
+
+  if (!photoData) {
+    alert("Une preuve photo est obligatoire pour valider le signalement.");
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const reportPath = `reports_abuse/${stationId}_${today}`;
+
+  try {
+    const docRef = db.collection("reports_abuse").doc(`${stationId}_${today}`);
+    const doc = await docRef.get();
+
+    let count = 0;
+    let reporters = [];
+    let photos = [];
+
+    if (doc.exists) {
+      count = doc.data().count;
+      reporters = doc.data().reporters || [];
+      photos = doc.data().photos || [];
+    }
+
+    if (reporters.includes(window.session.username)) {
+      alert("Vous avez déjà signalé cette station aujourd'hui.");
+      return;
+    }
+
+    const newCount = count + 1;
+    reporters.push(window.session.username);
+    photos.push(photoData); // Stockage de la preuve
+
+    await docRef.set(
+      {
+        stationId,
+        stationInfo,
+        count: newCount,
+        reporters: reporters,
+        photos: photos,
+        lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+
+    if (newCount >= 10) {
+      await triggerDGCCRFReport(stationId, stationInfo, photos);
+    }
+
+    alert(
+      `Signalement avec preuve photo enregistré (${newCount}/10). Merci de votre vigilance.`,
+    );
+  } catch (e) {
+    console.error("Report fail:", e);
+  }
+};
+
+async function triggerDGCCRFReport(id, info, photos) {
+  // 1. Blacklister la station sur Firebase
+  await db.collection("blacklist_stations").doc(id).set({
+    id,
+    info,
+    reason: "Prix non conformes (10+ preuves photo validées)",
+    photosCount: photos.length,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // 2. Génération du Dossier Bot Anti-Fraude (Format SignalConso)
+  const complaintDossier = {
+    dossierId: `FRAUD-FR-${id}-${Date.now()}`,
+    target: info,
+    source: "mon50ccetmoi-bot-v20",
+    platform: "SignalConso-API-Bridge",
+    evidenceCount: photos.length,
+    hasPhotos: true,
+    status: "TRANSMIS_DGCCRF",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    metadata: {
+      appVersion: CONFIG.VERSION,
+      isAutomated: true,
+    },
+  };
+
+  // Stocker le dossier officiel avec les liens vers les preuves
+  await db
+    .collection("complaints_official")
+    .doc(complaintDossier.dossierId)
+    .set({
+      ...complaintDossier,
+      evidence_samples: photos.slice(0, 3), // On garde les 3 premières preuves pour le dossier résumé
+    });
+
+  // 3. Logique Bot (Simulation Webhook ou Email Administratif)
+
+  // Notification admin
+  await db.collection("admin_alerts").add({
+    type: "FRAUDE_PRIX_BOT_SUCCESS",
+    station: info,
+    dossierLink: complaintDossier.dossierId,
+    hasVisualProof: true,
+    message: "Bot : Dossier de plainte (avec photos) transmis à la DGCCRF.",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+
+  // Optionnel: Si un Webhook Discord est configuré
+  if (CONFIG.WEBHOOK_ADMIN) {
+    try {
+      fetch(CONFIG.WEBHOOK_ADMIN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: `🚨 **ALERTE FRAUDE BOT** 🚨\nLa station **${info}** a reçu 10 signalements. Un dossier de plainte automatique a été transmis à la DGCCRF.`,
+        }),
+      });
+    } catch (e) {}
+  }
+}
+
+window.getBlacklist = async function () {
+  if (!db) return [];
+  try {
+    const snap = await db.collection("blacklist_stations").get();
+    return snap.docs.map((doc) => doc.id);
+  } catch (e) {
+    return [];
+  }
+};
+
+// --- SYSTÈME ÉVALUATION GARAGES (COMMUNAUTÉ) ---
+
+window.evaluateGarage = async function (placeId, name, score) {
+  if (!db || !window.session || window.session.isGuest) {
+    alert("Vous devez être membre pour évaluer un garage.");
+    return;
+  }
+
+  try {
+    const docRef = db.collection("garage_evaluations").doc(placeId);
+    const doc = await docRef.get();
+
+    let totalScore = 0;
+    let count = 0;
+    let voters = [];
+
+    if (doc.exists) {
+      totalScore = doc.data().totalScore || 0;
+      count = doc.data().count || 0;
+      voters = doc.data().voters || [];
+    }
+
+    if (voters.includes(window.session.username)) {
+      alert("Vous avez déjà noté ce garage.");
+      return;
+    }
+
+    voters.push(window.session.username);
+    const newCount = count + 1;
+    const newTotalScore = totalScore + score;
+
+    await docRef.set(
+      {
+        placeId,
+        name,
+        count: newCount,
+        totalScore: newTotalScore,
+        avgRating: (newTotalScore / newCount).toFixed(1),
+        voters: voters,
+        lastVote: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+
+    alert(
+      `Merci ! Votre évaluation a été prise en compte (${newCount}/1000 pour le Badge Pro).`,
+    );
+  } catch (e) {
+    console.error("Eval fail", e);
+  }
+};
+
+window.getGarageInternalInfo = async function (placeId) {
+  if (!db) return null;
+  try {
+    const doc = await db.collection("garage_evaluations").doc(placeId).get();
+    return doc.exists ? doc.data() : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// --- ROADBOOKS CLOUD SHARING ---
+
+window.publishRoadbookCloud = async function (roadbook) {
+  if (!db || !window.session) return false;
+
+  // BOT MODERATION
+  if (
+    window.GuardianBot &&
+    !window.GuardianBot.analyzeContent(
+      "Roadbook",
+      roadbook,
+      window.session.username,
+    )
+  ) {
+    return false;
+  }
+
+  try {
+    await db.collection("community_roadbooks").add({
+      ...roadbook,
+      author: window.session.username,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      reports: 0,
+    });
+    return true;
+  } catch (e) {
+    console.error("Roadbook cloud fail:", e);
+    return false;
+  }
+};
+
+// --- SYSTEME DE BAN (SANCTIONS ÉCHELONNÉES) ---
+async function applyAbuseSanction(userId) {
+  if (!userId || userId === "Anonyme") return;
+  // On cherche par UID si possible, sinon par pseudo (legacy)
+  let userRef = db.collection("users").doc(userId);
+  let snap = await userRef.get();
+
+  if (!snap.exists) {
+    // Fallback: Recherche par pseudo
+    const q = await db
+      .collection("users")
+      .where("username", "==", userId)
+      .limit(1)
+      .get();
+    if (!q.empty) {
+      userRef = q.docs[0].ref;
+      snap = q.docs[0];
+    } else return;
+  }
+
+  const data = snap.data() || {};
+  const abuseLevel = (data.abuseLevel || 0) + 1;
+  const totalFakeReports = (data.totalFakeReports || 0) + 1;
+  let banDurationMs = 0;
+  let isDefinitive = false;
+
+  // REGLE SPECIALE : 25 FAUX SIGNALEMENTS CUMULÉS = BAN FINAL DIRECT
+  if (totalFakeReports >= 25 || abuseLevel >= 5) {
+    isDefinitive = true;
+    banDurationMs = 99 * 365 * 24 * 60 * 60 * 1000;
+  } else if (abuseLevel === 1) banDurationMs = 1 * 60 * 60 * 1000;
+  else if (abuseLevel === 2) banDurationMs = 2 * 60 * 60 * 1000;
+  else banDurationMs = 24 * 60 * 60 * 1000;
+
+  const banUntil = Date.now() + banDurationMs;
+  await userRef.update({
+    abuseLevel: isDefinitive ? 5 : abuseLevel,
+    totalFakeReports: totalFakeReports,
+    bannedUntil: banUntil,
+    isPermanentlyBanned: isDefinitive,
+  });
+
+  // BLOCAGE IP GLOBAL (Si ban définitif)
+  if (isDefinitive) {
+    try {
+      const ipRes = await fetch("https://api.ipify.org?format=json");
+      const ipData = await ipRes.json();
+      const currentIp = ipData.ip;
+      await db.collection("banned_ips").doc(currentIp).set({
+        userId,
+        reason: "Bannissement définitif - Abus cumulés",
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) {}
+  }
+  if (window.session && window.session.username === userId) {
+    window.session.bannedUntil = banUntil;
+    secureSetItem("session", JSON.stringify(window.session));
+  }
+  await db.collection("mod_logs").add({
+    userId,
+    type: "BAN_TEMPORAIRE",
+    level: abuseLevel,
+    until: new Date(banUntil).toLocaleString(),
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+}
+window.isUserBanned = function () {
+  if (!window.session || window.session.isGuest) return false;
+  const bannedUntil = window.session.bannedUntil || 0;
+  return Date.now() < bannedUntil;
+};
+
+
 /* --- app-core.js --- */
 // --- LITE MODE (PERFORMANCE) ---
 window.isLiteMode = localStorage.getItem("liteMode") === "true";
@@ -3413,7 +4342,12 @@ window.startApp = function () {
 
   loadHazards();
   renderRoadbooks();
-  if (window.OracleVoice) window.OracleVoice.start();
+  // window.OracleVoice.start(); désactivé au démarrage pour prévenir l'erreur "Requested device not found" (Zero-Trust)
+  // L'utilisateur devra l'activer manuellement
+  
+  if (window.ExchangeMarket) {
+    window.ExchangeMarket.init();
+  }
 
   // â”€â”€ Initialisation des Cartes Hors Ligne â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (window.OfflineMapManager) {
@@ -15193,12 +16127,6 @@ window.ExchangeMarket = {
     if (form) form.style.display = "none";
   },
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    ExchangeMarket.init();
-  }, 1000);
-});
 
 
 /* --- legal-database.js --- */

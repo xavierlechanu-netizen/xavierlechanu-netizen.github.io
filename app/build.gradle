@@ -58,12 +58,29 @@ android {
     }
     compileSdkVersion 36
     namespace "com.mon50ccetmoi.twa"
+
+    signingConfigs {
+        release {
+            def localProperties = new Properties()
+            def localPropertiesFile = rootProject.file('local.properties')
+            if (localPropertiesFile.exists()) {
+                localPropertiesFile.withReader('UTF-8') { reader ->
+                    localProperties.load(reader)
+                }
+            }
+            storeFile rootProject.file("new-upload-keystore.jks")
+            storePassword localProperties.getProperty('storePassword', 'android')
+            keyAlias "upload"
+            keyPassword localProperties.getProperty('keyPassword', 'android')
+        }
+    }
+
     defaultConfig {
         applicationId "com.mon50ccetmoi.twa"
         minSdkVersion 23
         targetSdkVersion 36
-        versionCode 1010002
-        versionName "101.00.02"
+        versionCode 1010004
+        versionName "101.00.04"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -157,6 +174,7 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

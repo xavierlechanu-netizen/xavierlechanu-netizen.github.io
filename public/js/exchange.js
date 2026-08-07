@@ -713,9 +713,3 @@ window.ExchangeMarket = {
     if (form) form.style.display = "none";
   },
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    ExchangeMarket.init();
-  }, 1000);
-});

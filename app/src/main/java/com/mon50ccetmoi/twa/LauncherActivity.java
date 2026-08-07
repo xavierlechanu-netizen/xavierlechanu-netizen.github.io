@@ -29,6 +29,7 @@ public class LauncherActivity
         // Les couleurs de la barre d'état et de navigation sont gérées par
         // les metadata du AndroidManifest.xml (colorPrimary, navigationColor).
         // Les API setStatusBarColor/setNavigationBarColor sont obsolètes depuis SDK 35.
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         super.onCreate(savedInstanceState);
     }
 

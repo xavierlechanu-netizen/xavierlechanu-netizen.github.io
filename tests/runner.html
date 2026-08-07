@@ -91,6 +91,18 @@
                 assert(calculateReportPrice("HACK_ATTEMPT") === 4999, "Entrée invalide = retombe sur le tarif de base (pas de prix gratuit)");
             });
 
+            describe("🎙️ Jarvis - Détection Contournement Centre-Ville", () => {
+                const parseCommand = (cmd) => {
+                    const match = cmd.match(/(sans|évite|éviter|contourne|contourner|ne pas passer).*(centre|ville)/i);
+                    return !!match;
+                };
+                
+                assert(parseCommand("emmène-moi à lyon sans passer par le centre-ville") === true, "Détection 'sans passer par le centre-ville' -> OK");
+                assert(parseCommand("évite le centre pour aller à marseille") === true, "Détection 'évite le centre' -> OK");
+                assert(parseCommand("itinéraire vers paris") === false, "Commande normale (pas d'évitement) -> OK");
+                assert(parseCommand("emmène moi en ville") === false, "Aller en ville (ne pas éviter) -> OK");
+            });
+
             // Summary
             const summary = document.getElementById('summary');
             if (failed === 0) {

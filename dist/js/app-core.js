@@ -524,7 +524,12 @@ window.startApp = function () {
 
   loadHazards();
   renderRoadbooks();
-  if (window.OracleVoice) window.OracleVoice.start();
+  // window.OracleVoice.start(); désactivé au démarrage pour prévenir l'erreur "Requested device not found" (Zero-Trust)
+  // L'utilisateur devra l'activer manuellement
+  
+  if (window.ExchangeMarket) {
+    window.ExchangeMarket.init();
+  }
 
   // â”€â”€ Initialisation des Cartes Hors Ligne â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (window.OfflineMapManager) {

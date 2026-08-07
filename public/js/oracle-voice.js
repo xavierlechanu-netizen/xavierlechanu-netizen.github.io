@@ -331,9 +331,14 @@ class OracleVoice {
     }
     // â”€â”€ Navigation Intelligente (Extraction) â”€â”€
     else if (commandText.match(/(emmène|amène|aller|navigue|itinéraire|route|guidage)/i)) {
+        // Detection contournement centre-ville
+        const avoidCityCenter = commandText.match(/(sans|évite|éviter|contourne|contourner|ne pas passer).*(centre|ville)/i);
+        window.avoidCityCenters = !!avoidCityCenter;
+
         // Extraction intelligente de la destination
         let dest = commandText
             .replace(/.*(?:emmène(?:-moi)?|amène|aller|naviguer?|itinéraire|vers|à|au)\s+/i, "")
+            .replace(/(?:sans|en évitant|évite|éviter|contourne|contourner|ne pas passer).*(?:centre|ville|centres-villes?)/i, "")
             .replace(/s'il te pla[iî]t/i, "")
             .trim();
             
@@ -359,10 +364,17 @@ class OracleVoice {
                             if (typeof window.launchNativeGPS === "function") window.launchNativeGPS();
                         }, 2000);
                     } else {
-                         reply([
-                             `Calcul de l'itinéraire optimal vers ${dest}.`,
-                             `Je cherche la meilleure route pour aller à ${dest}.`
-                         ]);
+                        if (window.avoidCityCenters) {
+                            reply([
+                                `Calcul de l'itinéraire vers ${dest} en contournant les centres urbains.`,
+                                `C'est noté. Je cherche une route vers ${dest} qui évite le centre-ville.`
+                            ]);
+                        } else {
+                             reply([
+                                 `Calcul de l'itinéraire optimal vers ${dest}.`,
+                                 `Je cherche la meilleure route pour aller à ${dest}.`
+                             ]);
+                        }
                     }
                 }
             }
