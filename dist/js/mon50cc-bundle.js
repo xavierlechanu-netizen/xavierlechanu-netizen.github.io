@@ -8036,7 +8036,7 @@ window.generateTacticalExploration = function () {
 window.checkVigilanceRouge = async function () {
   try {
     // Appel sécurisé via Cloud Function (évite d'exposer la clé Météo-France)
-    const url = "https://us-central1-mon50ccetmoi.cloudfunctions.net/getVigilanceMeteo";
+    const url = "https://europe-west1-mon50ccetmoi.cloudfunctions.net/getVigilanceMeteo";
     const response = await fetch(url);
 
     if (!response.ok) {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CONFIGURATION GLOBALE - mon50ccetmoi
  * Centralisation des clés et configurations sensibles.
  */
@@ -21,12 +21,13 @@ const CONFIG = {
 
   // Firebase Cloud Database (Firestore)
   FIREBASE: {
-    apiKey: atob("QUl6YVN5QnVmWjVobXpFb0RvT1o5WW9mcEh2TDNISkRidUVPYzdJ"),
+    apiKey: "AIzaSyAOQgK8GO4DgR1jLwxCaHek1oM-cBUoYSw",
     authDomain: "mon50ccetmoi.firebaseapp.com",
     projectId: "mon50ccetmoi",
-    storageBucket: "mon50ccetmoi.appspot.com",
+    storageBucket: "mon50ccetmoi.firebasestorage.app",
     messagingSenderId: "618915667828",
-    appId: "1:618915667828:web:7f6d4e21a3b5c0d9e1f2",
+    appId: "1:618915667828:web:8508e0362e4edd0a0dd621",
+    measurementId: "G-S482ZE7TKG"
   },
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

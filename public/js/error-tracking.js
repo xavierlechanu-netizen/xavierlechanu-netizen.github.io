@@ -63,7 +63,7 @@ window.CrashReporter = {
         .add(payload)
         .then(() => {
           // Send to Notion Bug Tracker via Cloud Functions
-          fetch("https://us-central1-mon50ccetmoi.cloudfunctions.net/reportToNotion", {
+          fetch("https://europe-west1-mon50ccetmoi.cloudfunctions.net/reportToNotion", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

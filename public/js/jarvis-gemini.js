@@ -55,10 +55,16 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 this.history.shift();
             }
 
+            let token = "";
+            if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+                token = await firebase.auth().currentUser.getIdToken();
+            }
+
             const response = await fetch(this.endpoint, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : ""
                 },
                 body: JSON.stringify({
                     history: this.history,

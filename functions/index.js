@@ -601,7 +601,7 @@ exports.askJarvisGemini = onRequest(
 //    POST body : { title, description, category, priority }
 // ─────────────────────────────────────────────────────────────────────────────
 exports.reportToNotion = onRequest(
-    { secrets: [NOTION_API_KEY, NOTION_DATABASE_ID] },
+    { secrets: [NOTION_API_KEY, NOTION_DATABASE_ID], region: "europe-west1" },
     async (req, res) => {
         setCorsHeaders(res);
         if (req.method === "OPTIONS") return res.status(204).send("");
@@ -671,7 +671,7 @@ exports.reportToNotion = onRequest(
 // 3. getVigilanceMeteo
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getVigilanceMeteo = onRequest(
-    { secrets: [METEO_FRANCE_API_KEY], cors: true },
+    { secrets: [METEO_FRANCE_API_KEY], cors: true, region: "europe-west1" },
     async (req, res) => {
         setCorsHeaders(res);
         if (req.method === "OPTIONS") return res.status(204).send("");
