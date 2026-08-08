@@ -1,0 +1,19 @@
+# ============================================================================
+# Table de partitions personnalisée — Boîte Noire V1
+# ============================================================================
+# Cible : ESP32-C3-MINI-1 (Flash 4 Mo)
+#
+# Layout :
+#   - nvs          : Stockage clé AES-256 (chiffrée si NVS Encryption ON)
+#   - otadata      : Gestion OTA pour les mises à jour FOTA
+#   - ota_0 / ota_1: Double slot firmware (A/B update)
+#   - blackbox_data: Stockage chiffré des trames télémétriques (768 Ko)
+#   - nvs_key      : Clé de chiffrement NVS (si activé)
+# ============================================================================
+# Name,          Type, SubType,  Offset,   Size,     Flags
+nvs,             data, nvs,      0x9000,   0x6000,
+otadata,         data, ota,      0xf000,   0x2000,
+ota_0,           app,  ota_0,    0x20000,  0x180000,
+ota_1,           app,  ota_1,    0x1A0000, 0x180000,
+blackbox_data,   data, 0x80,     0x320000, 0xC0000,
+nvs_key,         data, nvs_keys, 0x3E0000, 0x1000,

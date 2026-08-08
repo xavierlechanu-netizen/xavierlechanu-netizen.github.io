@@ -1,0 +1,51 @@
+# ============================================================================
+# sdkconfig.defaults — Configuration de build ESP-IDF (Boîte Noire V1)
+# ============================================================================
+# Ces valeurs sont appliquées automatiquement par idf.py au premier build.
+# Elles peuvent être surchargées via `idf.py menuconfig`.
+# ============================================================================
+
+# ---- Cible matérielle ----
+CONFIG_IDF_TARGET="esp32c3"
+
+# ---- Table de partitions personnalisée ----
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# ---- Chiffrement NVS (Protection des clés AES au repos) ----
+CONFIG_NVS_ENCRYPTION=y
+
+# ---- Secure Boot V2 (FOTA authentifiée) ----
+# Décommenter pour la production (nécessite la clé de signature)
+# CONFIG_SECURE_BOOT=y
+# CONFIG_SECURE_BOOT_V2_ENABLED=y
+
+# ---- Flash Encryption (chiffrement intégral de la Flash) ----
+# Décommenter pour la production
+# CONFIG_SECURE_FLASH_ENC_ENABLED=y
+
+# ---- Désactivation JTAG en production ----
+# (Aussi brûlé par la zeroization)
+# CONFIG_SECURE_DISABLE_JTAG=y
+
+# ---- Bluetooth Low Energy 5.0 ----
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
+CONFIG_BT_NIMBLE_ROLE_CENTRAL=n
+
+# ---- Deep Sleep & Power Management ----
+CONFIG_PM_ENABLE=y
+CONFIG_FREERTOS_USE_TICKLESS_IDLE=y
+
+# ---- Watchdog (anti-freeze) ----
+CONFIG_ESP_TASK_WDT_EN=y
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=30
+
+# ---- Optimisation taille (firmware compact) ----
+CONFIG_COMPILER_OPTIMIZATION_SIZE=y
+
+# ---- Log level (WARNING en prod, DEBUG en dev) ----
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y
+# CONFIG_LOG_DEFAULT_LEVEL_DEBUG=y
