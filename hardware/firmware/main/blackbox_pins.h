@@ -42,4 +42,8 @@
 /* ---- Niveau de batterie LiPo (ADC via pont diviseur) ---- */
 #define PIN_VBAT_ADC            GPIO_NUM_1
 
+/* ---- Capteur IMU (I2C) ---- */
+#define PIN_IMU_SDA             GPIO_NUM_6
+#define PIN_IMU_SCL             GPIO_NUM_7
+
 #endif /* BLACKBOX_PINS_H */

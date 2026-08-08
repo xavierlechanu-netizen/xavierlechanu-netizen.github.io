@@ -39,6 +39,7 @@
 #include "blackbox_storage.h"
 #include "ble_comm.h"
 #include "gps_parser.h"
+#include "imu.h"
 
 /* ---- Tag de log ---- */
 static const char *TAG = "MAIN";
@@ -143,6 +144,12 @@ void app_main(void)
     }
 
     /* ================================================================
+     * ÉTAPE 6 : Initialisation IMU (I2C)
+     * ================================================================ */
+    ESP_LOGI(TAG, "[6/6] Initialisation Capteur IMU...");
+    imu_init();
+
+    /* ================================================================
      * LANCEMENT DE LA BOUCLE TÉLÉMÉTRIQUE (1 Hz)
      * ================================================================ */
     ESP_LOGI(TAG, "═══════════════════════════════════════════════");
@@ -206,6 +213,12 @@ static void telemetry_task(void *pvParameters)
 
         /* TODO : Lire ADC pour tension batterie */
         frame.battery_mv = 3700;  /* Placeholder */
+
+        /* ---- Lire le capteur inertiel (IMU) ---- */
+        imu_data_t imu_data;
+        imu_read_data(&imu_data);
+        frame.g_force_x10 = (uint16_t)(imu_data.accel_g * 10.0f);
+        frame.lean_angle_deg = (uint8_t)imu_data.lean_angle;
 
         /* Mettre à jour les valeurs BLE */
         ble_comm_update_battery(frame.battery_mv);

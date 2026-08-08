@@ -42,7 +42,9 @@ typedef struct __attribute__((packed)) {
     uint16_t battery_mv;        /**< Tension batterie LiPo en mV */
     uint8_t  tamper_state;       /**< État anti-tamper (0 = OK) */
     uint8_t  flags;              /**< Drapeaux (bit 0 = alimentation ext.) */
-    uint8_t  reserved[42];       /**< Réservé pour extensions futures */
+    uint16_t g_force_x10;        /**< Force G totale × 10 (ex: 124 = 12.4G) */
+    uint8_t  lean_angle_deg;     /**< Angle d'inclinaison en degrés (0-180) */
+    uint8_t  reserved[39];       /**< Réservé pour extensions futures */
 } blackbox_frame_t;
 
 _Static_assert(sizeof(blackbox_frame_t) == 64,
