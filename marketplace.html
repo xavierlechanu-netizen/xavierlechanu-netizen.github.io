@@ -12,6 +12,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
     />
+    <script src="https://merchant.revolut.com/embed.js" async charset="utf-8"></script>
     <link rel="stylesheet" href="css/style.min.css" />
     <style>
       body {
@@ -846,6 +847,39 @@
           alert(`Fonds insuffisants. Il vous manque ${cost - currentBVC} BVC pour débloquer cette voix.`);
         }
       }
+
+      // Logic pour l'achat de la Boîte Noire via Revolut
+      const BlackBoxShop = {
+        simulateRevolutPay: function(amount, description) {
+          const btn = event.currentTarget;
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Initialisation Revolut Pay...';
+          btn.style.pointerEvents = 'none';
+
+          setTimeout(() => {
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Paiement Validé';
+            btn.style.background = "#00ffcc";
+            btn.style.color = "#000";
+            alert(`Paiement de ${amount}€ pour [${description}] validé via l'API Revolut Pay.\n\nVotre facture et le numéro de suivi Colissimo seront envoyés par email.`);
+            
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+              btn.style.background = "";
+              btn.style.color = "";
+              btn.style.pointerEvents = 'auto';
+            }, 3000);
+          }, 1500);
+        },
+        buyUnit: function() {
+          this.simulateRevolutPay(49.90, "Boîte Noire V1");
+        },
+        buyPack: function(qty) {
+          this.simulateRevolutPay(89.82, "Pack Duo Boîtes Noires");
+        },
+        subscribePremium: function() {
+          this.simulateRevolutPay(4.99, "Abonnement Premium (1er mois)");
+        }
+      };
     </script>
   </body>
 </html>

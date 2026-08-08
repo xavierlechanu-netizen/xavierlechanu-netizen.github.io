@@ -378,7 +378,48 @@
         </p>
       </div>
 
-      <!-- EXPERT DASHBOARD (Hidden until paid) -->
+      <!-- DECRYPTION MODAL (Hidden until paid) -->
+      <div id="decryption-modal" style="display: none; margin-top: 20px; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 8px; border: 1px solid #ff0055;">
+        <h3 style="color: #ff0055; margin-top: 0;"><i class="fa-solid fa-key"></i> Déchiffrement AES-256 (Zero-Knowledge)</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Le cloud ne possède pas la clé de déchiffrement. Veuillez saisir la Master Key de l'agence pour lire le rapport localement.</p>
+        
+        <input
+          type="password"
+          id="master-key-input"
+          placeholder="Saisissez la clé privée AES (Ex: 0x...)"
+          style="
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #1e293b;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+          "
+        />
+        <button
+          onclick="decryptTelemetry()"
+          style="
+            width: 100%;
+            padding: 15px;
+            background: #00d2ff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+          "
+        >
+          <i class="fa-solid fa-unlock"></i> Déchiffrer
+        </button>
+      </div>
+
+      <!-- EXPERT DASHBOARD (Hidden until decrypted) -->
       <div id="expert-dashboard" style="display: none; margin-top: 20px">
         <div
           style="
