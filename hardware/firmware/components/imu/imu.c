@@ -1,6 +1,11 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <math.h>
 #include "esp_log.h"
+#include "esp_err.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "driver/i2c.h"
 #include "imu.h"
 #include "../../main/blackbox_pins.h"
