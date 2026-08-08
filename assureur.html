@@ -548,6 +548,26 @@
               ></div>
             </div>
 
+            <!-- MODULE IA LITIGE -->
+            <div style="margin-top: 20px; background: rgba(183, 0, 255, 0.1); border: 1px solid rgba(183, 0, 255, 0.3); border-radius: 8px; padding: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: #b700ff;"><i class="fa-solid fa-brain"></i> IA Litige (Reconstitution)</h4>
+                <button onclick="runLitigationAI()" style="background: linear-gradient(135deg, #b700ff, #8a2be2); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem;">
+                  Lancer l'Analyse
+                </button>
+              </div>
+              
+              <!-- Legal Warning (AI Act) -->
+              <div style="background: rgba(255, 170, 0, 0.1); border-left: 4px solid #ffaa00; padding: 10px; margin-bottom: 15px; font-size: 0.75rem; color: #ccc;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #ffaa00;"></i> <strong>AI Act Compliance :</strong> Cet outil agit à titre d'assistance. Aucune décision légale automatisée ne peut être prise sans supervision humaine par l'expert en sinistre.
+              </div>
+
+              <!-- Result Area -->
+              <div id="ai-report-area" style="display: none; background: #111; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; line-height: 1.6; border: 1px solid #333;">
+                <span id="ai-report-content">Génération du rapport en cours...</span>
+              </div>
+            </div>
+
             <button
               onclick="window.print()"
               style="

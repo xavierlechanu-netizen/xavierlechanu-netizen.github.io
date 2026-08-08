@@ -3,6 +3,7 @@
 
 let currentReportData = null;
 let currentReportId = null;
+let decryptedTelemetry = null;
 
 // ==========================================
 // 1. RECHERCHE DE DOSSIER (FIREBASE)
@@ -92,7 +93,7 @@ async function decryptTelemetry() {
   if (keyInput === "AXA-MASTER-KEY-2026") { // Clé de démo
     
     // Simulation de la donnée claire obtenue après déchiffrement
-    const clearData = {
+    decryptedTelemetry = {
       speed: 62,
       gForce: 12.4,
       lean: 85,
@@ -104,18 +105,18 @@ async function decryptTelemetry() {
 
     // Mise à jour de l'UI
     document.getElementById("telemetry-id").textContent = currentReportId;
-    document.getElementById("telemetry-speed").textContent = clearData.speed + " km/h";
-    document.getElementById("telemetry-g").textContent = clearData.gForce + " G";
-    document.getElementById("telemetry-lean").textContent = clearData.lean + " °";
+    document.getElementById("telemetry-speed").textContent = decryptedTelemetry.speed + " km/h";
+    document.getElementById("telemetry-g").textContent = decryptedTelemetry.gForce + " G";
+    document.getElementById("telemetry-lean").textContent = decryptedTelemetry.lean + " °";
     
-    document.getElementById("telemetry-time").textContent = " " + clearData.timestamp;
-    document.getElementById("telemetry-gps").textContent = ` ${clearData.lat}, ${clearData.lng}`;
+    document.getElementById("telemetry-time").textContent = " " + decryptedTelemetry.timestamp;
+    document.getElementById("telemetry-gps").textContent = ` ${decryptedTelemetry.lat}, ${decryptedTelemetry.lng}`;
     
     // Animation matrix du hash
     hashElement.textContent = "Déchiffrement en cours...";
     setTimeout(() => {
       hashElement.style.color = "#00ffcc";
-      hashElement.textContent = clearData.hash;
+      hashElement.textContent = decryptedTelemetry.hash;
     }, 800);
 
     // Affichage
@@ -125,4 +126,55 @@ async function decryptTelemetry() {
   } else {
     alert("Clé AES invalide. La signature MAC a rejeté le déchiffrement (Anti-Tamper).");
   }
+}
+
+// ==========================================
+// 4. MODULE IA LITIGE (RECONSTITUTION)
+// ==========================================
+function runLitigationAI() {
+  if (!decryptedTelemetry) {
+    alert("Veuillez d'abord déchiffrer les données de télémétrie.");
+    return;
+  }
+
+  const reportArea = document.getElementById("ai-report-area");
+  const contentSpan = document.getElementById("ai-report-content");
+  
+  reportArea.style.display = "block";
+  contentSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Traitement par le modèle IA Litige en cours...';
+
+  setTimeout(() => {
+    let report = "";
+    const s = decryptedTelemetry.speed;
+    const g = decryptedTelemetry.gForce;
+    const l = decryptedTelemetry.lean;
+
+    // Arbre de décision heuristique (Simulation IA)
+    if (g > 10 && s > 40 && l > 60) {
+      report = `
+        <strong style="color: #ff3333;">ALERTE CHOC MAJEUR</strong><br><br>
+        <strong>Circonstances probables :</strong> Le deux-roues circulait à une vitesse relativement élevée (${s} km/h). 
+        Le pic d'accélération de ${g}G indique un arrêt brutal (impact). L'inclinaison de ${l}° confirme que le véhicule est couché au sol suite à l'impact.<br><br>
+        <strong>Reconstitution :</strong> Collision latérale ou frontale avec un obstacle solide (probablement un tiers impliqué).<br><br>
+        <strong style="color: #b700ff;">Probabilité d'implication d'un tiers : 87%</strong>
+      `;
+    } else if (g <= 10 && l >= 80) {
+      report = `
+        <strong style="color: #ffaa00;">GLISSADE / PERTE D'ADHÉRENCE</strong><br><br>
+        <strong>Circonstances probables :</strong> Vitesse mesurée de ${s} km/h avec un choc modéré de ${g}G. 
+        L'inclinaison de ${l}° indique que le deux-roues s'est couché, mais l'absence de choc violent exclut un impact direct.<br><br>
+        <strong>Reconstitution :</strong> Perte de contrôle isolée (chaussée glissante, freinage excessif) ayant entraîné une chute du véhicule.<br><br>
+        <strong style="color: #b700ff;">Probabilité d'implication d'un tiers : 12% (Sinistre isolé présumé)</strong>
+      `;
+    } else {
+      report = `
+        <strong>INCIDENT MINEUR OU STATIONNEMENT</strong><br><br>
+        <strong>Circonstances probables :</strong> L'analyse de la force (${g}G) et de l'inclinaison (${l}°) ne correspond pas à un accident de circulation classique à cette vitesse (${s} km/h).<br><br>
+        <strong>Reconstitution :</strong> Chute à l'arrêt ou tentative de vol/vandalisme.<br><br>
+        <strong style="color: #b700ff;">Recommandation d'expertise physique conseillée.</strong>
+      `;
+    }
+
+    contentSpan.innerHTML = report;
+  }, 2000);
 }
