@@ -1,0 +1,206 @@
+/**
+ * ============================================================================
+ * blackbox-ble.js — Client Web Bluetooth API pour la Boîte Noire 50cc
+ * ============================================================================
+ * Connecte l'application web (PWA) au hardware ESP32-C3 via BLE.
+ * 
+ * UUIDs (Doivent correspondre à ble_comm.h du firmware) :
+ *   - Service Télémétrie : 0x0001
+ *   - Service Diagnostic : 0x0002
+ * 
+ * @note L'API Web Bluetooth nécessite HTTPS et un geste utilisateur (clic).
+ * ============================================================================
+ */
+
+class BlackBoxBLE {
+  constructor() {
+    this.device = null;
+    this.server = null;
+    this.telemetryService = null;
+    this.diagnosticService = null;
+
+    // UUIDs de base (GATT 16-bit convertis par WebBLE en UUIDs standard si ce ne sont pas des standards SIG)
+    // Ici on utilise le base UUID complet défini dans le firmware
+    this.baseUuidPrefix = "50cc0000-";
+    this.baseUuidSuffix = "-4d6f-6e35-306363657431";
+
+    this.SVC_TELEMETRY = this.buildUuid("0001");
+    this.SVC_DIAGNOSTIC = this.buildUuid("0002");
+    
+    // Télémétrie CHRs
+    this.CHR_FRAME_COUNT = this.buildUuid("0101");
+    this.CHR_FRAME_DATA  = this.buildUuid("0102");
+    this.CHR_EXPORT_CMD  = this.buildUuid("0103");
+
+    // Diagnostic CHRs
+    this.CHR_BATTERY      = this.buildUuid("0201");
+    this.CHR_TAMPER_STATE = this.buildUuid("0202");
+    
+    this.isConnected = false;
+    this.onConnectionChange = null; // Callback UI
+    this.onTelemetryData = null;    // Callback Data
+    this.onDiagnosticUpdate = null; // Callback UI
+  }
+
+  buildUuid(shortHex) {
+    return `${this.baseUuidPrefix}${shortHex}${this.baseUuidSuffix}`;
+  }
+
+  /**
+   * Ouvre la popup native du navigateur pour scanner et connecter l'appareil.
+   */
+  async connect() {
+    if (!navigator.bluetooth) {
+      alert("Erreur : L'API Web Bluetooth n'est pas supportée par votre navigateur (essayez Chrome ou Edge sur PC/Android).");
+      return false;
+    }
+
+    try {
+      console.log("[BLE] Demande d'appareil Bluetooth...");
+      this.device = await navigator.bluetooth.requestDevice({
+        filters: [{ namePrefix: 'BB50-' }],
+        optionalServices: [this.SVC_TELEMETRY, this.SVC_DIAGNOSTIC]
+      });
+
+      console.log(`[BLE] Appareil sélectionné : ${this.device.name}`);
+      this.device.addEventListener('gattserverdisconnected', this.handleDisconnection.bind(this));
+
+      console.log("[BLE] Connexion au serveur GATT...");
+      this.server = await this.device.gatt.connect();
+      this.isConnected = true;
+      if (this.onConnectionChange) this.onConnectionChange(true);
+
+      await this.initializeServices();
+      return true;
+
+    } catch (error) {
+      console.error("[BLE] Erreur de connexion :", error);
+      alert("Échec de la connexion Bluetooth : " + error.message);
+      this.disconnect();
+      return false;
+    }
+  }
+
+  /**
+   * Initialise les services et caractéristiques après la connexion.
+   */
+  async initializeServices() {
+    if (!this.server) return;
+
+    try {
+      console.log("[BLE] Récupération du service Diagnostic...");
+      this.diagnosticService = await this.server.getPrimaryService(this.SVC_DIAGNOSTIC);
+      
+      console.log("[BLE] Récupération du service Télémétrie...");
+      this.telemetryService = await this.server.getPrimaryService(this.SVC_TELEMETRY);
+
+      // S'abonner aux notifications de trames
+      const frameChar = await this.telemetryService.getCharacteristic(this.CHR_FRAME_DATA);
+      await frameChar.startNotifications();
+      frameChar.addEventListener('characteristicvaluechanged', this.handleFrameNotification.bind(this));
+
+      console.log("[BLE] Services initialisés et abonnements actifs.");
+      
+      // Première lecture des diagnostics
+      await this.readDiagnostics();
+
+    } catch (error) {
+      console.error("[BLE] Erreur d'initialisation des services :", error);
+    }
+  }
+
+  /**
+   * Lecture de la batterie et de l'état anti-effraction
+   */
+  async readDiagnostics() {
+    if (!this.diagnosticService) return;
+
+    try {
+      const batChar = await this.diagnosticService.getCharacteristic(this.CHR_BATTERY);
+      const batVal = await batChar.readValue();
+      const battery_mv = batVal.getUint16(0, true);
+
+      const tamperChar = await this.diagnosticService.getCharacteristic(this.CHR_TAMPER_STATE);
+      const tamperVal = await tamperChar.readValue();
+      const tamper_state = tamperVal.getUint8(0);
+
+      console.log(`[BLE] Diagnostic -> Batterie: ${battery_mv}mV, Tamper: ${tamper_state}`);
+      
+      if (this.onDiagnosticUpdate) {
+        this.onDiagnosticUpdate({ battery_mv, tamper_state });
+      }
+    } catch (error) {
+      console.error("[BLE] Erreur de lecture diagnostic :", error);
+    }
+  }
+
+  /**
+   * Envoie la commande pour télécharger les trames.
+   */
+  async exportTelemetry(startIndex = 0, count = 0) {
+    if (!this.telemetryService) {
+      alert("Boîte Noire non connectée.");
+      return;
+    }
+
+    try {
+      const cmdChar = await this.telemetryService.getCharacteristic(this.CHR_EXPORT_CMD);
+      
+      // Structure: [start_index (4B)] [count (4B)] (Little Endian)
+      const buffer = new ArrayBuffer(8);
+      const view = new DataView(buffer);
+      view.setUint32(0, startIndex, true);
+      view.setUint32(4, count, true);
+
+      console.log(`[BLE] Envoi commande export: start=${startIndex}, count=${count}`);
+      await cmdChar.writeValue(buffer);
+      
+    } catch (error) {
+      console.error("[BLE] Erreur commande export :", error);
+    }
+  }
+
+  /**
+   * Réception des trames en direct.
+   */
+  handleFrameNotification(event) {
+    const value = event.target.value;
+    // La trame brute est un buffer binaire (ex: struct blackbox_frame_t)
+    // Ici on extrait quelques données basiques pour l'UI, mais dans le vrai
+    // cas, on l'enverrait chiffrée sur Firebase.
+    
+    // Si la trame fait 64 octets (comme défini en C)
+    if (value.byteLength >= 16) {
+        const timestamp = value.getUint32(0, true);
+        const lat = value.getInt32(4, true) / 1e7;
+        const lon = value.getInt32(8, true) / 1e7;
+        const speed = value.getUint16(12, true) / 10;
+        
+        console.log(`[BLE] Trame reçue: TS=${timestamp}, Lat=${lat}, Lon=${lon}, Vitesse=${speed} km/h`);
+        
+        if (this.onTelemetryData) {
+            this.onTelemetryData({ timestamp, lat, lon, speed, raw: value });
+        }
+    }
+  }
+
+  /**
+   * Déconnexion propre.
+   */
+  disconnect() {
+    if (this.device && this.device.gatt.connected) {
+      this.device.gatt.disconnect();
+    }
+  }
+
+  handleDisconnection() {
+    console.log("[BLE] Appareil déconnecté.");
+    this.isConnected = false;
+    this.device = null;
+    this.server = null;
+    if (this.onConnectionChange) this.onConnectionChange(false);
+  }
+}
+
+// Instance globale
+window.BlackBox = new BlackBoxBLE();
