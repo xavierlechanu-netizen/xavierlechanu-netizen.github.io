@@ -476,19 +476,23 @@
 
           <!-- Image Produit -->
           <div class="product-img" style="
-            background: linear-gradient(160deg, rgba(255, 170, 0, 0.1), rgba(10, 14, 25, 0.9));
-            color: #ffaa00;
+            background: url('assets/ui/blackbox.jpg') center/cover no-repeat, linear-gradient(160deg, #1a1a1a, #000);
             position: relative;
+            border-bottom: 1px solid rgba(255,170,0,0.2);
           ">
-            <i class="fa-solid fa-microchip" style="font-size: 3rem;"></i>
+            <!-- Fallback icon si l'image n'est pas encore dispo -->
+            <i class="fa-solid fa-microchip" style="font-size: 3rem; color: rgba(255,255,255,0.1); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;"></i>
+            
             <div style="
               position: absolute;
               bottom: 8px;
               right: 10px;
               font-family: 'JetBrains Mono', monospace;
               font-size: 0.65rem;
-              color: rgba(255, 170, 0, 0.5);
-            ">ESP32-C3 · AES-256</div>
+              color: rgba(255, 255, 255, 0.5);
+              z-index: 1;
+              letter-spacing: 1px;
+            ">WIRELESS & SEALED</div>
           </div>
 
           <h3 style="color: #fff; margin: 10px 0 5px;">Boîte Noire V1 — 50 cc</h3>
@@ -499,8 +503,8 @@
             <span style="color: #b700ff; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-gift"></i> Offre de Lancement : 1 an d'Abonnement Premium Offert !</span>
           </div>
           <p style="color: #888; font-size: 0.85rem; line-height: 1.4; margin-bottom: 10px;">
-            Boîtier traceur/enregistreur inviolable. Format carte bancaire (85×54×6.5 mm). 
-            Résine ignifuge UL 94-V0, IP68, autodestruction AES en cas d'ouverture.
+            Finition ultra-premium en <strong>Aluminium Noir Mat</strong>. Format ultra-plat inviolable (85×54 mm). 
+            Résine ignifuge UL 94-V0, IP68, scellé à vie avec autodestruction AES en cas d'ouverture.
           </p>
 
           <!-- Specs mini -->
