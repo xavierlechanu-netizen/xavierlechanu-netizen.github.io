@@ -462,12 +462,12 @@ function checkFerryProximity(lat, lng) {
 
 window.addCategorizedMaint = function (category) {
   if (window.session && window.session.isGuest) {
-    alert("ðŸ”’ Le Carnet Certifié est réservé aux membres.");
+    alert("🔒 Le Carnet Certifié est réservé aux membres.");
     return;
   }
 
   const proCode = prompt(
-    `ðŸ”‘ VALIDATION PRO REQUISE\nPour certifier l'entretien "${category}", le garage doit entrer son code partenaire :`,
+    `🔑 VALIDATION PRO REQUISE\nPour certifier l'entretien "${category}", le garage doit entrer son code partenaire :`,
   );
 
   // Simulation de validation (En prod, on vérifie contre la base des garages certifiés)
@@ -510,7 +510,7 @@ window.addCategorizedMaint = function (category) {
 function getSOSActions() {
   const num = secureGetItem("emergency_contact");
   if (num) {
-    return `<a href="tel:${num}" style="display:block; margin-top:20px; padding:20px; background:#2ecc71; color:white; text-decoration:none; border-radius:50px; font-weight:bold; font-size:1.2rem;">APPELER URGENCE ðŸ“ž</a>`;
+    return `<a href="tel:${num}" style="display:block; margin-top:20px; padding:20px; background:#2ecc71; color:white; text-decoration:none; border-radius:50px; font-weight:bold; font-size:1.2rem;">APPELER URGENCE 📞</a>`;
   }
   return "";
 }
@@ -604,7 +604,7 @@ window.publishFlashOffer = function () {
   speak("Offre Flash publiée.");
   alert("Votre offre de promotion a été diffusée !");
   if (typeof publishMoodCloud === "function") {
-    publishMoodCloud({ label: "âš¡ PROMO", text: text });
+    publishMoodCloud({ label: "⚡ PROMO", text: text });
   }
 };
 
@@ -821,7 +821,7 @@ window.submitArbitre = function () {
 function generateRideCard() {
   if (window.session.isGuest) {
     alert(
-      "ðŸ”’ La Carte de Score est réservée aux membres. Inscrivez-vous pour partager vos exploits !",
+      "🔒 La Carte de Score est réservée aux membres. Inscrivez-vous pour partager vos exploits !",
     );
     return;
   }

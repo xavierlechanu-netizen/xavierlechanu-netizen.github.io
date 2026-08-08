@@ -4,7 +4,7 @@
  * Flow : client ←’ Firebase Function (création ordre) ←’ Revolut ←’ webhook ←’ Firestore
  */
 window.InsurancePortal = {
-  // Clé publique Merchant (config.js) â€” utilisée côté client uniquement
+  // Clé publique Merchant (config.js) — utilisée côté client uniquement
   get revolutPublicKey() {
     return CONFIG?.REVOLUT?.PUBLIC_KEY || "";
   },
@@ -113,17 +113,17 @@ window.InsurancePortal = {
     return labels[status] || status;
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────────
   // OPTION 1 : Paiement Revolut Merchant (flow complet)
   // 1. Appel Firebase Function ←’ création ordre Revolut (clé secrète serveur)
   // 2. Récupération du order_token
   // 3. RevolutCheckout(token).payWithPopup()
   // 4. Webhook Revolut ←’ Firebase ←’ déblocage rapport
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────────
   async payInstant(caseId) {
     const pubKey = this.revolutPublicKey;
     if (!pubKey) {
-      alert("âš ï¸ Clé publique Revolut manquante dans config.js");
+      alert("⚠ï¸ Clé publique Revolut manquante dans config.js");
       return;
     }
 
@@ -148,7 +148,7 @@ window.InsurancePortal = {
     }
   },
 
-  // â”€ Appel Firebase Function : création de l'ordre Revolut â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Appel Firebase Function : création de l'ordre Revolut ────────────
   async createOrderViaFunction(caseId) {
     const url = `${this.functionBaseUrl}/createRevolutOrder`;
     const reportType =
@@ -176,10 +176,10 @@ window.InsurancePortal = {
     return await response.json();
   },
 
-  // â”€ Lance RevolutCheckout avec le token reçu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Lance RevolutCheckout avec le token reçu ───────────────────
   async launchRevolutCheckout(caseId, orderData) {
     if (typeof RevolutCheckout !== "function") {
-      // SDK pas encore chargé (async) â€” attendre 2s et réessayer
+      // SDK pas encore chargé (async) — attendre 2s et réessayer
       await new Promise((r) => setTimeout(r, 2000));
       if (typeof RevolutCheckout !== "function") {
         throw new Error("SDK Revolut non chargé. Vérifiez votre connexion.");
@@ -187,7 +187,7 @@ window.InsurancePortal = {
     }
 
     const instance = await RevolutCheckout(orderData.order_token, "prod");
-    // Mode production activé â€” anciennement 'sandbox'
+    // Mode production activé — anciennement 'sandbox'
 
     instance.payWithPopup({
       onSuccess: () => {
@@ -209,7 +209,7 @@ window.InsurancePortal = {
     });
   },
 
-  // â”€ Poll Firestore pour détecter la confirmation webhook â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Poll Firestore pour détecter la confirmation webhook ────────
   async pollPaymentConfirmation(caseId, attempts = 0) {
     if (attempts > 20) {
       // Timeout après ~60s
@@ -255,7 +255,7 @@ window.InsurancePortal = {
     this.pollPaymentConfirmation(caseId, attempts + 1);
   },
 
-  // â”€ Modals UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Modals UI ─────────────────────────────────────────────────
   renderRevolutSuccess(caseId) {
     const content = document.getElementById("screen-content");
     if (!content) return;
@@ -293,7 +293,7 @@ window.InsurancePortal = {
                     </div>
                     <div class="revolut-amount-badge">
                         <span class="revolut-amount-value">${price.toFixed(2)} €</span>
-                        <span class="revolut-amount-label">Rapport Assurance certifié â€” ${caseId}</span>
+                        <span class="revolut-amount-label">Rapport Assurance certifié — ${caseId}</span>
                     </div>
                     <div class="ai-progress-bar" style="margin-top:20px;">
                         <div class="ai-progress-fill revolut-progress" style="width:30%;"></div>
@@ -361,7 +361,7 @@ window.InsurancePortal = {
             </div>`;
   },
 
-  // DOSSIER LITIGE IA â€” Lance l'analyse Blackbox intelligente
+  // DOSSIER LITIGE IA — Lance l'analyse Blackbox intelligente
   openLitigationWizard(caseId) {
     if (typeof window.LitigationAI === "undefined") {
       alert(

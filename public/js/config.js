@@ -30,14 +30,14 @@ const CONFIG = {
     measurementId: "G-S482ZE7TKG"
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // REVOLUT BUSINESS â€” Paiements Merchant
-  // Clé publique Merchant (pk_...) â€” sans danger côté client
-  // La clé secrète (sk_...) ne va JAMAIS ici â€” Firebase Functions uniquement
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
+  // REVOLUT BUSINESS — Paiements Merchant
+  // Clé publique Merchant (pk_...) — sans danger côté client
+  // La clé secrète (sk_...) ne va JAMAIS ici — Firebase Functions uniquement
+  // ─────────────────────────────────────────────────────
   REVOLUT: {
     PUBLIC_KEY: "pk_kkwSOEhfQdseB6OVcsYEIpdAwxNxY0JvSUtgtQlLuNlFpNED", // Clé Merchant publique
-    PAYMENT_LINK: "", // Laisser vide â€” on utilise le SDK embarqué
+    PAYMENT_LINK: "", // Laisser vide — on utilise le SDK embarqué
     MERCHANT_ID: "", // Rempli automatiquement par l'API
     CURRENCY: "EUR",
     AMOUNT_CENTS: 4999, // 49,99 €
@@ -45,9 +45,9 @@ const CONFIG = {
     FAIL_REDIRECT: "https://mon50ccetmoi.com/?payment=failed",
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // PORTAIL ASSURANCE â€” Paramètres IA litige
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────
+  // PORTAIL ASSURANCE — Paramètres IA litige
+  // ─────────────────────────────────────────────────────
   INSURANCE: {
     FIRESTORE_COLLECTION: "litigation_proposals", // Collection Firestore des propositions
     REPORT_PRICE_EUR: 49.99,

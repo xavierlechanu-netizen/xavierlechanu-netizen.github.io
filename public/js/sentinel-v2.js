@@ -155,7 +155,7 @@ window.Sentinel = {
   handleBug: function (type, detail) {
     const now = Date.now();
     console.warn(
-      `ðŸš€ Sentinel : Bug intercepté (${type}). Analyse en cours...`,
+      `🚀 Sentinel : Bug intercepté (${type}). Analyse en cours...`,
     );
 
     this.errorLog.push({ type, detail, time: now });

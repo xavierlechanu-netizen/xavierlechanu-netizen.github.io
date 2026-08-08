@@ -60,7 +60,7 @@ window.Wallet = {
           "Accès refusé. Le Coffre-Fort certifié est réservé aux membres.",
         );
       alert(
-        "ðŸ”’ Le Coffre-Fort certifié est réservé aux membres inscrits.",
+        "🔒 Le Coffre-Fort certifié est réservé aux membres inscrits.",
       );
       return;
     }

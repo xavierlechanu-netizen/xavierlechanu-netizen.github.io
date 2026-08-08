@@ -1,5 +1,5 @@
 /**
- * OfflineMapManager â€” mon50ccetmoi v100.00-GOLD
+ * OfflineMapManager — mon50ccetmoi v100.00-GOLD
  * Gestion complète des cartes hors ligne avec Leaflet + OpenStreetMap
  * Basculement automatique : Google Maps (online) ←” Leaflet (offline)
  */
@@ -7,7 +7,7 @@
 window.OfflineMapManager = (function () {
   "use strict";
 
-  // â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Configuration ────────────────────────────────────────────
   const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
   const TILE_ATTRIBUTION =
     '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
@@ -15,7 +15,7 @@ window.OfflineMapManager = (function () {
   const MAX_ZOOM_CACHE = 16;
   const NOMINATIM_URL = "https://nominatim.openstreetmap.org";
 
-  // â”€â”€ État interne â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── État interne ─────────────────────────────────────────────
   let leafletMap = null;
   let leafletMarker = null;
   let leafletRoute = null;
@@ -24,7 +24,7 @@ window.OfflineMapManager = (function () {
   let downloadJobId = null;
   let swMessageChannel = null;
 
-  // â”€â”€ Détection réseau â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Détection réseau ─────────────────────────────────────────
   function isOnline() {
     return navigator.onLine;
   }
@@ -32,17 +32,17 @@ window.OfflineMapManager = (function () {
   window.addEventListener("online", () => {
     switchToGoogleMaps();
     showNetworkToast(
-      "ðŸŸ¢ Réseau rétabli â€” Carte HD réactivée",
+      "🟢 Réseau rétabli — Carte HD réactivée",
       "online",
     );
   });
 
   window.addEventListener("offline", () => {
     switchToLeaflet();
-    showNetworkToast("ðŸ”´ Mode Hors Ligne â€” Carte locale active", "offline");
+    showNetworkToast("🔴 Mode Hors Ligne — Carte locale active", "offline");
   });
 
-  // â”€â”€ Génération des URLs de tuiles pour une zone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Génération des URLs de tuiles pour une zone ──────────────
   function lat2tile(lat, zoom) {
     return Math.floor(
       ((1 -
@@ -87,7 +87,7 @@ window.OfflineMapManager = (function () {
     return urls;
   }
 
-  // â”€â”€ Initialisation de la carte Leaflet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Initialisation de la carte Leaflet ───────────────────────
   function initLeaflet() {
     if (leafletMap) return;
 
@@ -142,14 +142,14 @@ window.OfflineMapManager = (function () {
     isInitialized = true;
   }
 
-  // â”€â”€ Mise à jour de la position sur Leaflet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Mise à jour de la position sur Leaflet ───────────────────
   function updateLeafletPosition(lat, lng) {
     if (!leafletMap || !leafletMarker) return;
     leafletMarker.setLatLng([lat, lng]);
     leafletMap.panTo([lat, lng]);
   }
 
-  // â”€â”€ Basculement Google Maps ←’ Leaflet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Basculement Google Maps ←’ Leaflet ────────────────────────
   function switchToLeaflet() {
     if (isOfflineMode) return;
     isOfflineMode = true;
@@ -174,7 +174,7 @@ window.OfflineMapManager = (function () {
     }
   }
 
-  // â”€â”€ Basculement Leaflet ←’ Google Maps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Basculement Leaflet ←’ Google Maps ────────────────────────
   function switchToGoogleMaps() {
     if (!isOfflineMode) return;
     isOfflineMode = false;
@@ -188,14 +188,14 @@ window.OfflineMapManager = (function () {
     if (offlineBadge) offlineBadge.classList.add("hidden");
   }
 
-  // â”€â”€ Recherche Nominatim (offline-friendly) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Recherche Nominatim (offline-friendly) ───────────────────
   async function searchNominatim(query, lat, lng) {
     try {
       const params = new URLSearchParams({
         q: query,
         format: "json",
         limit: 5,
-        // Pas de filtre countrycodes â€” conformité Règlement (UE) 2018/302 (Geo-blocking)
+        // Pas de filtre countrycodes — conformité Règlement (UE) 2018/302 (Geo-blocking)
         viewbox: `${lng - 0.5},${lat + 0.5},${lng + 0.5},${lat - 0.5}`,
         bounded: 1,
         email: "contact@mon50ccetmoi.com",
@@ -211,7 +211,7 @@ window.OfflineMapManager = (function () {
     }
   }
 
-  // â”€â”€ Toast réseau â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Toast réseau ─────────────────────────────────────────────
   function showNetworkToast(msg, type) {
     const existing = document.getElementById("network-status-toast");
     if (existing) existing.remove();
@@ -240,7 +240,7 @@ window.OfflineMapManager = (function () {
     setTimeout(() => toast.remove(), 4000);
   }
 
-  // â”€â”€ Téléchargement d'une zone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Téléchargement d'une zone ────────────────────────────────
   async function downloadZone(lat, lng, radiusKm = 15, zoneName = "Ma Zone") {
     if (
       !("serviceWorker" in navigator) ||
@@ -258,7 +258,7 @@ window.OfflineMapManager = (function () {
 
     if (
       !confirm(
-        `ðŸ“¥ Télécharger la zone "${zoneName}" ?\n\n${totalCount} tuiles (~${estimatedMb} Mo)\nRayon : ${radiusKm} km\n\nCela peut prendre quelques minutes.`,
+        `📥 Télécharger la zone "${zoneName}" ?\n\n${totalCount} tuiles (~${estimatedMb} Mo)\nRayon : ${radiusKm} km\n\nCela peut prendre quelques minutes.`,
       )
     ) {
       return;
@@ -316,7 +316,7 @@ window.OfflineMapManager = (function () {
     );
   }
 
-  // â”€â”€ UI : Barre de progression â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── UI : Barre de progression ────────────────────────────────
   function showDownloadProgress(current, total, zoneName, percent) {
     let progressEl = document.getElementById("offline-download-progress");
     if (!progressEl) {
@@ -370,7 +370,7 @@ window.OfflineMapManager = (function () {
     }
   }
 
-  // â”€â”€ Affichage des zones sauvegardées â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Affichage des zones sauvegardées ─────────────────────────
   function refreshZoneList() {
     const container = document.getElementById("offline-zones-list");
     if (!container) return;
@@ -433,7 +433,7 @@ window.OfflineMapManager = (function () {
       .join("");
   }
 
-  // â”€â”€ Supprimer une zone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Supprimer une zone ───────────────────────────────────────
   function deleteZone(idx) {
     if (!confirm("Supprimer cette zone hors ligne ?")) return;
     const zones = JSON.parse(localStorage.getItem("offline_zones") || "[]");
@@ -444,11 +444,11 @@ window.OfflineMapManager = (function () {
     // Un "Tout effacer" est disponible dans le panneau
   }
 
-  // â”€â”€ Vider tout le cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Vider tout le cache ──────────────────────────────────────
   function clearAllTiles() {
     if (
       !confirm(
-        "âš ï¸ Effacer TOUTES les tuiles hors ligne ?\nVos zones enregistrées seront supprimées.",
+        "⚠ï¸ Effacer TOUTES les tuiles hors ligne ?\nVos zones enregistrées seront supprimées.",
       )
     )
       return;
@@ -458,7 +458,7 @@ window.OfflineMapManager = (function () {
       channel.port1.onmessage = () => {
         localStorage.removeItem("offline_zones");
         refreshZoneList();
-        showNetworkToast("ðŸ—‘ï¸ Cache tuiles effacé", "offline");
+        showNetworkToast("🗑ï¸ Cache tuiles effacé", "offline");
       };
       navigator.serviceWorker.controller.postMessage(
         { type: "CLEAR_TILES_CACHE" },
@@ -467,7 +467,7 @@ window.OfflineMapManager = (function () {
     }
   }
 
-  // â”€â”€ Obtenir les stats du cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Obtenir les stats du cache ────────────────────────────────
   function getStats(callback) {
     if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
       callback({ count: 0, estimatedMb: 0 });
@@ -481,7 +481,7 @@ window.OfflineMapManager = (function () {
     );
   }
 
-  // â”€â”€ Télécharger la zone autour du GPS actuel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Télécharger la zone autour du GPS actuel ─────────────────
   function downloadCurrentZone() {
     const pos = window.currentPosition;
     if (!pos) {
@@ -496,7 +496,7 @@ window.OfflineMapManager = (function () {
     downloadZone(pos.lat, pos.lng, radius, name);
   }
 
-  // â”€â”€ Initialisation publique â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Initialisation publique ───────────────────────────────────
   function init() {
     // Vérifier si on démarre hors ligne
     if (!isOnline()) {
@@ -521,7 +521,7 @@ window.OfflineMapManager = (function () {
     refreshZoneList();
   }
 
-  // â”€â”€ API publique â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── API publique ─────────────────────────────────────────────
   return {
     init,
     switchToLeaflet,

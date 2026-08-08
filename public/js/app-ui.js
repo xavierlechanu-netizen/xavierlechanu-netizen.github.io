@@ -101,7 +101,7 @@ window.showPage = function (page) {
                 </div>
             </div>
             <button onclick="generateRideCard()" class="btn-insurance" style="width:100%; margin-top:20px; background:linear-gradient(45deg, #ffb703, #ff4d4d); color:black;">
-                <i class="fa-solid fa-share-nodes"></i> GÃƒâ€°NÃƒâ€°RER MA CARTE RIDE (VIRAL)
+                <i class="fa-solid fa-share-nodes"></i> GÃƒ‰NÃƒ‰RER MA CARTE RIDE (VIRAL)
             </button>`;
   } else if (page === "seasons") {
     if (typeof content !== "undefined")
@@ -185,7 +185,7 @@ window.showPage = function (page) {
             <div id="dynamic-garage-list"></div>
 
             <div class="card" style="border: 1px solid var(--neon-blue); background: rgba(0, 210, 255, 0.05);">
-                <h4 style="color:var(--neon-blue); margin-bottom:10px;"><i class="fa-solid fa-chart-line"></i> TÃƒâ€°LÃƒâ€°MÃƒâ€°TRIE DE RIDE</h4>
+                <h4 style="color:var(--neon-blue); margin-bottom:10px;"><i class="fa-solid fa-chart-line"></i> TÃƒ‰LÃƒ‰MÃƒ‰TRIE DE RIDE</h4>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; text-align:center;">
                     <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
                         <small>ANGLE MAX</small><br>
@@ -196,7 +196,7 @@ window.showPage = function (page) {
                         <strong style="font-size:1.2rem; color:var(--danger);">${window.session?.vMax || 0} km/h</strong>
                     </div>
                 </div>
-                <button onclick="resetTelemetry()" style="width:100%; height:25px; margin-top:10px; background:transparent; border:1px solid #444; color:#666; font-size:0.6rem; border-radius:15px;">RÃƒâ€°INITIALISER LES STATS</button>
+                <button onclick="resetTelemetry()" style="width:100%; height:25px; margin-top:10px; background:transparent; border:1px solid #444; color:#666; font-size:0.6rem; border-radius:15px;">RÃƒ‰INITIALISER LES STATS</button>
             </div>
 
             <h4 style="margin-top:20px; font-size:0.9rem; color:#aaa; display:flex; justify-content:space-between;">
@@ -225,7 +225,7 @@ window.showPage = function (page) {
                         <span style="color:#666; font-size:0.7rem;">${h.date}</span>
                     </div>
                     <div style="font-size:0.75rem; margin-top:3px; color:#ccc;">${h.action}</div>
-                    ${h.certified ? `<div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;"><i class="fa-solid fa-certificate"></i> CERTIFIÃƒâ€° PAR : ${h.garage}</div>` : ""}
+                    ${h.certified ? `<div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;"><i class="fa-solid fa-certificate"></i> CERTIFIÃƒ‰ PAR : ${h.garage}</div>` : ""}
                 </div>`,
                         )
                         .join("")
@@ -256,7 +256,7 @@ window.showPage = function (page) {
             <div class="promo-box"><span>Votre code promo:</span><strong>CHEZBIGBOO</strong></div>
             <div class="broker-contact">
                 <strong>Robert - Courtier Partenaire</strong>
-                <a href="tel:0749555829">Ã°Å¸“Å¾ 07 49 55 58 29</a>
+                <a href="tel:0749555829">ðŸ“ž 07 49 55 58 29</a>
                 <span>Spécialiste du jeune conducteur 50cc</span>
             </div>
             <p>Bénéficiez de -15% sur votre assurance scooter en tant que membre.</p>
@@ -279,7 +279,7 @@ window.showPage = function (page) {
             <div id="meca-response" style="margin-top:20px; font-size:0.9rem; line-height:1.4;"></div>`;
   } else if (page === "arbitre") {
     if (window.session && window.session.isGuest) {
-      alert("Accès réservé aux membres inscrits ! Ã°Å¸â€ºµ");
+      alert("Accès réservé aux membres inscrits ! ðŸ›µ");
       return;
     }
     if (typeof content !== "undefined")
@@ -373,7 +373,7 @@ window.showPage = function (page) {
             </div>
             
             <button onclick="Certificate.generate()" class="btn-insurance" style="width:100%; margin-top:25px; background:linear-gradient(45deg, #2ecc71, #3498db); color:white;">
-                <i class="fa-solid fa-file-shield"></i> GÃƒâ€°NÃƒâ€°RER MON CERTIFICAT OFFICIEL
+                <i class="fa-solid fa-file-shield"></i> GÃƒ‰NÃƒ‰RER MON CERTIFICAT OFFICIEL
             </button>
             
             <p style="font-size:0.65rem; color:#666; text-align:center; margin-top:20px;">Note : Ce coffre-fort facilite les contrÃƒ´les mais ne remplace pas les documents originaux selon la législation en vigueur.</p>`;
@@ -381,7 +381,7 @@ window.showPage = function (page) {
     if (typeof content !== "undefined")
       content.innerHTML = `<h3><i class="fa-solid fa-oil-can"></i> Le Sorcier de la Méca</h3>
             <div class="glassmorphism" style="padding:20px; margin-bottom:20px;">
-                <h4 style="color:var(--accent);">CALCULATEUR DE MÃƒâ€°LANGE</h4>
+                <h4 style="color:var(--accent);">CALCULATEUR DE MÃƒ‰LANGE</h4>
                 <div style="margin-top:15px;">
                     <input type="number" id="mix-liters" placeholder="Litres d'essence" class="scooter-brand-select" style="width:100%; margin-bottom:10px;">
                     <input type="number" id="mix-percent" placeholder="% d'huile (ex: 2)" class="scooter-brand-select" style="width:100%; margin-bottom:10px;">
@@ -434,7 +434,7 @@ window.showPage = function (page) {
     if (typeof content !== "undefined")
       content.innerHTML = `<div class="card" style="border:1px solid #9b59b6;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="color:#9b59b6; margin:0;">Ã°Å¸â€  ${t("challenges_title")} : ${challenge.name}</h3>
+                <h3 style="color:#9b59b6; margin:0;">ðŸ† ${t("challenges_title")} : ${challenge.name}</h3>
                 <span style="font-size:0.7rem; background:#9b59b6; color:white; padding:2px 6px; border-radius:10px;">CYCLE LIVE</span>
             </div>
             <p style="font-size:0.8rem; margin-top:10px;">Objectif : ${challenge.goal} ${challenge.unit} par quinzaine.</p>
@@ -447,7 +447,7 @@ window.showPage = function (page) {
                 <div class="garage-bar-bg" style="height:12px;">
                     <div class="garage-bar-fill" style="width:${progress}%; background:#9b59b6;"></div>
                 </div>
-                <p style="font-size:0.8rem; color:#888; margin-top:10px; text-align:center;">Ã°Å¸Å½â€“ï¸ Vous avez réussi <strong>${wins}/150</strong> défis pour le Badge Pro</p>
+                <p style="font-size:0.8rem; color:#888; margin-top:10px; text-align:center;">ðŸŽ–ï¸ Vous avez réussi <strong>${wins}/150</strong> défis pour le Badge Pro</p>
             </div>
 
                           <button class="btn-insurance" style="margin-top:20px; width:100%; background:#9b59b6; color:white;" onclick="toggleMenu()">CONTINUER L''ASCENSION</button>
@@ -500,7 +500,7 @@ window.showPage = function (page) {
     if (typeof content !== "undefined")
       content.innerHTML = `<h3>Mentions Légales & Confidentialité</h3>
             <div style="font-size:0.8rem; line-height:1.4; color:#ccc;">
-                <p><strong>Ãƒâ€°diteur :</strong> mon50ccetmoi (Engineering Unit)</p>
+                <p><strong>Ãƒ‰diteur :</strong> mon50ccetmoi (Engineering Unit)</p>
                 <p><strong>Responsable :</strong> mon50ccetmoi Admin (US)</p>
                 <p><strong>Contact :</strong> via l'application</p>
                 <hr style="border:0; border-top:1px solid #444; margin:10px 0;">
@@ -562,7 +562,7 @@ window.showPage = function (page) {
                 <select id="garage-status-select" onchange="updateGarageStatus(this.value)" class="scooter-brand-select" style="width:100%; background:#111;">
                     <option value="dispo" selected>âÅ“… Prise en charge immédiate</option>
                     <option value="busy">â³ RDV nécessaire (>48h)</option>
-                    <option value="full">Ã°Å¸Å¡« Atelier Complet</option>
+                    <option value="full">ðŸš« Atelier Complet</option>
                 </select>
             </div>
 
@@ -578,19 +578,19 @@ window.showPage = function (page) {
             <div class="card" style="text-align:center; background:rgba(52, 152, 219, 0.05); border:1px solid #3498db;">
                 <i class="fa-solid fa-certificate" style="font-size:2rem; color:#f1c40f;"></i><br>
                 <h4 style="margin:10px 0; color:#fff;">Droit d'Entrée & Certification</h4>
-                <p style="font-size:0.7rem; color:#aaa; margin-bottom:10px;">Devenez <strong>Garage Certifié</strong> pour seulement <strong>50ââ€š¬ TTC</strong> (Paiement unique).</p>
+                <p style="font-size:0.7rem; color:#aaa; margin-bottom:10px;">Devenez <strong>Garage Certifié</strong> pour seulement <strong>50â‚¬ TTC</strong> (Paiement unique).</p>
                 <ul style="font-size:0.65rem; color:#ccc; list-style:none; padding:0; text-align:left; margin-bottom:15px;">
                     <li>âÅ“… Badge <strong>Certifié mon50ccetmoi</strong></li>
-                    <li>Ã°Å¸Å¡€ <strong>Boost de visibilité</strong> sur la carte</li>
-                    <li>Ã°Å¸â€º ï¸ Accès illimité aux fiches techniques</li>
-                    <li>Ã°Å¸‘" Priorité dans les résultats de recherche</li>
+                    <li>ðŸš€ <strong>Boost de visibilité</strong> sur la carte</li>
+                    <li>ðŸ› ï¸ Accès illimité aux fiches techniques</li>
+                    <li>ðŸ‘" Priorité dans les résultats de recherche</li>
                 </ul>
-                <button onclick="payGarageEntryFee()" class="btn-insurance" style="background:#f1c40f; color:black; font-weight:bold;">S'acquitter du droit d'entrée (50ââ€š¬)</button>
+                <button onclick="payGarageEntryFee()" class="btn-insurance" style="background:#f1c40f; color:black; font-weight:bold;">S'acquitter du droit d'entrée (50â‚¬)</button>
                 
                 <div style="margin-top:15px; padding-top:15px; border-top:1px solid #444;">
-                    <p style="font-size:0.7rem; color:#2ecc71;"><strong>Ã°Å¸Å½ OPTION "CROISSANCE" GRATUITE :</strong></p>
-                    <p style="font-size:0.6rem; color:#aaa;">Offrez <strong>-10% de réduction</strong> aux membres sur présentation de l'app et soyez <strong>exonéré</strong> des 50ââ€š¬ !</p>
-                    <button onclick="applyPartnerExemption()" class="btn-insurance fa-beat" style="background:transparent; border:1px solid #2ecc71; color:#2ecc71; margin-top:5px; font-size:0.8rem; font-weight:bold;">REJOINDRE LE RÃƒâ€°SEAU GRATUITEMENT (-10%)</button>
+                    <p style="font-size:0.7rem; color:#2ecc71;"><strong>ðŸŽ OPTION "CROISSANCE" GRATUITE :</strong></p>
+                    <p style="font-size:0.6rem; color:#aaa;">Offrez <strong>-10% de réduction</strong> aux membres sur présentation de l'app et soyez <strong>exonéré</strong> des 50â‚¬ !</p>
+                    <button onclick="applyPartnerExemption()" class="btn-insurance fa-beat" style="background:transparent; border:1px solid #2ecc71; color:#2ecc71; margin-top:5px; font-size:0.8rem; font-weight:bold;">REJOINDRE LE RÃƒ‰SEAU GRATUITEMENT (-10%)</button>
                 </div>
             </div>`
                 : `
@@ -617,11 +617,11 @@ window.showPage = function (page) {
                 <p style="font-size:0.8rem; color:#aaa; margin-top:10px;">L'application restera 100% gratuite, mais les dons aident Ãƒ  payer les serveurs (Google Maps API, Firebase) et Ãƒ  financer les futures mises Ãƒ  jour.</p>
                 
                 <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                    <a href="https://www.buymeacoffee.com/mon50cc" target="_blank" class="btn-insurance" style="background:#ffdd00; color:black; text-decoration:none;">âËœ• Offrir un café (Badge Mécène Ã°Å¸’â€“)</a>
-                    <a href="https://paypal.me/mon50cc" target="_blank" class="btn-insurance" style="background:#0070ba; color:white; text-decoration:none;">Ã°Å¸’â„¢ Faire un don libre (PayPal)</a>
+                    <a href="https://www.buymeacoffee.com/mon50cc" target="_blank" class="btn-insurance" style="background:#ffdd00; color:black; text-decoration:none;">âËœ• Offrir un café (Badge Mécène ðŸ’–)</a>
+                    <a href="https://paypal.me/mon50cc" target="_blank" class="btn-insurance" style="background:#0070ba; color:white; text-decoration:none;">ðŸ’™ Faire un don libre (PayPal)</a>
                 </div>
                 
-                <p style="font-size:0.7rem; color:#666; margin-top:15px;">Ã°Å¸Å½ Chaque don débloque le badge exclusif **"Mécène"** sur votre profil et sur la carte communautaire !</p>
+                <p style="font-size:0.7rem; color:#666; margin-top:15px;">ðŸŽ Chaque don débloque le badge exclusif **"Mécène"** sur votre profil et sur la carte communautaire !</p>
             </div>
         `;
   } else if (page === "security") {
@@ -690,7 +690,7 @@ window.submitMecaV3 = function () {
   }, 2000);
 };
 
-// --- DÃƒâ€°TECTEUR DE CHUTE ---
+// --- DÃƒ‰TECTEUR DE CHUTE ---
 window.addEventListener("devicemotion", (e) => {
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
@@ -877,7 +877,7 @@ window.closeMood = function () {
 
 window.requestAccountDeletion = function () {
   const confirm1 = confirm(
-    "âš ï¸ ATTENTION : Voulez-vous vraiment supprimer définitivement votre compte et TOUTES vos données (garage, points, historique) ?",
+    "⚠ï¸ ATTENTION : Voulez-vous vraiment supprimer définitivement votre compte et TOUTES vos données (garage, points, historique) ?",
   );
   if (confirm1) {
     const confirm2 = prompt(
@@ -913,7 +913,7 @@ window.logout = function () {
 window.updateTicker = function () {
   const t = document.getElementById("ticker-text");
   if (t)
-    t.innerHTML = `Bienvenue sur mon50ccetmoi v100.00-GOLD SILVER EDITION ! Prudence sur la route. ðŸ›µðŸ’¨`;
+    t.innerHTML = `Bienvenue sur mon50ccetmoi v100.00-GOLD SILVER EDITION ! Prudence sur la route. 🛵💨`;
 };
 updateTicker();
 setInterval(updateTicker, 60000);

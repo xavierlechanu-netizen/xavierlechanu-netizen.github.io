@@ -58,10 +58,16 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 this.history.shift();
             }
 
+            let token = "";
+            if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+                token = await firebase.auth().currentUser.getIdToken();
+            }
+
             const response = await fetch(this.endpoint, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : ""
                 },
                 body: JSON.stringify({
                     history: this.history,
@@ -1450,9 +1456,9 @@ window.CortegeSystem = {
                 
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
                     <button onclick="window.CortegeSystem.sendSignal('⛽', 'Besoin d\\'essence')" style="background:#111; color:#fff; border:1px solid #ffaa00; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-gas-pump" style="color:#ffaa00;"></i> Essence</button>
-                    <button onclick="window.CortegeSystem.sendSignal('ðŸ“¸', 'Pause demandée')" style="background:#111; color:#fff; border:1px solid #00d2ff; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-camera" style="color:#00d2ff;"></i> Pause</button>
-                    <button onclick="window.CortegeSystem.sendSignal('ðŸ”§', 'Problème technique')" style="background:#111; color:#fff; border:1px solid #ff0055; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-wrench" style="color:#ff0055;"></i> Meca</button>
-                    <button onclick="window.CortegeSystem.sendSignal('ðŸ‘®', 'Danger signalé')" style="background:#111; color:#fff; border:1px solid #ffeb3b; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-triangle-exclamation" style="color:#ffeb3b;"></i> Danger</button>
+                    <button onclick="window.CortegeSystem.sendSignal('📸', 'Pause demandée')" style="background:#111; color:#fff; border:1px solid #00d2ff; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-camera" style="color:#00d2ff;"></i> Pause</button>
+                    <button onclick="window.CortegeSystem.sendSignal('🔧', 'Problème technique')" style="background:#111; color:#fff; border:1px solid #ff0055; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-wrench" style="color:#ff0055;"></i> Meca</button>
+                    <button onclick="window.CortegeSystem.sendSignal('👮', 'Danger signalé')" style="background:#111; color:#fff; border:1px solid #ffeb3b; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-triangle-exclamation" style="color:#ffeb3b;"></i> Danger</button>
                 </div>
                 
                 <button onclick="document.getElementById('cortege-signals-modal').style.display='none'" style="width:100%; background:transparent; border:1px solid #aaa; color:#fff; padding:10px; border-radius:20px; cursor:pointer; font-family:'Outfit', sans-serif;">Fermer</button>
@@ -2085,9 +2091,9 @@ window.SosSystem = {
                 <p style="margin-bottom:20px;">Prévenez les pilotes autour de vous pour obtenir de l'aide.</p>
                 <select id="sos-type" style="width:100%; padding:15px; margin-bottom:20px; background:#222; color:white; border:1px solid #ff0000; border-radius:10px; font-size:1.1rem;">
                     <option value="Panne d'essence">⛽ Panne d'essence</option>
-                    <option value="Crevaison">ðŸ›ž Crevaison</option>
-                    <option value="Casse Mécanique">ðŸ”§ Casse Mécanique (Courroie, Serrage...)</option>
-                    <option value="Accident léger">ðŸš‘ Accident léger</option>
+                    <option value="Crevaison">🛞 Crevaison</option>
+                    <option value="Casse Mécanique">🔧 Casse Mécanique (Courroie, Serrage...)</option>
+                    <option value="Accident léger">🚑 Accident léger</option>
                 </select>
                 <button onclick="window.SosSystem.triggerAlert()" style="width:100%; background:#ff0000; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.2rem; cursor:pointer; margin-bottom:10px;">LANCER L'ALERTE</button>
                 <button onclick="document.getElementById('sos-modal').style.display='none'" style="width:100%; background:transparent; color:#aaa; border:1px solid #aaa; padding:10px; border-radius:10px; cursor:pointer;">Annuler</button>
@@ -2190,7 +2196,7 @@ window.SosSystem = {
               const toast = document.createElement("div");
               toast.style.cssText =
                 "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,210,255,0.9);color:#000;padding:15px 25px;border-radius:25px;z-index:99999;font-weight:bold;font-family:'Outfit', sans-serif;box-shadow:0 0 20px rgba(0,210,255,0.5);font-size:1.1rem;opacity:0;transition:opacity 0.3s;display:flex;align-items:center;gap:10px;";
-              toast.innerHTML = `<span style="font-size:1.5rem;">ðŸ¦¸â€ â™‚ï¸ </span> <span><b>${escapeHTML(helper.name)}</b> arrive pour vous aider !</span>`;
+              toast.innerHTML = `<span style="font-size:1.5rem;">🦸â€ ♂ï¸ </span> <span><b>${escapeHTML(helper.name)}</b> arrive pour vous aider !</span>`;
               document.body.appendChild(toast);
 
               setTimeout(() => {
@@ -2421,7 +2427,7 @@ window.PitStopSystem = {
 
     const info = new google.maps.InfoWindow({
       content: `<div style="color:black; font-family:'Outfit';">
-                        <h3 style="margin:0;">${isGas ? "⛽" : "ðŸ”§"} ${data.name}</h3>
+                        <h3 style="margin:0;">${isGas ? "⛽" : "🔧"} ${data.name}</h3>
                         <p style="margin:5px 0;">${data.desc || ""}</p>
                         <small>Ajouté par: ${data.author}</small><br>
                         <button onclick="window.calculateRoute(new google.maps.LatLng(${data.lat}, ${data.lng}))" style="margin-top:5px; background:#111; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer;">Y aller</button>
@@ -2455,7 +2461,7 @@ window.PitStopSystem = {
                 
                 <select id="pitstop-type" style="width:100%; padding:10px; margin-bottom:10px; background:#222; color:white; border:1px solid #333; border-radius:5px;">
                     <option value="gas">⛽ Station Service (Friendly 50cc)</option>
-                    <option value="garage">ðŸ”§ Garage 2-Roues de confiance</option>
+                    <option value="garage">🔧 Garage 2-Roues de confiance</option>
                 </select>
                 
                 <input type="text" id="pitstop-name" placeholder="Nom du lieu (ex: Total Access)" style="width:100%; padding:10px; margin-bottom:10px; background:#222; color:white; border:1px solid #333; border-radius:5px;">
@@ -2731,7 +2737,7 @@ window.PrivacyManager = {
   deleteMyData: async function () {
     if (
       !confirm(
-        "âš ï¸ ATTENTION âš ï¸\nCette action est irréversible. Votre compte, vos points BVC, vos territoires et vos traces seront définitivement supprimés.\n\nÊtes-vous absolument sûr(e) de vouloir tout supprimer ?",
+        "⚠ï¸ ATTENTION ⚠ï¸\nCette action est irréversible. Votre compte, vos points BVC, vos territoires et vos traces seront définitivement supprimés.\n\nÊtes-vous absolument sûr(e) de vouloir tout supprimer ?",
       )
     ) {
       return;
@@ -4349,7 +4355,7 @@ window.startApp = function () {
     window.ExchangeMarket.init();
   }
 
-  // â”€â”€ Initialisation des Cartes Hors Ligne â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Initialisation des Cartes Hors Ligne ──────────────────────
   if (window.OfflineMapManager) {
     try {
       window.OfflineMapManager.init();
@@ -4373,7 +4379,7 @@ window.startApp = function () {
       console.warn("mon50cc OfflineMap : Erreur init", e);
     }
   }
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────────
 
   // Check Parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -4400,7 +4406,7 @@ window.startApp = function () {
   checkLegalConsent();
 };
 
-// â”€â”€ Panneau Cartes Hors Ligne : ouverture / fermeture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Panneau Cartes Hors Ligne : ouverture / fermeture ────────────
 window.toggleOfflinePanel = function () {
   const panel = document.getElementById("offline-panel");
   if (!panel) return;
@@ -4420,8 +4426,8 @@ window.toggleOfflinePanel = function () {
                 color: ${online ? "#00ff88" : "#ff4d6d"};
             `;
       statusEl.innerHTML = `
-                <span style="font-size:1rem; margin-right:8px;">${online ? "ðŸŸ¢" : "ðŸ”´"}</span>
-                ${online ? "CONNECTÉ â€” Google Maps actif" : "HORS LIGNE â€” Carte locale active"}
+                <span style="font-size:1rem; margin-right:8px;">${online ? "🟢" : "🔴"}</span>
+                ${online ? "CONNECTÉ — Google Maps actif" : "HORS LIGNE — Carte locale active"}
             `;
     }
 
@@ -4476,7 +4482,7 @@ window.toggleTilt = function () {
   map.setTilt(currentTilt === 45 ? 0 : 45);
 };
 
-// â”€â”€â”€ Wake Lock résilient (se réactive automatiquement en cas de perte) â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Wake Lock résilient (se réactive automatiquement en cas de perte) ────────
 let wakeLockRef = null;
 async function requestWakeLock() {
   if (!("wakeLock" in navigator)) return;
@@ -4497,16 +4503,17 @@ async function requestWakeLock() {
 
 // Réacquérir le Wake Lock quand l'app revient au premier plan
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && !wakeLockRef) {
-    requestWakeLock();
-    // Relancer le GPS si on a perdu la position pendant le sleep (SEULEMENT si consentement donné)
-    if (!currentPosition && gpsWatchId === null && hasLocationConsent()) {
-      startGeolocation();
+  if (document.visibilityState === "visible") {
+    if (!wakeLockRef) requestWakeLock();
+    // Relancer le GPS de force car iOS/Android tuent souvent le watcher en arrière-plan
+    if (hasLocationConsent()) {
+      console.log("mon50cc GPS : App resume, relance du GPS pour forcer le fix.");
+      window.retryGps();
     }
   }
 });
 
-// â”€â”€ Garde de consentement : vérifie si l'utilisateur a accepté la divulgation â”€â”€
+// ── Garde de consentement : vérifie si l'utilisateur a accepté la divulgation ──
 function hasLocationConsent() {
   return localStorage.getItem("location_consent_accepted") === "true";
 }
@@ -4528,7 +4535,7 @@ async function checkLegalConsent() {
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // DIVULGATION BIEN VISIBLE (Prominent Disclosure) â€” Google Play
+  // DIVULGATION BIEN VISIBLE (Prominent Disclosure) — Google Play
   // Conforme à la politique relative aux données de l'utilisateur.
   // Affiché AVANT toute collecte de données de localisation.
   // ══════════════════════════════════════════════════════════════════
@@ -4590,7 +4597,7 @@ async function checkLegalConsent() {
             text-align:center; font-size:0.85rem; z-index:19999; line-height:1.4;
         `;
     banner.innerHTML = `
-            <strong>âš ï¸ Localisation requise</strong><br>
+            <strong>⚠ï¸ Localisation requise</strong><br>
             L'application ne peut pas fonctionner sans accès à votre position.
             <br><button onclick="checkLegalConsent()" style="margin-top:8px; padding:8px 24px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; cursor:pointer;">Réessayer</button>
         `;
@@ -4668,7 +4675,7 @@ function showGpsBanner(msg, code) {
     document.body.appendChild(banner);
   }
 
-  const repairBtn = `<button onclick="window.retryGps()" style="margin-top:10px; padding:8px 20px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; font-size:0.85rem; cursor:pointer;">ðŸ”„ Réessayer</button>`;
+  const repairBtn = `<button onclick="window.retryGps()" style="margin-top:10px; padding:8px 20px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; font-size:0.85rem; cursor:pointer;">🔄 Réessayer</button>`;
 
   banner.innerHTML = `<div style="font-weight:bold; margin-bottom:4px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i>GPS : ${msg}</div><div style="font-size:0.72rem; color:#fca5a5;">(Code erreur: ${code})</div>${repairBtn}`;
   banner.style.display = "block";
@@ -4690,13 +4697,13 @@ window.repairGps = function () {
   const appUrl = "mon50ccetmoi.com";
   const instructions = `
         <div style="text-align:left; font-size:0.9rem; line-height:1.5;">
-            <b style="color:#ffb703;">ðŸ“± Sur Android Chrome :</b><br>
-            1. Appuie sur les 3 points â‹® en haut à droite<br>
+            <b style="color:#ffb703;">📱 Sur Android Chrome :</b><br>
+            1. Appuie sur les 3 points ⋮ en haut à droite<br>
             2. Paramètres ←’ Paramètres du site<br>
             3. Localisation ←’ Cherche '${appUrl}'<br>
             4. Passe de 'Bloquer' à 'Autoriser'<br>
             5. Recharge l'application<br><br>
-            <b style="color:#ffb703;">ðŸ“± Dans l'app Android :</b><br>
+            <b style="color:#ffb703;">📱 Dans l'app Android :</b><br>
             1. Appui long sur l'icône de l'app<br>
             2. Infos sur l'appli ←’ Autorisations<br>
             3. Position ←’ Autoriser (ou Toujours autoriser)
@@ -4756,7 +4763,7 @@ async function startGeolocation() {
       "mon50cc GPS : Consentement de localisation non accordé. GPS bloqué.",
     );
     alert(
-      "âš ï¸ Accès GPS bloqué : Le consentement de géolocalisation est requis. Vous allez être redirigé vers l'accueil.",
+      "⚠ï¸ Accès GPS bloqué : Le consentement de géolocalisation est requis. Vous allez être redirigé vers l'accueil.",
     );
     window.location.href = "index.html";
     return;
@@ -4803,7 +4810,7 @@ async function startGeolocation() {
   // On utilise uniquement watchPosition car iOS gère très mal les appels concurrents (getCurrentPosition + watchPosition)
   const geoOptions = {
     enableHighAccuracy: true,
-    timeout: 30000, // 30s â€” laisse le temps aux satellites en intérieur
+    timeout: 30000, // 30s — laisse le temps aux satellites en intérieur
     maximumAge: 3000, // 3s de cache max pour les updates fréquents
   };
 
@@ -4838,14 +4845,14 @@ async function startGeolocation() {
 
   gpsWatchId = navigator.geolocation.watchPosition(
     (pos) => {
-      // Filtrage qualité : accepter la première position à tout prix, puis filtrer à < 500m
+      // Filtrage qualité : accepter les positions même > 500m si c'est tout ce qu'on a,
+      // pour éviter que l'utilisateur reste bloqué sur la carte.
       const acc = pos.coords.accuracy || 0;
-      if (currentPosition && acc > 500) {
-        console.warn(
-          `mon50cc GPS : Position ignorée (précision: ${acc.toFixed(0)}m > 500m)`,
-        );
+      if (currentPosition && window.lastAccuracy && acc > 2000 && acc > window.lastAccuracy * 2) {
+        console.warn(`mon50cc GPS : Position ignorée (précision très dégradée: ${acc.toFixed(0)}m)`);
         return;
       }
+      window.lastAccuracy = acc;
       updatePosition(pos);
       hideGpsBanner();
       gpsRetryCount = 0; // Reset du compteur de retry
@@ -4854,7 +4861,7 @@ async function startGeolocation() {
     geoOptions,
   );
 
-  // ÉTAPE 4 : Timer de sécurité â€” si aucune position après 15s, forcer le fallback
+  // ÉTAPE 4 : Timer de sécurité — si aucune position après 15s, forcer le fallback
   setTimeout(() => {
     if (!currentPosition && fallbackWatchId === null) {
       console.warn(
@@ -4865,7 +4872,7 @@ async function startGeolocation() {
   }, 15000);
 }
 
-// Fallback basse précision (WiFi/Cellulaire) â€” déclenché automatiquement
+// Fallback basse précision (WiFi/Cellulaire) — déclenché automatiquement
 function activateLowAccuracyFallback() {
   if (fallbackWatchId !== null) return; // Déjà actif
   if (gpsRetryCount >= GPS_MAX_RETRIES) {
@@ -4936,7 +4943,14 @@ class NeuralPredictionEngine {
 window.NeuralEngine = new NeuralPredictionEngine();
 
 let speedHistory = [];
-function getSmoothedSpeed(rawSpeed) {
+function getSmoothedSpeed(rawSpeed, speedIsNull) {
+  // Si la vitesse est null (ex: fix WiFi), on ne l'ajoute pas à l'historique 
+  // pour ne pas fausser la moyenne avec des "0" intempestifs.
+  if (speedIsNull && speedHistory.length > 0) {
+    // Retourne la dernière moyenne connue
+    return speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+  }
+  
   speedHistory.push(rawSpeed);
   if (speedHistory.length > 5) speedHistory.shift();
   const sum = speedHistory.reduce((a, b) => a + b, 0);
@@ -4944,10 +4958,10 @@ function getSmoothedSpeed(rawSpeed) {
 }
 
 function updatePosition(position) {
-  // Arrêt du fallback basse précision si on récupère un signal GPS haute précision décent (< 30m)
+  // Arrêt du fallback basse précision si on récupère un signal GPS décent (< 100m)
   if (
     position.coords.accuracy !== null &&
-    position.coords.accuracy < 30 &&
+    position.coords.accuracy < 100 &&
     fallbackWatchId !== null
   ) {
     navigator.geolocation.clearWatch(fallbackWatchId);
@@ -5026,15 +5040,16 @@ function updatePosition(position) {
         if (el)
           el.onclick = () =>
             alert(
-              "Veuillez créer un compte pour accéder à l'Arbitre de la Route ! ⚖️ðŸ›µ",
+              "Veuillez créer un compte pour accéder à l'Arbitre de la Route ! ⚖️🛵",
             );
       },
     );
   }
 
   // Vitesse (HUD) avec Smoothing Neural
-  const rawSpeed = speed !== null && speed >= 0 ? speed * 3.6 : 0;
-  const speedKmh = Math.round(getSmoothedSpeed(rawSpeed));
+  const speedIsNull = speed === null;
+  const rawSpeed = !speedIsNull && speed >= 0 ? speed * 3.6 : 0;
+  const speedKmh = Math.round(getSmoothedSpeed(rawSpeed, speedIsNull));
   const speedEl = document.getElementById("speed");
   const speedBar = document.getElementById("speed-bar");
 
@@ -5504,41 +5519,41 @@ window.OracleEngine = {
     },
     zh: {
       standard: {
-        start: "ç³»ç»Ÿå°±ç»ªã€‚è¿žæŽ¥å·²å»ºç«‹ã€‚",
-        speed: "è­¦å‘Šï¼šé€Ÿåº¦è¿‡å¿«ã€‚è¯·ç«‹å³å‡é€Ÿã€‚",
-        threat_detected: "åˆ†æžï¼šå‘çŽ°å¨èƒã€‚å»ºè®®è°¨æ…Žã€‚",
-        level_up: "æ­å–œè½¦æ‰‹ã€‚æ‚¨çš„ç»éªŒå€¼å·²æå‡ã€‚",
-        start_guardian: "å®ˆæŠ¤å¤©ä½¿å·²å¼€å¯ã€‚æ­£åœ¨ç›‘æŽ§ã€‚",
-        stop_guardian: "å®ˆæŠ¤å¤©ä½¿å·²å…³é—­ã€‚ç›‘æŽ§ç»“æŸã€‚",
-        danger_overtake: "è­¦å‘Šï¼šæ£€æµ‹åˆ°å±é™©è¶…è½¦ã€‚",
+        start: "系统就绪。连接已建立。",
+        speed: "警告：速度过快。请立å³å‡速。",
+        threat_detected: "分æž：å‘现å¨èƒ。建议谨慎。",
+        level_up: "æ­喜车手。您的ç»验值已æå‡。",
+        start_guardian: "守护天使已开å¯。正在监控。",
+        stop_guardian: "守护天使已关闭。监控结æŸ。",
+        danger_overtake: "警告：检测到å±险超车。",
       },
     },
     ja: {
       standard: {
-        start: "ã‚·ã‚¹ãƒ†ãƒ æº–å‚™å®Œäº†ã€‚æŽ¥ç¶šãŒç¢ºç«‹ã•ã‚Œã¾ã—ãŸã€‚",
-        speed: "è­¦å‘Šï¼šé€Ÿåº¦è¶…éŽã§ã™ã€‚ç›´ã¡ã«æ¸›é€Ÿã—ã¦ãã ã•ã„ã€‚",
-        threat_detected: "åˆ†æžï¼šè„…å¨ã‚’æ¤œçŸ¥ã€‚æ³¨æ„ã—ã¦ãã ã•ã„ã€‚",
-        level_up: "ãŠã‚ã§ã¨ã†ã”ã–ã„ã¾ã™ã€‚ãƒ¬ãƒ™ãƒ«ãŒä¸ŠãŒã‚Šã¾ã—ãŸã€‚",
-        start_guardian: "å®ˆè­·å¤©ä½¿ãŒèµ·å‹•ã—ã¾ã—ãŸã€‚ç›£è¦–ä¸­ã€‚",
-        stop_guardian: "å®ˆè­·å¤©ä½¿ãŒè§£é™¤ã•ã‚Œã¾ã—ãŸã€‚ç›£è¦–çµ‚äº†ã€‚",
-        danger_overtake: "è­¦å‘Šï¼šå±é™ºãªè¿½ã„è¶Šã—ã‚’æ¤œçŸ¥ã—ã¾ã—ãŸã€‚",
+        start: "システム準備完了。接続ãŒ確立ã•れã¾ã—ãŸ。",
+        speed: "警告：速度超éŽã§ã™。直ã¡ã«減速ã—ã¦ãã ã•ã„。",
+        threat_detected: "分æž：脅å¨を検知。注æ„ã—ã¦ãã ã•ã„。",
+        level_up: "ãŠã‚ã§ã¨ã†ã”ã–ã„ã¾ã™。レベルãŒ上ãŒりã¾ã—ãŸ。",
+        start_guardian: "守護天使ãŒ起動ã—ã¾ã—ãŸ。監視中。",
+        stop_guardian: "守護天使ãŒ解除ã•れã¾ã—ãŸ。監視終了。",
+        danger_overtake: "警告：å±険ãª追ã„越ã—を検知ã—ã¾ã—ãŸ。",
       },
     },
     es: {
       andalucia: {
-        start: "¡Ole! El OrÃ¡culo estÃ¡ listo, mi arma. ¡VÃ¡monos!",
-        speed: "¡Eh, chiquillo! Vas mu' rÃ¡pido, frena un poco.",
-        threat_detected: "Cuidao, que hay un jaleo ahÃ­ delante.",
+        start: "¡Ole! El Oráculo está listo, mi arma. ¡Vámonos!",
+        speed: "¡Eh, chiquillo! Vas mu' rápido, frena un poco.",
+        threat_detected: "Cuidao, que hay un jaleo ahí delante.",
         level_up: "¡Qué arte tienes! Has subido de nivel.",
-        start_guardian: "El Ãngel de la Guarda estÃ¡ contigo, mi arma.",
+        start_guardian: "El Ãngel de la Guarda está contigo, mi arma.",
         stop_guardian: "El Ãngel se va a echar una siestecita, ten cuidao.",
         danger_overtake:
-          "¡Chiquillo! Ese adelantamiento ha sÃ­o mu' peligroso.",
+          "¡Chiquillo! Ese adelantamiento ha sío mu' peligroso.",
       },
       standard: {
-        start: "Sistemas listos. ConexiÃ³n establecida.",
+        start: "Sistemas listos. Conexión establecida.",
         speed: "Alerta: Exceso de velocidad. Reduzca inmediatamente.",
-        threat_detected: "ANÃLISIS: Amenaza identificada. Tenga precauciÃ³n.",
+        threat_detected: "ANÃLISIS: Amenaza identificada. Tenga precaución.",
         level_up: "Felicidades Piloto. Su experiencia ha aumentado.",
         start_guardian: "Ãngel de la Guarda activado. Vigilancia en curso.",
         stop_guardian: "Ãngel de la Guarda desactivado. Fin de la vigilancia.",
@@ -5583,12 +5598,12 @@ window.OracleEngine = {
     },
     pt: {
       standard: {
-        start: "Sistema pronto. ConexÃ£o estabelecida.",
+        start: "Sistema pronto. Conexão estabelecida.",
         speed: "Alerta: Velocidade excessiva. Reduza imediatamente.",
         threat_detected: "ANÃLISE: Ameaça identificada. Cuidado aconselhado.",
         level_up: "Parabéns Piloto. A sua experiência aumentou.",
-        start_guardian: "Anjo da Guarda ativado. MonitorizaçÃ£o em curso.",
-        stop_guardian: "Anjo da Guarda desativado. Fim da monitorizaçÃ£o.",
+        start_guardian: "Anjo da Guarda ativado. Monitorização em curso.",
+        stop_guardian: "Anjo da Guarda desativado. Fim da monitorização.",
         danger_overtake: "AVISO: ULTRAPASSAGEM PERIGOSA DETETADA.",
       },
     },
@@ -5610,11 +5625,11 @@ window.OracleEngine = {
         start: "System gotowy. PoÅ‚Ä…czenie nawiÄ…zane.",
         speed: "Alert: Nadmierna prÄ™dkoÅ›Ä‡. ProszÄ™ natychmiast zwolniÄ‡.",
         threat_detected:
-          "ANALIZA: Zidentyfikowano zagroÅ¼enie. Zalecana ostroÅ¼noÅ›Ä‡.",
+          "ANALIZA: Zidentyfikowano zagrożenie. Zalecana ostrożnoÅ›Ä‡.",
         level_up: "Gratulacje Pilocie. Twoje doÅ›wiadczenie wzrosÅ‚o.",
-        start_guardian: "AnioÅ‚ StrÃ³Å¼ aktywowany. Monitorowanie w toku.",
-        stop_guardian: "AnioÅ‚ StrÃ³Å¼ dezaktywowany. Koniec monitorowania.",
-        danger_overtake: "OSTRZEÅ»ENIE: WYKRYTO NIEBEZPIECZNE WYPRZEDZANIE.",
+        start_guardian: "AnioÅ‚ Stróż aktywowany. Monitorowanie w toku.",
+        stop_guardian: "AnioÅ‚ Stróż dezaktywowany. Koniec monitorowania.",
+        danger_overtake: "OSTRZEŻENIE: WYKRYTO NIEBEZPIECZNE WYPRZEDZANIE.",
       },
     },
     sv: {
@@ -5666,42 +5681,42 @@ window.OracleEngine = {
     el: {
       standard: {
         start:
-          "Î£ÏÏƒÏ„Î·Î¼Î± Î­Ï„Î¿Î¹Î¼Î¿. Î— ÏƒÏÎ½Î´ÎµÏƒÎ· Î¿Î»Î¿ÎºÎ»Î·ÏÏŽÎ¸Î·ÎºÎµ.",
+          "ΣÏÏƒÏ„ημα έÏ„οιμο. Î— ÏƒÏνδεÏƒη ολοκληÏÏŽθηκε.",
         speed:
-          "Î•Î¹Î´Î¿Ï€Î¿Î¯Î·ÏƒÎ·: Î¥Ï€ÎµÏÎ²Î¿Î»Î¹ÎºÎ® Ï„Î±Ï‡ÏÏ„Î·Ï„Î±. Î•Ï€Î¹Î²ÏÎ±Î´ÏÎ½ÎµÏ„Îµ Î±Î¼Î­ÏƒÏ‰Ï‚.",
+          "Î•ιδοÏ€οίηÏƒη: ΥÏ€εÏβολική Ï„αÏ‡ÏÏ„ηÏ„α. Î•Ï€ιβÏαδÏνεÏ„ε αμέÏƒÏ‰Ï‚.",
         threat_detected:
-          "Î‘ÎÎ‘Î›Î¥Î£Î—: Î•Î½Ï„Î¿Ï€Î¯ÏƒÏ„Î·ÎºÎµ Î±Ï€ÎµÎ¹Î»Î®. Î£Ï…Î½Î¹ÏƒÏ„Î¬Ï„Î±Î¹ Ï€ÏÎ¿ÏƒÎ¿Ï‡Î®.",
+          "Î‘ÎÎ‘Î›ΥΣÎ—: Î•νÏ„οÏ€ίÏƒÏ„ηκε αÏ€ειλή. ΣÏ…νιÏƒÏ„άÏ„αι Ï€ÏοÏƒοÏ‡ή.",
         level_up:
-          "Î£Ï…Î³Ï‡Î±ÏÎ·Ï„Î®ÏÎ¹Î± Î Î¹Î»ÏŒÏ„Îµ. Î— ÎµÎ¼Ï€ÎµÎ¹ÏÎ¯Î± ÏƒÎ±Ï‚ Î±Ï…Î¾Î®Î¸Î·ÎºÎµ.",
+          "ΣÏ…γÏ‡αÏηÏ„ήÏια ΠιλÏŒÏ„ε. Î— εμÏ€ειÏία ÏƒαÏ‚ αÏ…ξήθηκε.",
         start_guardian:
-          "Î¦ÏÎ»Î±ÎºÎ±Ï‚ Î†Î³Î³ÎµÎ»Î¿Ï‚ ÎµÎ½ÎµÏÎ³Î¿Ï€Î¿Î¹Î®Î¸Î·ÎºÎµ. Î Î±ÏÎ±ÎºÎ¿Î»Î¿ÏÎ¸Î·ÏƒÎ· ÏƒÎµ ÎµÎ¾Î­Î»Î¹Î¾Î·.",
+          "ΦÏλακαÏ‚ Î†γγελοÏ‚ ενεÏγοÏ€οιήθηκε. ΠαÏακολοÏθηÏƒη Ïƒε εξέλιξη.",
         stop_guardian:
-          "Î¦ÏÎ»Î±ÎºÎ±Ï‚ Î†Î³Î³ÎµÎ»Î¿Ï‚ Î±Ï€ÎµÎ½ÎµÏÎ³Î¿Ï€Î¿Î¹Î®Î¸Î·ÎºÎµ. Î¤Î­Î»Î¿Ï‚ Ï€Î±ÏÎ±ÎºÎ¿Î»Î¿ÏÎ¸Î·ÏƒÎ·Ï‚.",
+          "ΦÏλακαÏ‚ Î†γγελοÏ‚ αÏ€ενεÏγοÏ€οιήθηκε. ΤέλοÏ‚ Ï€αÏακολοÏθηÏƒηÏ‚.",
         danger_overtake:
-          "Î Î¡ÎŸÎ£ÎŸÎ§Î—: Î•ÎÎ¤ÎŸÎ Î™Î£Î¤Î—ÎšÎ• Î•Î Î™ÎšÎ™ÎÎ”Î¥ÎÎ— Î Î¡ÎŸÎ£Î Î•Î¡Î‘Î£Î—.",
+          "ΠΡÎŸΣÎŸΧÎ—: Î•ÎΤÎŸΠÎ™ΣΤÎ—ÎšÎ• Î•ΠÎ™ÎšÎ™ÎÎ”ΥÎÎ— ΠΡÎŸΣΠÎ•ΡÎ‘ΣÎ—.",
       },
     },
     cs: {
       standard: {
-        start: "Systém pÅ™ipraven. PÅ™ipojenÃ­ navÃ¡zÃ¡no.",
-        speed: "UpozornÄ›nÃ­: NadmÄ›rnÃ¡ rychlost. OkamÅ¾itÄ› zpomalte.",
+        start: "Systém pÅ™ipraven. PÅ™ipojení navázáno.",
+        speed: "UpozornÄ›ní: NadmÄ›rná rychlost. OkamžitÄ› zpomalte.",
         threat_detected:
-          "ANALÃZA: IdentifikovÃ¡na hrozba. DoporuÄuje se opatrnost.",
-        level_up: "Gratulujeme Pilote. VaÅ¡e zkuÅ¡enosti se zvÃ½Å¡ily.",
-        start_guardian: "AndÄ›l strÃ¡Å¾nÃ½ aktivovÃ¡n. SledovÃ¡nÃ­ probÃ­hÃ¡.",
-        stop_guardian: "AndÄ›l strÃ¡Å¾nÃ½ deaktivovÃ¡n. Konec sledovÃ¡nÃ­.",
-        danger_overtake: "VAROVÃNÃ: ZJIÅ TÄšNO NEBEZPEÄŒNÉ PÅ˜EDBÃHÃNÃ.",
+          "ANALÃZA: Identifikována hrozba. DoporuÄuje se opatrnost.",
+        level_up: "Gratulujeme Pilote. Vaše zkušenosti se zvýšily.",
+        start_guardian: "AndÄ›l strážný aktivován. Sledování probíhá.",
+        stop_guardian: "AndÄ›l strážný deaktivován. Konec sledování.",
+        danger_overtake: "VAROVÃNÃ: ZJIŠTÄšNO NEBEZPEÄŒNÉ PÅ˜EDBÃHÃNÃ.",
       },
     },
     hu: {
       standard: {
         start: "Rendszer kész. Kapcsolat létrejött.",
-        speed: "RiasztÃ¡s: TÃºl nagy sebesség. Azonnal lassÃ­tson.",
+        speed: "Riasztás: Túl nagy sebesség. Azonnal lassítson.",
         threat_detected:
-          "ELEMZÉS: Fenyegetés azonosÃ­tva. Ã“vatossÃ¡g ajÃ¡nlott.",
-        level_up: "GratulÃ¡lunk PilÃ³ta. Tapasztalata nÅ‘tt.",
-        start_guardian: "Årangyal aktivÃ¡lva. Megfigyelés folyamatban.",
-        stop_guardian: "Årangyal deaktivÃ¡lva. Megfigyelés vége.",
+          "ELEMZÉS: Fenyegetés azonosítva. Ã“vatosság ajánlott.",
+        level_up: "Gratulálunk Pilóta. Tapasztalata nÅ‘tt.",
+        start_guardian: "Årangyal aktiválva. Megfigyelés folyamatban.",
+        stop_guardian: "Årangyal deaktiválva. Megfigyelés vége.",
         danger_overtake: "FIGYELEM: VESZÉLYES ELÅZÉS ÉSZLELVE.",
       },
     },
@@ -5828,10 +5843,10 @@ async function speak(phraseKey) {
   // Simulation d'accents régionaux (pitch/rate)
   if (region && region !== "standard" && voiceMode === "standard") {
     switch (region) {
-      // Système A â€” Régions administratives (Nominatim)
+      // Système A — Régions administratives (Nominatim)
       case "provence-alpes-côte d'azur":
       case "occitanie":
-      // Système B â€” Villes/zones (GPS)
+      // Système B — Villes/zones (GPS)
       case "marseille":
       case "reunion":
         rate = 0.85;
@@ -6023,17 +6038,32 @@ async function calculateRouteSansAutoroute(start, end) {
     travelMode: "DRIVING",
     avoidHighways: true,
     avoidTolls: true,
-    provideRouteAlternatives: window.isRodageActive,
+    provideRouteAlternatives: window.isRodageActive || window.avoidCityCenters,
   };
 
   directionsService.route(legacyRequest, (result, status) => {
     if (status === "OK") {
+      let routeIndex = 0;
+      if (window.avoidCityCenters && result.routes.length > 1) {
+          // On choisit la route la plus longue en distance (qui correspond souvent à un contournement)
+          let maxDist = -1;
+          for (let i = 0; i < result.routes.length; i++) {
+              if (result.routes[i].legs[0].distance.value > maxDist) {
+                  maxDist = result.routes[i].legs[0].distance.value;
+                  routeIndex = i;
+              }
+          }
+      }
+
       if (directionsRenderer) {
         directionsRenderer.setMap(map);
         directionsRenderer.setDirections(result);
+        if (window.avoidCityCenters && result.routes.length > 1) {
+            directionsRenderer.setRouteIndex(routeIndex);
+        }
       }
 
-      const leg = result.routes[0].legs[0];
+      const leg = result.routes[routeIndex].legs[0];
       const infoBar = document.getElementById("nav-info-bar");
       if (infoBar) {
         infoBar.style.setProperty("display", "flex", "important");
@@ -7438,12 +7468,12 @@ function checkFerryProximity(lat, lng) {
 
 window.addCategorizedMaint = function (category) {
   if (window.session && window.session.isGuest) {
-    alert("ðŸ”’ Le Carnet Certifié est réservé aux membres.");
+    alert("🔒 Le Carnet Certifié est réservé aux membres.");
     return;
   }
 
   const proCode = prompt(
-    `ðŸ”‘ VALIDATION PRO REQUISE\nPour certifier l'entretien "${category}", le garage doit entrer son code partenaire :`,
+    `🔑 VALIDATION PRO REQUISE\nPour certifier l'entretien "${category}", le garage doit entrer son code partenaire :`,
   );
 
   // Simulation de validation (En prod, on vérifie contre la base des garages certifiés)
@@ -7486,7 +7516,7 @@ window.addCategorizedMaint = function (category) {
 function getSOSActions() {
   const num = secureGetItem("emergency_contact");
   if (num) {
-    return `<a href="tel:${num}" style="display:block; margin-top:20px; padding:20px; background:#2ecc71; color:white; text-decoration:none; border-radius:50px; font-weight:bold; font-size:1.2rem;">APPELER URGENCE ðŸ“ž</a>`;
+    return `<a href="tel:${num}" style="display:block; margin-top:20px; padding:20px; background:#2ecc71; color:white; text-decoration:none; border-radius:50px; font-weight:bold; font-size:1.2rem;">APPELER URGENCE 📞</a>`;
   }
   return "";
 }
@@ -7580,7 +7610,7 @@ window.publishFlashOffer = function () {
   speak("Offre Flash publiée.");
   alert("Votre offre de promotion a été diffusée !");
   if (typeof publishMoodCloud === "function") {
-    publishMoodCloud({ label: "âš¡ PROMO", text: text });
+    publishMoodCloud({ label: "⚡ PROMO", text: text });
   }
 };
 
@@ -7797,7 +7827,7 @@ window.submitArbitre = function () {
 function generateRideCard() {
   if (window.session.isGuest) {
     alert(
-      "ðŸ”’ La Carte de Score est réservée aux membres. Inscrivez-vous pour partager vos exploits !",
+      "🔒 La Carte de Score est réservée aux membres. Inscrivez-vous pour partager vos exploits !",
     );
     return;
   }
@@ -8315,7 +8345,7 @@ window.showPage = function (page) {
                 </div>
             </div>
             <button onclick="generateRideCard()" class="btn-insurance" style="width:100%; margin-top:20px; background:linear-gradient(45deg, #ffb703, #ff4d4d); color:black;">
-                <i class="fa-solid fa-share-nodes"></i> GÃƒâ€°NÃƒâ€°RER MA CARTE RIDE (VIRAL)
+                <i class="fa-solid fa-share-nodes"></i> GÃƒ‰NÃƒ‰RER MA CARTE RIDE (VIRAL)
             </button>`;
   } else if (page === "seasons") {
     if (typeof content !== "undefined")
@@ -8399,7 +8429,7 @@ window.showPage = function (page) {
             <div id="dynamic-garage-list"></div>
 
             <div class="card" style="border: 1px solid var(--neon-blue); background: rgba(0, 210, 255, 0.05);">
-                <h4 style="color:var(--neon-blue); margin-bottom:10px;"><i class="fa-solid fa-chart-line"></i> TÃƒâ€°LÃƒâ€°MÃƒâ€°TRIE DE RIDE</h4>
+                <h4 style="color:var(--neon-blue); margin-bottom:10px;"><i class="fa-solid fa-chart-line"></i> TÃƒ‰LÃƒ‰MÃƒ‰TRIE DE RIDE</h4>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; text-align:center;">
                     <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:10px;">
                         <small>ANGLE MAX</small><br>
@@ -8410,7 +8440,7 @@ window.showPage = function (page) {
                         <strong style="font-size:1.2rem; color:var(--danger);">${window.session?.vMax || 0} km/h</strong>
                     </div>
                 </div>
-                <button onclick="resetTelemetry()" style="width:100%; height:25px; margin-top:10px; background:transparent; border:1px solid #444; color:#666; font-size:0.6rem; border-radius:15px;">RÃƒâ€°INITIALISER LES STATS</button>
+                <button onclick="resetTelemetry()" style="width:100%; height:25px; margin-top:10px; background:transparent; border:1px solid #444; color:#666; font-size:0.6rem; border-radius:15px;">RÃƒ‰INITIALISER LES STATS</button>
             </div>
 
             <h4 style="margin-top:20px; font-size:0.9rem; color:#aaa; display:flex; justify-content:space-between;">
@@ -8439,7 +8469,7 @@ window.showPage = function (page) {
                         <span style="color:#666; font-size:0.7rem;">${h.date}</span>
                     </div>
                     <div style="font-size:0.75rem; margin-top:3px; color:#ccc;">${h.action}</div>
-                    ${h.certified ? `<div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;"><i class="fa-solid fa-certificate"></i> CERTIFIÃƒâ€° PAR : ${h.garage}</div>` : ""}
+                    ${h.certified ? `<div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;"><i class="fa-solid fa-certificate"></i> CERTIFIÃƒ‰ PAR : ${h.garage}</div>` : ""}
                 </div>`,
                         )
                         .join("")
@@ -8470,7 +8500,7 @@ window.showPage = function (page) {
             <div class="promo-box"><span>Votre code promo:</span><strong>CHEZBIGBOO</strong></div>
             <div class="broker-contact">
                 <strong>Robert - Courtier Partenaire</strong>
-                <a href="tel:0749555829">Ã°Å¸“Å¾ 07 49 55 58 29</a>
+                <a href="tel:0749555829">ðŸ“ž 07 49 55 58 29</a>
                 <span>Spécialiste du jeune conducteur 50cc</span>
             </div>
             <p>Bénéficiez de -15% sur votre assurance scooter en tant que membre.</p>
@@ -8493,7 +8523,7 @@ window.showPage = function (page) {
             <div id="meca-response" style="margin-top:20px; font-size:0.9rem; line-height:1.4;"></div>`;
   } else if (page === "arbitre") {
     if (window.session && window.session.isGuest) {
-      alert("Accès réservé aux membres inscrits ! Ã°Å¸â€ºµ");
+      alert("Accès réservé aux membres inscrits ! ðŸ›µ");
       return;
     }
     if (typeof content !== "undefined")
@@ -8587,7 +8617,7 @@ window.showPage = function (page) {
             </div>
             
             <button onclick="Certificate.generate()" class="btn-insurance" style="width:100%; margin-top:25px; background:linear-gradient(45deg, #2ecc71, #3498db); color:white;">
-                <i class="fa-solid fa-file-shield"></i> GÃƒâ€°NÃƒâ€°RER MON CERTIFICAT OFFICIEL
+                <i class="fa-solid fa-file-shield"></i> GÃƒ‰NÃƒ‰RER MON CERTIFICAT OFFICIEL
             </button>
             
             <p style="font-size:0.65rem; color:#666; text-align:center; margin-top:20px;">Note : Ce coffre-fort facilite les contrÃƒ´les mais ne remplace pas les documents originaux selon la législation en vigueur.</p>`;
@@ -8595,7 +8625,7 @@ window.showPage = function (page) {
     if (typeof content !== "undefined")
       content.innerHTML = `<h3><i class="fa-solid fa-oil-can"></i> Le Sorcier de la Méca</h3>
             <div class="glassmorphism" style="padding:20px; margin-bottom:20px;">
-                <h4 style="color:var(--accent);">CALCULATEUR DE MÃƒâ€°LANGE</h4>
+                <h4 style="color:var(--accent);">CALCULATEUR DE MÃƒ‰LANGE</h4>
                 <div style="margin-top:15px;">
                     <input type="number" id="mix-liters" placeholder="Litres d'essence" class="scooter-brand-select" style="width:100%; margin-bottom:10px;">
                     <input type="number" id="mix-percent" placeholder="% d'huile (ex: 2)" class="scooter-brand-select" style="width:100%; margin-bottom:10px;">
@@ -8648,7 +8678,7 @@ window.showPage = function (page) {
     if (typeof content !== "undefined")
       content.innerHTML = `<div class="card" style="border:1px solid #9b59b6;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 style="color:#9b59b6; margin:0;">Ã°Å¸â€  ${t("challenges_title")} : ${challenge.name}</h3>
+                <h3 style="color:#9b59b6; margin:0;">ðŸ† ${t("challenges_title")} : ${challenge.name}</h3>
                 <span style="font-size:0.7rem; background:#9b59b6; color:white; padding:2px 6px; border-radius:10px;">CYCLE LIVE</span>
             </div>
             <p style="font-size:0.8rem; margin-top:10px;">Objectif : ${challenge.goal} ${challenge.unit} par quinzaine.</p>
@@ -8661,7 +8691,7 @@ window.showPage = function (page) {
                 <div class="garage-bar-bg" style="height:12px;">
                     <div class="garage-bar-fill" style="width:${progress}%; background:#9b59b6;"></div>
                 </div>
-                <p style="font-size:0.8rem; color:#888; margin-top:10px; text-align:center;">Ã°Å¸Å½â€“ï¸ Vous avez réussi <strong>${wins}/150</strong> défis pour le Badge Pro</p>
+                <p style="font-size:0.8rem; color:#888; margin-top:10px; text-align:center;">ðŸŽ–ï¸ Vous avez réussi <strong>${wins}/150</strong> défis pour le Badge Pro</p>
             </div>
 
                           <button class="btn-insurance" style="margin-top:20px; width:100%; background:#9b59b6; color:white;" onclick="toggleMenu()">CONTINUER L''ASCENSION</button>
@@ -8714,7 +8744,7 @@ window.showPage = function (page) {
     if (typeof content !== "undefined")
       content.innerHTML = `<h3>Mentions Légales & Confidentialité</h3>
             <div style="font-size:0.8rem; line-height:1.4; color:#ccc;">
-                <p><strong>Ãƒâ€°diteur :</strong> mon50ccetmoi (Engineering Unit)</p>
+                <p><strong>Ãƒ‰diteur :</strong> mon50ccetmoi (Engineering Unit)</p>
                 <p><strong>Responsable :</strong> mon50ccetmoi Admin (US)</p>
                 <p><strong>Contact :</strong> via l'application</p>
                 <hr style="border:0; border-top:1px solid #444; margin:10px 0;">
@@ -8776,7 +8806,7 @@ window.showPage = function (page) {
                 <select id="garage-status-select" onchange="updateGarageStatus(this.value)" class="scooter-brand-select" style="width:100%; background:#111;">
                     <option value="dispo" selected>âÅ“… Prise en charge immédiate</option>
                     <option value="busy">â³ RDV nécessaire (>48h)</option>
-                    <option value="full">Ã°Å¸Å¡« Atelier Complet</option>
+                    <option value="full">ðŸš« Atelier Complet</option>
                 </select>
             </div>
 
@@ -8792,19 +8822,19 @@ window.showPage = function (page) {
             <div class="card" style="text-align:center; background:rgba(52, 152, 219, 0.05); border:1px solid #3498db;">
                 <i class="fa-solid fa-certificate" style="font-size:2rem; color:#f1c40f;"></i><br>
                 <h4 style="margin:10px 0; color:#fff;">Droit d'Entrée & Certification</h4>
-                <p style="font-size:0.7rem; color:#aaa; margin-bottom:10px;">Devenez <strong>Garage Certifié</strong> pour seulement <strong>50ââ€š¬ TTC</strong> (Paiement unique).</p>
+                <p style="font-size:0.7rem; color:#aaa; margin-bottom:10px;">Devenez <strong>Garage Certifié</strong> pour seulement <strong>50â‚¬ TTC</strong> (Paiement unique).</p>
                 <ul style="font-size:0.65rem; color:#ccc; list-style:none; padding:0; text-align:left; margin-bottom:15px;">
                     <li>âÅ“… Badge <strong>Certifié mon50ccetmoi</strong></li>
-                    <li>Ã°Å¸Å¡€ <strong>Boost de visibilité</strong> sur la carte</li>
-                    <li>Ã°Å¸â€º ï¸ Accès illimité aux fiches techniques</li>
-                    <li>Ã°Å¸‘" Priorité dans les résultats de recherche</li>
+                    <li>ðŸš€ <strong>Boost de visibilité</strong> sur la carte</li>
+                    <li>ðŸ› ï¸ Accès illimité aux fiches techniques</li>
+                    <li>ðŸ‘" Priorité dans les résultats de recherche</li>
                 </ul>
-                <button onclick="payGarageEntryFee()" class="btn-insurance" style="background:#f1c40f; color:black; font-weight:bold;">S'acquitter du droit d'entrée (50ââ€š¬)</button>
+                <button onclick="payGarageEntryFee()" class="btn-insurance" style="background:#f1c40f; color:black; font-weight:bold;">S'acquitter du droit d'entrée (50â‚¬)</button>
                 
                 <div style="margin-top:15px; padding-top:15px; border-top:1px solid #444;">
-                    <p style="font-size:0.7rem; color:#2ecc71;"><strong>Ã°Å¸Å½ OPTION "CROISSANCE" GRATUITE :</strong></p>
-                    <p style="font-size:0.6rem; color:#aaa;">Offrez <strong>-10% de réduction</strong> aux membres sur présentation de l'app et soyez <strong>exonéré</strong> des 50ââ€š¬ !</p>
-                    <button onclick="applyPartnerExemption()" class="btn-insurance fa-beat" style="background:transparent; border:1px solid #2ecc71; color:#2ecc71; margin-top:5px; font-size:0.8rem; font-weight:bold;">REJOINDRE LE RÃƒâ€°SEAU GRATUITEMENT (-10%)</button>
+                    <p style="font-size:0.7rem; color:#2ecc71;"><strong>ðŸŽ OPTION "CROISSANCE" GRATUITE :</strong></p>
+                    <p style="font-size:0.6rem; color:#aaa;">Offrez <strong>-10% de réduction</strong> aux membres sur présentation de l'app et soyez <strong>exonéré</strong> des 50â‚¬ !</p>
+                    <button onclick="applyPartnerExemption()" class="btn-insurance fa-beat" style="background:transparent; border:1px solid #2ecc71; color:#2ecc71; margin-top:5px; font-size:0.8rem; font-weight:bold;">REJOINDRE LE RÃƒ‰SEAU GRATUITEMENT (-10%)</button>
                 </div>
             </div>`
                 : `
@@ -8831,11 +8861,11 @@ window.showPage = function (page) {
                 <p style="font-size:0.8rem; color:#aaa; margin-top:10px;">L'application restera 100% gratuite, mais les dons aident Ãƒ  payer les serveurs (Google Maps API, Firebase) et Ãƒ  financer les futures mises Ãƒ  jour.</p>
                 
                 <div style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                    <a href="https://www.buymeacoffee.com/mon50cc" target="_blank" class="btn-insurance" style="background:#ffdd00; color:black; text-decoration:none;">âËœ• Offrir un café (Badge Mécène Ã°Å¸’â€“)</a>
-                    <a href="https://paypal.me/mon50cc" target="_blank" class="btn-insurance" style="background:#0070ba; color:white; text-decoration:none;">Ã°Å¸’â„¢ Faire un don libre (PayPal)</a>
+                    <a href="https://www.buymeacoffee.com/mon50cc" target="_blank" class="btn-insurance" style="background:#ffdd00; color:black; text-decoration:none;">âËœ• Offrir un café (Badge Mécène ðŸ’–)</a>
+                    <a href="https://paypal.me/mon50cc" target="_blank" class="btn-insurance" style="background:#0070ba; color:white; text-decoration:none;">ðŸ’™ Faire un don libre (PayPal)</a>
                 </div>
                 
-                <p style="font-size:0.7rem; color:#666; margin-top:15px;">Ã°Å¸Å½ Chaque don débloque le badge exclusif **"Mécène"** sur votre profil et sur la carte communautaire !</p>
+                <p style="font-size:0.7rem; color:#666; margin-top:15px;">ðŸŽ Chaque don débloque le badge exclusif **"Mécène"** sur votre profil et sur la carte communautaire !</p>
             </div>
         `;
   } else if (page === "security") {
@@ -8904,7 +8934,7 @@ window.submitMecaV3 = function () {
   }, 2000);
 };
 
-// --- DÃƒâ€°TECTEUR DE CHUTE ---
+// --- DÃƒ‰TECTEUR DE CHUTE ---
 window.addEventListener("devicemotion", (e) => {
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
@@ -9091,7 +9121,7 @@ window.closeMood = function () {
 
 window.requestAccountDeletion = function () {
   const confirm1 = confirm(
-    "âš ï¸ ATTENTION : Voulez-vous vraiment supprimer définitivement votre compte et TOUTES vos données (garage, points, historique) ?",
+    "⚠ï¸ ATTENTION : Voulez-vous vraiment supprimer définitivement votre compte et TOUTES vos données (garage, points, historique) ?",
   );
   if (confirm1) {
     const confirm2 = prompt(
@@ -9127,7 +9157,7 @@ window.logout = function () {
 window.updateTicker = function () {
   const t = document.getElementById("ticker-text");
   if (t)
-    t.innerHTML = `Bienvenue sur mon50ccetmoi v100.00-GOLD SILVER EDITION ! Prudence sur la route. ðŸ›µðŸ’¨`;
+    t.innerHTML = `Bienvenue sur mon50ccetmoi v100.00-GOLD SILVER EDITION ! Prudence sur la route. 🛵💨`;
 };
 updateTicker();
 setInterval(updateTicker, 60000);
@@ -9748,7 +9778,7 @@ window.JarvisEngine = {
     switch (result.action) {
       case "EMERGENCY_CALL":
         if (typeof window.triggerSOS === "function") window.triggerSOS();
-        else alert("âš ï¸ URGENCE : Appeler le 112");
+        else alert("⚠ï¸ URGENCE : Appeler le 112");
         break;
       case "COMPARE_GAS_PRICES":
         if (typeof window.CommunityGas === "object") {
@@ -10310,13 +10340,13 @@ window.Leaderboard = {
       let crownIcon = "";
       let color = "#fff";
       if (index === 0) {
-        crownIcon = "ðŸ‘‘";
+        crownIcon = "👑";
         color = "#ffd700";
       } else if (index === 1) {
-        crownIcon = "ðŸ¥ˆ";
+        crownIcon = "🥈";
         color = "#c0c0c0";
       } else if (index === 2) {
-        crownIcon = "ðŸ¥‰";
+        crownIcon = "🥉";
         color = "#cd7f32";
       }
 
@@ -10800,7 +10830,7 @@ window.closePrivacyPolicy = function () {
   if (modal) modal.classList.add("hidden");
 };
 
-// â”€â”€â”€ Droit à l'effacement (Droit à l'oubli / Protocol Zero) â”€â”€
+// ─── Droit à l'effacement (Droit à l'oubli / Protocol Zero) ──
 window.revokeAndEraseData = async function () {
   if (
     confirm(
@@ -10858,7 +10888,7 @@ window.revokeAndEraseData = async function () {
   }
 };
 
-// â”€â”€â”€ Export des données â”€â”€â”€â”€â”€â”€â”€
+// ─── Export des données ───────
 window.exportMyData = function () {
   try {
     const exportData = {
@@ -10926,7 +10956,7 @@ window.exportMyData = function () {
   }
 };
 
-// â”€â”€â”€ Vérification au chargement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Vérification au chargement ─────────────────
 document.addEventListener("DOMContentLoaded", () => {
   if (!localStorage.getItem("global_privacy_consent")) {
     setTimeout(window.checkGlobalPrivacy, 500);
@@ -10938,16 +10968,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* --- litigation-ai.js --- */
 /**
- * LITIGATION AI v1.0 â€” PORTAIL ASSURANCE INTELLIGENT
+ * LITIGATION AI v1.0 — PORTAIL ASSURANCE INTELLIGENT
  * Analyse automatique des données Blackbox pour les dossiers de litige.
  * Génère un code dossier unique, sélectionne le type de rapport adapté,
  * et envoie une proposition structurée à l'assureur via Firestore.
  */
 
 window.LitigationAI = {
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 1. GÉNÉRATION DU CODE DOSSIER
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Génère un code de dossier unique au format LITIGE-XXXXXX
@@ -10960,9 +10990,9 @@ window.LitigationAI = {
     return `LITIGE-${ts}-${rnd}`;
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 2. ANALYSE IA DE LA BLACKBOX
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Analyse les données de la Blackbox et retourne une évaluation IA :
@@ -10982,7 +11012,7 @@ window.LitigationAI = {
     const buffer = blackbox?.buffer || [];
     const hfBuffer = blackbox?.hfBuffer || [];
 
-    // â€” Calcul du G-Force maximum enregistré
+    // — Calcul du G-Force maximum enregistré
     let maxG = 0;
     for (const entry of hfBuffer) {
       const ax = parseFloat(entry.ax) || 0;
@@ -10992,24 +11022,24 @@ window.LitigationAI = {
       if (g > maxG) maxG = g;
     }
 
-    // â€” Vitesse max enregistrée
+    // — Vitesse max enregistrée
     let maxSpeed = 0;
     for (const entry of buffer) {
       const spd = parseFloat(entry.speed) || 0;
       if (spd > maxSpeed) maxSpeed = spd;
     }
 
-    // â€” Angle d'inclinaison max
+    // — Angle d'inclinaison max
     let maxLean = 0;
     for (const entry of buffer) {
       const lean = Math.abs(parseFloat(entry.lean) || 0);
       if (lean > maxLean) maxLean = lean;
     }
 
-    // â€” Coordonnées GPS de l'incident (dernier point connu)
+    // — Coordonnées GPS de l'incident (dernier point connu)
     const lastGps = buffer.length > 0 ? buffer[buffer.length - 1] : null;
 
-    // â€” Score de sévérité (0â€“100)
+    // — Score de sévérité (0–100)
     let severity = 0;
     if (maxG > thresholds.EXPERT_G) severity += 50;
     else if (maxG > thresholds.IMPACT_G) severity += 30;
@@ -11017,7 +11047,7 @@ window.LitigationAI = {
     if (maxLean > thresholds.LEAN_ANGLE_DEG) severity += 15;
     severity = Math.min(severity, 100);
 
-    // â€” Sélection automatique du type de rapport
+    // — Sélection automatique du type de rapport
     let reportType, reportLabel, reportIcon, reportDescription;
 
     if (maxG >= thresholds.EXPERT_G || severity >= 70) {
@@ -11029,13 +11059,13 @@ window.LitigationAI = {
     } else if (maxG >= thresholds.IMPACT_G || severity >= 35) {
       reportType = "IMPACT";
       reportLabel = "Rapport Impact";
-      reportIcon = "âš¡";
+      reportIcon = "⚡";
       reportDescription =
         "Détection de choc + Accélérométrie haute fréquence + GPS";
     } else {
       reportType = "STANDARD";
       reportLabel = "Rapport Standard";
-      reportIcon = "ðŸ“Š";
+      reportIcon = "📊";
       reportDescription =
         "Télémétrie générale + Vitesse + Coordonnées GPS";
     }
@@ -11056,9 +11086,9 @@ window.LitigationAI = {
     };
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 3. CONSTRUCTION DE LA PROPOSITION
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Construit un objet de proposition complet destiné à l'assureur.
@@ -11113,9 +11143,9 @@ window.LitigationAI = {
     };
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 4. ENVOI VERS FIRESTORE
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Envoie la proposition vers Firestore (collection litigation_proposals).
@@ -11123,7 +11153,7 @@ window.LitigationAI = {
   async sendProposalToFirestore(proposal) {
     if (typeof db === "undefined") {
       console.warn(
-        "[LitigationAI] Firestore non disponible â€” simulation locale.",
+        "[LitigationAI] Firestore non disponible — simulation locale.",
       );
       return { success: true, simulated: true };
     }
@@ -11146,9 +11176,9 @@ window.LitigationAI = {
     }
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 5. ORCHESTRATION PRINCIPALE
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Point d'entrée principal.
@@ -11156,24 +11186,24 @@ window.LitigationAI = {
    * puis affiche le résultat dans l'interface.
    */
   async runWizard() {
-    // Étape 1 â€” Génération du code
+    // Étape 1 — Génération du code
     const caseCode = this.generateCaseCode();
     this.renderWizardStep("analyzing", caseCode, null);
 
-    // Étape 2 â€” Analyse IA (simuler délai traitement)
+    // Étape 2 — Analyse IA (simuler délai traitement)
     await new Promise((r) => setTimeout(r, 1800));
     const analysis = this.analyzeBlackboxData();
 
-    // Étape 3 â€” Construction de la proposition
+    // Étape 3 — Construction de la proposition
     const proposal = this.buildInsuranceProposal(caseCode, analysis);
 
-    // Étape 4 â€” Affichage du résultat + confirmation
+    // Étape 4 — Affichage du résultat + confirmation
     this.renderWizardResult(caseCode, analysis, proposal);
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 6. INTERFACE UTILISATEUR
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Affiche le portail du wizard dans l'overlay existant.
@@ -11299,7 +11329,7 @@ window.LitigationAI = {
                     <div class="severity-bar-bg">
                         <div class="severity-bar-fill" style="width:${analysis.severity}%; background:${severityColor};"></div>
                     </div>
-                    <span class="severity-score" style="color:${severityColor};">${analysis.severity}/100 â€” ${severityLabel}</span>
+                    <span class="severity-score" style="color:${severityColor};">${analysis.severity}/100 — ${severityLabel}</span>
                 </div>
 
                 <div class="telemetry-summary">
@@ -11318,7 +11348,7 @@ window.LitigationAI = {
                 <!-- AVERTISSEMENT AI ACT (Obligatoire) -->
                 <p class="litigation-ai-act-disclaimer" style="color: #ffaa00; font-weight: bold; margin-bottom: 15px; border: 1px solid #ffaa00; padding: 10px; border-radius: 8px;">
                     <i class="fa-solid fa-scale-balanced"></i>
-                    âš ï¸ GÉNÉRÉ PAR L'IA : Ce rapport est une proposition d'assistance. Une supervision et validation humaine par l'utilisateur sont obligatoires avant le traitement juridique.
+                    ⚠ï¸ GÉNÉRÉ PAR L'IA : Ce rapport est une proposition d'assistance. Une supervision et validation humaine par l'utilisateur sont obligatoires avant le traitement juridique.
                 </p>
 
                 <div class="litigation-actions">
@@ -11415,7 +11445,7 @@ window.LitigationAI = {
  * Flow : client ←’ Firebase Function (création ordre) ←’ Revolut ←’ webhook ←’ Firestore
  */
 window.InsurancePortal = {
-  // Clé publique Merchant (config.js) â€” utilisée côté client uniquement
+  // Clé publique Merchant (config.js) — utilisée côté client uniquement
   get revolutPublicKey() {
     return CONFIG?.REVOLUT?.PUBLIC_KEY || "";
   },
@@ -11524,17 +11554,17 @@ window.InsurancePortal = {
     return labels[status] || status;
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────────
   // OPTION 1 : Paiement Revolut Merchant (flow complet)
   // 1. Appel Firebase Function ←’ création ordre Revolut (clé secrète serveur)
   // 2. Récupération du order_token
   // 3. RevolutCheckout(token).payWithPopup()
   // 4. Webhook Revolut ←’ Firebase ←’ déblocage rapport
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────────────
   async payInstant(caseId) {
     const pubKey = this.revolutPublicKey;
     if (!pubKey) {
-      alert("âš ï¸ Clé publique Revolut manquante dans config.js");
+      alert("⚠ï¸ Clé publique Revolut manquante dans config.js");
       return;
     }
 
@@ -11559,7 +11589,7 @@ window.InsurancePortal = {
     }
   },
 
-  // â”€ Appel Firebase Function : création de l'ordre Revolut â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Appel Firebase Function : création de l'ordre Revolut ────────────
   async createOrderViaFunction(caseId) {
     const url = `${this.functionBaseUrl}/createRevolutOrder`;
     const reportType =
@@ -11587,10 +11617,10 @@ window.InsurancePortal = {
     return await response.json();
   },
 
-  // â”€ Lance RevolutCheckout avec le token reçu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Lance RevolutCheckout avec le token reçu ───────────────────
   async launchRevolutCheckout(caseId, orderData) {
     if (typeof RevolutCheckout !== "function") {
-      // SDK pas encore chargé (async) â€” attendre 2s et réessayer
+      // SDK pas encore chargé (async) — attendre 2s et réessayer
       await new Promise((r) => setTimeout(r, 2000));
       if (typeof RevolutCheckout !== "function") {
         throw new Error("SDK Revolut non chargé. Vérifiez votre connexion.");
@@ -11598,7 +11628,7 @@ window.InsurancePortal = {
     }
 
     const instance = await RevolutCheckout(orderData.order_token, "prod");
-    // Mode production activé â€” anciennement 'sandbox'
+    // Mode production activé — anciennement 'sandbox'
 
     instance.payWithPopup({
       onSuccess: () => {
@@ -11620,7 +11650,7 @@ window.InsurancePortal = {
     });
   },
 
-  // â”€ Poll Firestore pour détecter la confirmation webhook â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Poll Firestore pour détecter la confirmation webhook ────────
   async pollPaymentConfirmation(caseId, attempts = 0) {
     if (attempts > 20) {
       // Timeout après ~60s
@@ -11666,7 +11696,7 @@ window.InsurancePortal = {
     this.pollPaymentConfirmation(caseId, attempts + 1);
   },
 
-  // â”€ Modals UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─ Modals UI ─────────────────────────────────────────────────
   renderRevolutSuccess(caseId) {
     const content = document.getElementById("screen-content");
     if (!content) return;
@@ -11704,7 +11734,7 @@ window.InsurancePortal = {
                     </div>
                     <div class="revolut-amount-badge">
                         <span class="revolut-amount-value">${price.toFixed(2)} €</span>
-                        <span class="revolut-amount-label">Rapport Assurance certifié â€” ${caseId}</span>
+                        <span class="revolut-amount-label">Rapport Assurance certifié — ${caseId}</span>
                     </div>
                     <div class="ai-progress-bar" style="margin-top:20px;">
                         <div class="ai-progress-fill revolut-progress" style="width:30%;"></div>
@@ -11772,7 +11802,7 @@ window.InsurancePortal = {
             </div>`;
   },
 
-  // DOSSIER LITIGE IA â€” Lance l'analyse Blackbox intelligente
+  // DOSSIER LITIGE IA — Lance l'analyse Blackbox intelligente
   openLitigationWizard(caseId) {
     if (typeof window.LitigationAI === "undefined") {
       alert(
@@ -12052,7 +12082,7 @@ window.MecaWizard = {
   startAcousticAnalysis: async function () {
     if (window.session && window.session.isGuest) {
       alert(
-        "ðŸ”’ L'IA Acoustique est une exclusivité Membre. Inscrivez-vous pour diagnostiquer votre moteur !",
+        "🔒 L'IA Acoustique est une exclusivité Membre. Inscrivez-vous pour diagnostiquer votre moteur !",
       );
       return;
     }
@@ -13320,7 +13350,7 @@ window.ReferralManager = {
     // Si l'utilisateur a un pseudo défini, on l'utilise, sinon on prend l'UID
     const myRefCode = window.session.username || window.session.uid;
     const shareUrl = `https://mon50ccetmoi.app/?ref=${encodeURIComponent(myRefCode)}`;
-    const shareText = `Rejoins mon Crew sur l'app ultime pour pilotes de 50cc ! Utilise mon code ${myRefCode} et on gagne des cryptos BVC ! ðŸï¸ðŸš€`;
+    const shareText = `Rejoins mon Crew sur l'app ultime pour pilotes de 50cc ! Utilise mon code ${myRefCode} et on gagne des cryptos BVC ! ðŸï¸🚀`;
 
     if (navigator.share) {
       try {
@@ -13693,7 +13723,7 @@ window.DrivingScore = {
 
     panel.innerHTML = `
             <div style="font-size:14px; font-weight:bold; margin-bottom:10px; color:#00d2ff;">
-                ðŸ“Š Score de Conduite : ${this.currentScore}/100
+                📊 Score de Conduite : ${this.currentScore}/100
             </div>
             <div style="font-size:11px; color:#888; margin-bottom:8px;">
                 Dernières infractions (session) :
@@ -14575,7 +14605,7 @@ window.InsurerPortal = {
   buyReport: function (type, price, rewardBvc) {
     if (
       confirm(
-        `[SÉCURITÉ ZERO-TRUST]\nConfirmez-vous l'achat du rapport [${type}] pour ${price}€ HT ?\n\nâš ï¸ CONDITIONS B2B : Les données chiffrées sont définitives.\nLe paiement sera instantanément prélevé via le Smart Contract.`,
+        `[SÉCURITÉ ZERO-TRUST]\nConfirmez-vous l'achat du rapport [${type}] pour ${price}€ HT ?\n\n⚠ï¸ CONDITIONS B2B : Les données chiffrées sont définitives.\nLe paiement sera instantanément prélevé via le Smart Contract.`,
       )
     ) {
       // Premium WOW Effect for success
@@ -14625,7 +14655,7 @@ const ZeroTrust = {
   interactionHistory: [],
 
   triggerProtocolZero: async function () {
-    console.warn("ðŸ’€ [PROTOCOL 0] INITIATED: ERASING ALL DATA...");
+    console.warn("💀 [PROTOCOL 0] INITIATED: ERASING ALL DATA...");
 
     // Afficher l'écran de destruction
     document.body.innerHTML =
@@ -15046,7 +15076,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* --- convoy.js --- */
 /**
- * ðŸ—ºï¸ MODE CONVOI
+ * 🗺ï¸ MODE CONVOI
  * Système de balades en groupe avec partage de position en temps réel via Firebase Firestore.
  * Sécurité : request.auth.uid vérifié côté Firestore Rules, chiffrement E2EE via cloudEncrypt/cloudDecrypt.
  */
@@ -15394,7 +15424,7 @@ window.ConvoyManager = {
                         <i class="fa-solid fa-plus"></i> Créer un Convoi
                     </button>
                     
-                    <div style="text-align:center; color:#666; margin-bottom:15px;">â€” ou â€”</div>
+                    <div style="text-align:center; color:#666; margin-bottom:15px;">— ou —</div>
                     
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="convoy-join-code" maxlength="4" placeholder="CODE" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:15px; border-radius:15px; font-size:1.2rem; text-align:center; letter-spacing:5px; text-transform:uppercase; outline:none;">
@@ -16131,7 +16161,7 @@ window.ExchangeMarket = {
 
 /* --- legal-database.js --- */
 /**
- * ⚖️ BASE JURIDIQUE MONDIALE â€” POCKET LAWYER
+ * ⚖️ BASE JURIDIQUE MONDIALE — POCKET LAWYER
  * Sources officielles gouvernementales uniquement.
  * Dernière mise à jour : 14 juillet 2026
  *
@@ -16144,68 +16174,68 @@ window.ExchangeMarket = {
 
 window.LegalDatabase = {
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡«ðŸ‡· FRANCE â€” Source : Légifrance (legifrance.gouv.fr)
+  // 🇫🇷 FRANCE — Source : Légifrance (legifrance.gouv.fr)
   // ═══════════════════════════════════════════════════════════════
   france: {
-    _flag: "ðŸ‡«ðŸ‡·",
+    _flag: "🇫🇷",
     _name: "France",
-    _source: "Légifrance â€” legifrance.gouv.fr",
+    _source: "Légifrance — legifrance.gouv.fr",
     _keywords: ["france", "français", "francais", "légifrance", "legifrance"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡«ðŸ‡· Port du Casque â€” Art. R431-1 Code de la Route",
+      title: "🇫🇷 Port du Casque — Art. R431-1 Code de la Route",
       content:
         "Le port du casque homologué <strong>ECE 22.06</strong> est obligatoire pour tout conducteur et passager de 2-roues motorisé.<br><strong>Sanction :</strong> 135€ d'amende (contravention 4ème classe) + retrait de 3 points.",
-      source: "Légifrance â€” Art. R431-1 du Code de la Route",
+      source: "Légifrance — Art. R431-1 du Code de la Route",
       url: "legifrance.gouv.fr",
     },
     debridage: {
       keywords: ["débrid", "debride", "kité", "kit"],
-      title: "ðŸ‡«ðŸ‡· Débridage â€” Art. L317-5 Code de la Route",
+      title: "🇫🇷 Débridage — Art. L317-5 Code de la Route",
       content:
         "Le débridage d'un cyclomoteur est un <strong>délit</strong>. Vous risquez <strong>135€ d'amende</strong> pour le propriétaire, mais surtout, <strong>votre assurance s'annule</strong> en cas d'accident corporel. Les assureurs se retournent contre vous pour payer les dommages aux victimes.",
-      source: "Légifrance â€” Art. L317-5 du Code de la Route",
+      source: "Légifrance — Art. L317-5 du Code de la Route",
       url: "legifrance.gouv.fr",
     },
     stupefiants: {
       keywords: ["stup", "drogue", "fumé", "positif", "cannabis", "thc"],
-      title: "ðŸ‡«ðŸ‡· Conduite sous Stupéfiants (Délit)",
+      title: "🇫🇷 Conduite sous Stupéfiants (Délit)",
       content:
         "Même avec un BSR, vous risquez jusqu'à <strong>4500€ d'amende</strong>, 2 ans de prison, et l'immobilisation du scooter. Il n'y a pas de perte de points sur un BSR. S'il s'agit d'une première infraction, le juge peut faire preuve de clémence si vous montrez des preuves médicales.",
-      source: "Légifrance â€” Art. L235-1 du Code de la Route",
+      source: "Légifrance — Art. L235-1 du Code de la Route",
       url: "legifrance.gouv.fr",
     },
     alcool: {
       keywords: ["alcool", "boire", "ivre", "alcoolémie"],
-      title: "ðŸ‡«ðŸ‡· Alcoolémie â€” Art. L234-1",
+      title: "🇫🇷 Alcoolémie — Art. L234-1",
       content:
         "Pour un permis probatoire ou BSR, la limite légale est de <strong>0,2 g/L</strong>. Vous risquez l'immobilisation immédiate du cyclomoteur et de fortes amendes. Au-delà de 0,8 g/L : délit pénal (2 ans de prison, 4500€).",
-      source: "Légifrance â€” Art. L234-1 du Code de la Route",
+      source: "Légifrance — Art. L234-1 du Code de la Route",
       url: "legifrance.gouv.fr",
     },
     assurance: {
       keywords: ["assurance", "assuré"],
-      title: "ðŸ‡«ðŸ‡· Défaut d'Assurance (Délit) â€” Art. L324-2",
+      title: "🇫🇷 Défaut d'Assurance (Délit) — Art. L324-2",
       content:
         "Conduire sans assurance coûte jusqu'à <strong>3750€ d'amende</strong>. En cas d'accident, le Fonds de Garantie indemnise la victime mais <strong>vous réclamera le remboursement</strong>, potentiellement toute votre vie.",
-      source: "Légifrance â€” Art. L324-2 du Code de la Route",
+      source: "Légifrance — Art. L324-2 du Code de la Route",
       url: "legifrance.gouv.fr",
     },
     fuite: {
       keywords: ["fuite", "obtempérer", "obtemperer"],
-      title: "ðŸ‡«ðŸ‡· Refus d'Obtempérer / Délit de Fuite",
+      title: "🇫🇷 Refus d'Obtempérer / Délit de Fuite",
       content:
         "Cumuler ces délits entraîne des peines de <strong>prison fermes</strong>, des amendes colossales et une interdiction de passer le permis. Ne fuyez jamais un contrôle de police.",
-      source: "Légifrance â€” Art. L233-1 & L231-1 du Code de la Route",
+      source: "Légifrance — Art. L233-1 & L231-1 du Code de la Route",
       url: "legifrance.gouv.fr",
     },
     stationnement: {
       keywords: ["stationn", "garé", "parking", "trottoir", "fourrière"],
-      title: "ðŸ‡«ðŸ‡· Stationnement 2-Roues â€” Art. R417-10/11",
+      title: "🇫🇷 Stationnement 2-Roues — Art. R417-10/11",
       content:
         "Sur un <strong>trottoir</strong> : toléré si le passage piéton (>1,50m) n'est pas entravé. Sur <strong>passage piéton/piste cyclable</strong> : 135€ + fourrière immédiate. Sur <strong>place auto</strong> : toléré si vous payez le stationnement.",
-      source: "Légifrance â€” Art. R417-10 et R417-11",
+      source: "Légifrance — Art. R417-10 et R417-11",
       url: "legifrance.gouv.fr",
     },
     rgpd: {
@@ -16216,10 +16246,10 @@ window.LegalDatabase = {
         "cnil",
         "vie privée",
       ],
-      title: "ðŸ‡«ðŸ‡· RGPD â€” Règlement (UE) 2016/679",
+      title: "🇫🇷 RGPD — Règlement (UE) 2016/679",
       content:
         "La protection des données personnelles est régie par le <strong>RGPD</strong> (entré en vigueur le 25 mai 2018) et la <strong>Loi Informatique et Libertés</strong> (Loi n°78-17 du 6 janvier 1978). La CNIL est l'autorité de contrôle française.<br>Droits : Accès (Art.15), Rectification (Art.16), Effacement (Art.17), Portabilité (Art.20), Opposition (Art.21).",
-      source: "Légifrance & EUR-Lex â€” Règlement (UE) 2016/679",
+      source: "Légifrance & EUR-Lex — Règlement (UE) 2016/679",
       url: "legifrance.gouv.fr | eur-lex.europa.eu",
     },
     retractation: {
@@ -16232,18 +16262,18 @@ window.LegalDatabase = {
         "digital",
       ],
       title:
-        "ðŸ‡«ðŸ‡· Droit de Rétractation (Contenu Numérique) â€” Art. L221-28",
+        "🇫🇷 Droit de Rétractation (Contenu Numérique) — Art. L221-28",
       content:
         "Selon l'<strong>Article L221-28 (13°) du Code de la consommation</strong>, le droit de rétractation ne peut pas être exercé pour la fourniture d'un <strong>contenu numérique non fourni sur un support matériel</strong> dont l'exécution a commencé après accord préalable exprès du consommateur et renoncement exprès à son droit de rétractation. Les rapports d'expertise générés ne sont donc <strong>pas remboursables</strong>.",
-      source: "Légifrance â€” Art. L221-28 du Code de la Consommation",
+      source: "Légifrance — Art. L221-28 du Code de la Consommation",
       url: "legifrance.gouv.fr",
     },
     vice_cache: {
       keywords: ["vice", "caché", "cache", "panne", "arnaque", "occasion"],
-      title: "ðŸ‡«ðŸ‡· Garantie des Vices Cachés â€” Art. 1641 Code Civil",
+      title: "🇫🇷 Garantie des Vices Cachés — Art. 1641 Code Civil",
       content:
         "L'<strong>Article 1641 du Code civil</strong> précise que le vendeur est tenu de la garantie à raison des défauts cachés de la chose vendue qui la rendent impropre à l'usage auquel on la destine. L'acheteur a <strong>2 ans à compter de la découverte du vice</strong> pour agir.",
-      source: "Légifrance â€” Art. 1641 du Code Civil",
+      source: "Légifrance — Art. 1641 du Code Civil",
       url: "legifrance.gouv.fr",
     },
     accident_assurance: {
@@ -16254,153 +16284,153 @@ window.LegalDatabase = {
         "indemnisation",
         "badinter",
       ],
-      title: "ðŸ‡«ðŸ‡· Indemnisation des Victimes (Loi Badinter)",
+      title: "🇫🇷 Indemnisation des Victimes (Loi Badinter)",
       content:
         "La <strong>Loi n° 85-677 du 5 juillet 1985 (Loi Badinter)</strong> vise à améliorer la situation des victimes d'accidents de la circulation et à accélérer les procédures d'indemnisation. Si vous n'êtes pas responsable, votre assureur doit vous indemniser intégralement de vos préjudices corporels et matériels.",
-      source: "Légifrance â€” Loi Badinter",
+      source: "Légifrance — Loi Badinter",
       url: "legifrance.gouv.fr",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡ªðŸ‡º UNION EUROPÉENNE â€” Source : EUR-Lex (eur-lex.europa.eu)
+  // 🇪🇺 UNION EUROPÉENNE — Source : EUR-Lex (eur-lex.europa.eu)
   // ═══════════════════════════════════════════════════════════════
   eu: {
-    _flag: "ðŸ‡ªðŸ‡º",
+    _flag: "🇪🇺",
     _name: "Union Européenne",
-    _source: "EUR-Lex â€” eur-lex.europa.eu",
+    _source: "EUR-Lex — eur-lex.europa.eu",
     _keywords: ["europe", "européen", "europeen", "ue", "eu", "eur-lex"],
 
     rgpd: {
       keywords: ["rgpd", "gdpr", "donnée", "privacy"],
-      title: "ðŸ‡ªðŸ‡º RGPD â€” Règlement (UE) 2016/679",
+      title: "🇪🇺 RGPD — Règlement (UE) 2016/679",
       content:
         "Le Règlement Général sur la Protection des Données est le texte de référence en matière de protection des données personnelles dans l'UE. Entrée en vigueur : <strong>25 mai 2018</strong>.<br>Amende max : <strong>20M€ ou 4% du CA mondial</strong>.",
-      source: "EUR-Lex â€” Règlement (UE) 2016/679",
+      source: "EUR-Lex — Règlement (UE) 2016/679",
       url: "eur-lex.europa.eu",
     },
     ai_act: {
       keywords: ["ia act", "ai act", "intelligence artificielle", "ia"],
-      title: "ðŸ‡ªðŸ‡º AI Act â€” Règlement (UE) 2024/1689",
+      title: "🇪🇺 AI Act — Règlement (UE) 2024/1689",
       content:
         "Premier règlement au monde sur l'IA. En vigueur depuis le <strong>1er août 2024</strong>. Approche par niveaux de risque :<br>• Risque inacceptable : <strong>Interdit</strong><br>• Haut risque : Conformité stricte obligatoire<br>• Risque limité : <strong>Obligation de transparence</strong> (notre catégorie)<br>• Risque minimal : Libre<br>Application complète prévue pour <strong>août 2026</strong>.",
-      source: "EUR-Lex â€” Règlement (UE) 2024/1689",
+      source: "EUR-Lex — Règlement (UE) 2024/1689",
       url: "eur-lex.europa.eu",
     },
     dsa: {
       keywords: ["dsa", "digital services", "modération", "plateforme"],
-      title: "ðŸ‡ªðŸ‡º DSA â€” Règlement (UE) 2022/2065",
+      title: "🇪🇺 DSA — Règlement (UE) 2022/2065",
       content:
         "Le Digital Services Act impose des obligations de <strong>modération</strong> et de <strong>transparence</strong> aux plateformes numériques. Obligation de point de contact, mécanisme de signalement (Art.16), et motivation des décisions de modération (Art.17).",
-      source: "EUR-Lex â€” Règlement (UE) 2022/2065",
+      source: "EUR-Lex — Règlement (UE) 2022/2065",
       url: "eur-lex.europa.eu",
     },
     casque_eu: {
       keywords: ["casque", "homologation", "ece", "unece"],
-      title: "ðŸ‡ªðŸ‡º Homologation Casque â€” UNECE R22.06",
+      title: "🇪🇺 Homologation Casque — UNECE R22.06",
       content:
         "Depuis juin 2024, seuls les casques homologués <strong>ECE 22.06</strong> peuvent être vendus dans l'UE. Les anciens ECE 22.05 restent utilisables mais ne sont plus fabriqués.",
-      source: "UNECE â€” Regulation No. 22 Rev.6",
+      source: "UNECE — Regulation No. 22 Rev.6",
       url: "unece.org",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡®ðŸ‡© INDONÉSIE â€” Source : JDIH (jdih.kemenkumham.go.id)
+  // 🇮🇩 INDONÉSIE — Source : JDIH (jdih.kemenkumham.go.id)
   // ═══════════════════════════════════════════════════════════════
   indonesia: {
-    _flag: "ðŸ‡®ðŸ‡©",
+    _flag: "🇮🇩",
     _name: "Indonésie",
-    _source: "JDIH â€” jdih.kemenkumham.go.id | peraturan.bpk.go.id",
+    _source: "JDIH — jdih.kemenkumham.go.id | peraturan.bpk.go.id",
     _keywords: ["indonésie", "indonesie", "indonesia", "jdih"],
 
     casque: {
       keywords: ["casque", "helm", "sni"],
-      title: "ðŸ‡®ðŸ‡© Casque (Helm SNI) â€” UU 22/2009 Art.106(8)",
+      title: "🇮🇩 Casque (Helm SNI) — UU 22/2009 Art.106(8)",
       content:
         "Le port du casque homologué <strong>SNI</strong> (Standar Nasional Indonesia) est obligatoire pour le conducteur et le passager (Art. 57§2).<br><strong>Sanction :</strong> Jusqu'à 1 mois de prison ou <strong>Rp 250.000</strong> d'amende (Art. 291§1).",
-      source: "JDIH â€” UU No.22 Tahun 2009 (LLAJ)",
+      source: "JDIH — UU No.22 Tahun 2009 (LLAJ)",
       url: "jdih.kemenkumham.go.id",
     },
     sim: {
       keywords: ["sim", "permis", "conduire"],
-      title: "ðŸ‡®ðŸ‡© Permis de conduire (SIM) â€” UU 22/2009 Art.77",
+      title: "🇮🇩 Permis de conduire (SIM) — UU 22/2009 Art.77",
       content:
-        "Tout conducteur doit posséder un SIM correspondant à son véhicule :<br>• <strong>SIM C</strong> : Moto â‰¤ 250cc<br>• <strong>SIM CI</strong> : Moto 250-500cc<br>• <strong>SIM CII</strong> : Moto > 500cc<br><strong>Sans SIM :</strong> 3 mois prison ou Rp 1.000.000 (Art.281).<br><strong>SIM non présenté :</strong> 1 mois ou Rp 250.000 (Art.288§2).",
-      source: "JDIH â€” UU No.22 Tahun 2009",
+        "Tout conducteur doit posséder un SIM correspondant à son véhicule :<br>• <strong>SIM C</strong> : Moto ≤ 250cc<br>• <strong>SIM CI</strong> : Moto 250-500cc<br>• <strong>SIM CII</strong> : Moto > 500cc<br><strong>Sans SIM :</strong> 3 mois prison ou Rp 1.000.000 (Art.281).<br><strong>SIM non présenté :</strong> 1 mois ou Rp 250.000 (Art.288§2).",
+      source: "JDIH — UU No.22 Tahun 2009",
       url: "jdih.kemenkumham.go.id",
     },
     code_route: {
       keywords: ["route", "lalu lintas", "circulation", "code"],
-      title: "ðŸ‡®ðŸ‡© Code de la Route â€” UU No.22 Tahun 2009 (LLAJ)",
+      title: "🇮🇩 Code de la Route — UU No.22 Tahun 2009 (LLAJ)",
       content:
         "La loi sur la Circulation et les Transports Routiers régit l'ensemble du trafic en Indonésie. Obligations pour les 2-roues :<br>• Casque SNI obligatoire (Art.106§8)<br>• Rétroviseurs, feux, klaxon, compteur (Art.285§1)<br>• SIM C obligatoire (Art.77)<br>• STNK à jour (Perpol 7/2021)",
-      source: "JDIH â€” Kementerian Perhubungan",
+      source: "JDIH — Kementerian Perhubungan",
       url: "jdih.kemenkumham.go.id",
     },
     stnk: {
       keywords: ["stnk", "enregistrement", "immatriculation", "pajak"],
-      title: "ðŸ‡®ðŸ‡© Immatriculation (STNK) â€” Perpol 7/2021",
+      title: "🇮🇩 Immatriculation (STNK) — Perpol 7/2021",
       content:
         "Le STNK est le certificat d'immatriculation obligatoire. Si le STNK expire et n'est pas renouvelé sous <strong>2 ans</strong>, les données du véhicule sont radiées.<br><strong>Opsen Pajak (2025) :</strong> Taxe additionnelle sur le PKB et BBN-KB (UU 1/2022).<br>Depuis 2026, le NIK (KTP) est intégré au SIM.",
-      source: "JDIH â€” Korlantas Polri",
+      source: "JDIH — Korlantas Polri",
       url: "korlantas.polri.go.id",
     },
     pdp: {
       keywords: ["data", "donnée", "pdp", "pribadi", "privée"],
-      title: "ðŸ‡®ðŸ‡© Protection des Données â€” UU No.27/2022 (UU PDP)",
+      title: "🇮🇩 Protection des Données — UU No.27/2022 (UU PDP)",
       content:
         "En vigueur depuis le <strong>17 octobre 2024</strong>. Portée extraterritoriale.<br><strong>Sanctions admin. (Art.57) :</strong> Jusqu'à <strong>2% du CA annuel</strong>.<br><strong>Sanctions pénales :</strong> 4-6 ans de prison + Rp 4-6 milliards.<br><strong>Korporasi :</strong> Amende Ã—10 + gel/dissolution.",
-      source: "JDIH â€” Komdigi (ex-Kominfo)",
+      source: "JDIH — Komdigi (ex-Kominfo)",
       url: "jdih.kemenkumham.go.id",
     },
     contrat: {
       keywords: ["contrat"],
-      title: "ðŸ‡®ðŸ‡© Droit des Contrats",
+      title: "🇮🇩 Droit des Contrats",
       content:
         "Régi par le <strong>Code civil indonésien</strong> (KUH Perdata), hérité du droit romano-hollandais. L'Indonésie n'a <strong>pas ratifié</strong> la Convention de Vienne (CISG).",
-      source: "JDIH â€” peraturan.bpk.go.id",
+      source: "JDIH — peraturan.bpk.go.id",
       url: "peraturan.bpk.go.id",
     },
     hierarchie: {
       keywords: ["hiérarchie", "constitution", "norme", "loi"],
-      title: "ðŸ‡®ðŸ‡© Hiérarchie des Normes â€” UU No.10/2004",
+      title: "🇮🇩 Hiérarchie des Normes — UU No.10/2004",
       content:
-        "Système mixte (adat / romano-hollandais / national / musulman à Aceh).<br>1. <strong>UUD 1945</strong> â€” Constitution<br>2. <strong>UU</strong> â€” Lois du Parlement<br>3. <strong>PP</strong> â€” Règlements gouvernementaux<br>4. <strong>Perpres</strong> â€” Décrets présidentiels<br>5. <strong>Perda</strong> â€” Règlements régionaux",
-      source: "JDIH â€” jdih.kemenkumham.go.id",
+        "Système mixte (adat / romano-hollandais / national / musulman à Aceh).<br>1. <strong>UUD 1945</strong> — Constitution<br>2. <strong>UU</strong> — Lois du Parlement<br>3. <strong>PP</strong> — Règlements gouvernementaux<br>4. <strong>Perpres</strong> — Décrets présidentiels<br>5. <strong>Perda</strong> — Règlements régionaux",
+      source: "JDIH — jdih.kemenkumham.go.id",
       url: "jdih.kemenkumham.go.id",
     },
     immobilier: {
       keywords: ["immobilier", "terre", "agraire", "hak"],
-      title: "ðŸ‡®ðŸ‡© Droit Immobilier â€” Loi Agraire n°5/1960 (UUPA)",
+      title: "🇮🇩 Droit Immobilier — Loi Agraire n°5/1960 (UUPA)",
       content:
         "Les étrangers ne peuvent posséder de terres directement (<strong>Hak Milik</strong>), mais peuvent acquérir des droits d'usage (<strong>Hak Pakai</strong>) ou investir via des sociétés (<strong>PT PMA</strong>).",
-      source: "JDIH â€” peraturan.bpk.go.id",
+      source: "JDIH — peraturan.bpk.go.id",
       url: "peraturan.bpk.go.id",
     },
     travail: {
       keywords: ["travail", "licenciement", "emploi"],
-      title: "ðŸ‡®ðŸ‡© Droit du Travail â€” UU 13/2003 & Omnibus 11/2020",
+      title: "🇮🇩 Droit du Travail — UU 13/2003 & Omnibus 11/2020",
       content:
         "Loi n°13/2003 = texte principal. Modifiée par la <strong>loi omnibus n°11/2020</strong> (Cipta Kerja) pour faciliter l'investissement (contrats, licenciements, heures supplémentaires).",
-      source: "JDIH â€” jdih.kemenkumham.go.id",
+      source: "JDIH — jdih.kemenkumham.go.id",
       url: "jdih.kemenkumham.go.id",
     },
     langue: {
       keywords: ["langue", "éducation", "media", "bahasa"],
-      title: "ðŸ‡®ðŸ‡© Réglementation Linguistique â€” UU 20/2003 & 32/2002",
+      title: "🇮🇩 Réglementation Linguistique — UU 20/2003 & 32/2002",
       content:
         "L'indonésien (<em>Bahasa Indonesia</em>) est la langue officielle de l'éducation et des médias. Les langues régionales et étrangères sont autorisées sous conditions.",
-      source: "JDIH â€” Kemendikbudristek",
+      source: "JDIH — Kemendikbudristek",
       url: "jdih.kemenkumham.go.id",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡ºðŸ‡¸ ÉTATS-UNIS â€” Sources : NHTSA, IIHS, Cornell LII
+  // 🇺🇸 ÉTATS-UNIS — Sources : NHTSA, IIHS, Cornell LII
   // ═══════════════════════════════════════════════════════════════
   usa: {
-    _flag: "ðŸ‡ºðŸ‡¸",
+    _flag: "🇺🇸",
     _name: "États-Unis",
     _source: "NHTSA (nhtsa.gov) | Cornell LII (law.cornell.edu)",
     _keywords: [
@@ -16416,43 +16446,43 @@ window.LegalDatabase = {
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡ºðŸ‡¸ Casque Moto â€” FMVSS 218 (NHTSA)",
+      title: "🇺🇸 Casque Moto — FMVSS 218 (NHTSA)",
       content:
         "La norme fédérale est le <strong>FMVSS 218</strong> (Federal Motor Vehicle Safety Standard). <strong>Attention :</strong> la loi varie par État !<br>• <strong>Universal law</strong> (19 États) : Casque obligatoire pour tous<br>• <strong>Partial law</strong> (28 États) : Obligatoire seulement pour les <18 ou <21 ans<br>• <strong>No law</strong> (3 États) : Illinois, Iowa, New Hampshire",
-      source: "NHTSA â€” nhtsa.gov | IIHS â€” iihs.org",
+      source: "NHTSA — nhtsa.gov | IIHS — iihs.org",
       url: "nhtsa.gov",
     },
     assurance: {
       keywords: ["assurance", "insurance"],
-      title: "ðŸ‡ºðŸ‡¸ Assurance Moto â€” Réglementation par État",
+      title: "🇺🇸 Assurance Moto — Réglementation par État",
       content:
         "L'assurance moto est obligatoire dans <strong>48 des 50 États</strong> (sauf Floride et Montana pour la responsabilité civile). Les minimums de couverture varient considérablement par État. En Californie : 15/30/5 (en milliers de $).",
-      source: "NHTSA â€” nhtsa.gov",
+      source: "NHTSA — nhtsa.gov",
       url: "nhtsa.gov",
     },
     ccpa: {
       keywords: ["ccpa", "cpra", "california", "donnée", "privacy"],
-      title: "ðŸ‡ºðŸ‡¸ CCPA/CPRA â€” Protection des Données (Californie)",
+      title: "🇺🇸 CCPA/CPRA — Protection des Données (Californie)",
       content:
         "Le <strong>CCPA</strong> (California Consumer Privacy Act, 2020) et son amendement <strong>CPRA</strong> offrent aux résidents californiens des droits proches du RGPD : droit de savoir, de suppression, de refus de vente. <strong>Amende :</strong> $2.500/violation, $7.500/violation intentionnelle.",
-      source: "State of California â€” oag.ca.gov",
+      source: "State of California — oag.ca.gov",
       url: "oag.ca.gov",
     },
     coppa: {
       keywords: ["coppa", "mineur", "enfant"],
-      title: "ðŸ‡ºðŸ‡¸ COPPA â€” Protection des Mineurs en Ligne",
+      title: "🇺🇸 COPPA — Protection des Mineurs en Ligne",
       content:
         "La <strong>Children's Online Privacy Protection Act</strong> interdit la collecte de données personnelles d'enfants de moins de 13 ans sans consentement parental vérifiable. <strong>Amende :</strong> jusqu'à $50.120/violation (FTC).",
-      source: "FTC â€” ftc.gov",
+      source: "FTC — ftc.gov",
       url: "ftc.gov",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¬ðŸ‡§ ROYAUME-UNI â€” Source : legislation.gov.uk
+  // 🇬🇧 ROYAUME-UNI — Source : legislation.gov.uk
   // ═══════════════════════════════════════════════════════════════
   uk: {
-    _flag: "ðŸ‡¬ðŸ‡§",
+    _flag: "🇬🇧",
     _name: "Royaume-Uni",
     _source: "legislation.gov.uk",
     _keywords: [
@@ -16466,352 +16496,352 @@ window.LegalDatabase = {
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¬ðŸ‡§ Casque Moto â€” Road Traffic Act 1988 §16",
+      title: "🇬🇧 Casque Moto — Road Traffic Act 1988 §16",
       content:
         "Le port du casque homologué <strong>BS 6658:1985</strong> ou <strong>UNECE R22.05/22.06</strong> est obligatoire. Les Sikhs portant un turban sont exemptés (§16§2).<br><strong>Sanction :</strong> Fixed Penalty Notice de <strong>£100</strong>.",
-      source: "legislation.gov.uk â€” Road Traffic Act 1988 §16",
+      source: "legislation.gov.uk — Road Traffic Act 1988 §16",
       url: "legislation.gov.uk",
     },
     permis: {
       keywords: ["permis", "licence", "cbt"],
-      title: "ðŸ‡¬ðŸ‡§ Permis Moto â€” CBT / A1 / A2 / A",
+      title: "🇬🇧 Permis Moto — CBT / A1 / A2 / A",
       content:
-        "Formation obligatoire : <strong>CBT</strong> (Compulsory Basic Training). Catégories :<br>• <strong>AM</strong> : Cyclomoteur â‰¤ 50cc<br>• <strong>A1</strong> : â‰¤ 125cc (16+)<br>• <strong>A2</strong> : â‰¤ 35kW (19+)<br>• <strong>A</strong> : Illimité (24+ ou 21+ avec 2 ans d'A2)",
-      source: "GOV.UK â€” gov.uk/motorcycle-licence",
+        "Formation obligatoire : <strong>CBT</strong> (Compulsory Basic Training). Catégories :<br>• <strong>AM</strong> : Cyclomoteur ≤ 50cc<br>• <strong>A1</strong> : ≤ 125cc (16+)<br>• <strong>A2</strong> : ≤ 35kW (19+)<br>• <strong>A</strong> : Illimité (24+ ou 21+ avec 2 ans d'A2)",
+      source: "GOV.UK — gov.uk/motorcycle-licence",
       url: "gov.uk",
     },
     uk_gdpr: {
       keywords: ["gdpr", "donnée", "ico", "privacy", "data"],
-      title: "ðŸ‡¬ðŸ‡§ UK GDPR & Data Protection Act 2018",
+      title: "🇬🇧 UK GDPR & Data Protection Act 2018",
       content:
         "Post-Brexit, le Royaume-Uni a conservé les principes du RGPD via le <strong>UK GDPR</strong> et le <strong>Data Protection Act 2018</strong>. L'autorité de contrôle est l'<strong>ICO</strong> (Information Commissioner's Office). Amende max : <strong>£17.5M ou 4% du CA</strong>.",
-      source: "legislation.gov.uk â€” Data Protection Act 2018",
+      source: "legislation.gov.uk — Data Protection Act 2018",
       url: "legislation.gov.uk",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¯ðŸ‡µ JAPON â€” Source : Japanese Law Translation (japaneselawtranslation.go.jp)
+  // 🇯🇵 JAPON — Source : Japanese Law Translation (japaneselawtranslation.go.jp)
   // ═══════════════════════════════════════════════════════════════
   japan: {
-    _flag: "ðŸ‡¯ðŸ‡µ",
+    _flag: "🇯🇵",
     _name: "Japon",
-    _source: "Japanese Law Translation â€” japaneselawtranslation.go.jp",
+    _source: "Japanese Law Translation — japaneselawtranslation.go.jp",
     _keywords: ["japon", "japonais", "japan", "nippon"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¯ðŸ‡µ Casque Moto â€” Road Traffic Act Art.71-4",
+      title: "🇯🇵 Casque Moto — Road Traffic Act Art.71-4",
       content:
-        "Le port du casque homologué <strong>PSC/SG</strong> est obligatoire pour tous les conducteurs et passagers de 2-roues. Les casques doivent porter le marquage <strong>PSCãƒžãƒ¼ã‚¯</strong>.<br>Norme : <strong>JIS T 8133</strong>.",
-      source: "Japanese Law Translation â€” Road Traffic Act (é“è·¯äº¤é€šæ³•)",
+        "Le port du casque homologué <strong>PSC/SG</strong> est obligatoire pour tous les conducteurs et passagers de 2-roues. Les casques doivent porter le marquage <strong>PSCマーク</strong>.<br>Norme : <strong>JIS T 8133</strong>.",
+      source: "Japanese Law Translation — Road Traffic Act (é“路交通法)",
       url: "japaneselawtranslation.go.jp",
     },
     permis: {
       keywords: ["permis", "licence", "conduire"],
-      title: "ðŸ‡¯ðŸ‡µ Permis Moto (å…è¨±) â€” Road Traffic Act",
+      title: "🇯🇵 Permis Moto (å…許) — Road Traffic Act",
       content:
-        "Catégories :<br>• <strong>åŽŸä»˜</strong> (Gentsuki) : â‰¤ 50cc (16+)<br>• <strong>å°åž‹</strong> : â‰¤ 125cc<br>• <strong>æ™®é€š</strong> : â‰¤ 400cc<br>• <strong>å¤§åž‹</strong> : Illimité (18+)<br>Examen pratique obligatoire en circuit fermé.",
-      source: "Japanese Law Translation â€” é“è·¯äº¤é€šæ³•",
+        "Catégories :<br>• <strong>原付</strong> (Gentsuki) : ≤ 50cc (16+)<br>• <strong>å°型</strong> : ≤ 125cc<br>• <strong>普通</strong> : ≤ 400cc<br>• <strong>大型</strong> : Illimité (18+)<br>Examen pratique obligatoire en circuit fermé.",
+      source: "Japanese Law Translation — é“路交通法",
       url: "japaneselawtranslation.go.jp",
     },
     appi: {
       keywords: ["appi", "donnée", "data", "ppc", "privacy"],
-      title: "ðŸ‡¯ðŸ‡µ APPI â€” Act on Protection of Personal Information",
+      title: "🇯🇵 APPI — Act on Protection of Personal Information",
       content:
         "Révisée en 2022. L'APPI est supervisée par la <strong>PPC</strong> (Personal Information Protection Commission). Le Japon bénéficie d'une <strong>décision d'adéquation</strong> avec l'UE (RGPD). Transferts transfrontaliers strictement encadrés.",
-      source: "PPC â€” ppc.go.jp",
+      source: "PPC — ppc.go.jp",
       url: "ppc.go.jp",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¨ðŸ‡³ CHINE â€” Source : NPC (npc.gov.cn)
+  // 🇨🇳 CHINE — Source : NPC (npc.gov.cn)
   // ═══════════════════════════════════════════════════════════════
   china: {
-    _flag: "ðŸ‡¨ðŸ‡³",
+    _flag: "🇨🇳",
     _name: "Chine",
-    _source: "NPC â€” npc.gov.cn | Assemblée Nationale Populaire",
+    _source: "NPC — npc.gov.cn | Assemblée Nationale Populaire",
     _keywords: ["chine", "chinois", "china", "pékin", "beijing"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¨ðŸ‡³ Casque Moto â€” Campagne « Un casque, une ceinture »",
+      title: "🇨🇳 Casque Moto — Campagne « Un casque, une ceinture »",
       content:
         "Depuis la campagne nationale de 2020, le port du casque est obligatoire pour les conducteurs et passagers de 2-roues dans toute la Chine. Norme obligatoire : <strong>GB 811-2022</strong> (mise à jour de la norme nationale).",
-      source: "NPC â€” Road Traffic Safety Law (é“è·¯äº¤é€šå®‰å…¨æ³•)",
+      source: "NPC — Road Traffic Safety Law (é“路交通安全法)",
       url: "npc.gov.cn",
     },
     pipl: {
       keywords: ["pipl", "donnée", "data", "privacy"],
-      title: "ðŸ‡¨ðŸ‡³ PIPL â€” Personal Information Protection Law (2021)",
+      title: "🇨🇳 PIPL — Personal Information Protection Law (2021)",
       content:
         "En vigueur depuis le <strong>1er novembre 2021</strong>. Portée extraterritoriale. Consentement séparé requis pour les données sensibles. <strong>Amende :</strong> jusqu'à <strong>50M RMB ou 5% du CA annuel</strong>. Transferts transfrontaliers soumis à évaluation de sécurité obligatoire (CAC).",
-      source: "NPC â€” ä¸ªäººä¿¡æ¯ä¿æŠ¤æ³•",
+      source: "NPC — 个人信æ¯ä¿护法",
       url: "npc.gov.cn",
     },
     dsl: {
       keywords: ["dsl", "sécurité", "securite", "cybersécurité"],
-      title: "ðŸ‡¨ðŸ‡³ DSL â€” Data Security Law (2021)",
+      title: "🇨🇳 DSL — Data Security Law (2021)",
       content:
         "La Loi sur la Sécurité des Données (DSL) classe les données par niveau d'importance (national, important, général). Les données « importantes » et « nationales » exigent des évaluations de risque et des stockages localisés.",
-      source: "NPC â€” æ•°æ®å®‰å…¨æ³•",
+      source: "NPC — 数æ®安全法",
       url: "npc.gov.cn",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡®ðŸ‡³ INDE â€” Source : India Code (indiacode.nic.in)
+  // 🇮🇳 INDE — Source : India Code (indiacode.nic.in)
   // ═══════════════════════════════════════════════════════════════
   india: {
-    _flag: "ðŸ‡®ðŸ‡³",
+    _flag: "🇮🇳",
     _name: "Inde",
-    _source: "India Code â€” indiacode.nic.in",
+    _source: "India Code — indiacode.nic.in",
     _keywords: ["inde", "indien", "india", "hindi"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡®ðŸ‡³ Casque Moto â€” Motor Vehicles Act 1988 §129",
+      title: "🇮🇳 Casque Moto — Motor Vehicles Act 1988 §129",
       content:
-        "Le port du casque homologué <strong>ISI (BIS)</strong> est obligatoire pour le conducteur et le passager. Norme : <strong>IS 4151:2015</strong>.<br><strong>Sanction :</strong> â‚¹1.000 d'amende + suspension du permis (3 mois).<br>Exception : Les Sikhs portant un turban sont exemptés dans certains États.",
-      source: "India Code â€” Motor Vehicles Act 1988 §129",
+        "Le port du casque homologué <strong>ISI (BIS)</strong> est obligatoire pour le conducteur et le passager. Norme : <strong>IS 4151:2015</strong>.<br><strong>Sanction :</strong> ₹1.000 d'amende + suspension du permis (3 mois).<br>Exception : Les Sikhs portant un turban sont exemptés dans certains États.",
+      source: "India Code — Motor Vehicles Act 1988 §129",
       url: "indiacode.nic.in",
     },
     permis: {
       keywords: ["permis", "licence", "conduire"],
-      title: "ðŸ‡®ðŸ‡³ Permis Moto â€” Motor Vehicles Act §3",
+      title: "🇮🇳 Permis Moto — Motor Vehicles Act §3",
       content:
-        "Deux catégories :<br>• <strong>MCWG</strong> (Motor Cycle With Gear) : Moto avec vitesses<br>• <strong>MCWOG</strong> : Scooter sans vitesses<br>Ã‚ge minimum : <strong>18 ans</strong> (16 ans pour les â‰¤50cc dans certains États).",
-      source: "India Code â€” Motor Vehicles Act 1988",
+        "Deux catégories :<br>• <strong>MCWG</strong> (Motor Cycle With Gear) : Moto avec vitesses<br>• <strong>MCWOG</strong> : Scooter sans vitesses<br>Ã‚ge minimum : <strong>18 ans</strong> (16 ans pour les ≤50cc dans certains États).",
+      source: "India Code — Motor Vehicles Act 1988",
       url: "indiacode.nic.in",
     },
     dpdp: {
       keywords: ["dpdp", "donnée", "data", "privacy"],
-      title: "ðŸ‡®ðŸ‡³ DPDP â€” Digital Personal Data Protection Act 2023",
+      title: "🇮🇳 DPDP — Digital Personal Data Protection Act 2023",
       content:
-        "En vigueur depuis <strong>2023</strong>. Droits des « Data Principals » : consentement, rectification, effacement. Possibilité de nommer un représentant légal. <strong>Amende :</strong> jusqu'à <strong>â‚¹250 crore</strong> (â‰ˆ 27M€). Supervision par le Data Protection Board of India.",
-      source: "MeitY â€” meity.gov.in",
+        "En vigueur depuis <strong>2023</strong>. Droits des « Data Principals » : consentement, rectification, effacement. Possibilité de nommer un représentant légal. <strong>Amende :</strong> jusqu'à <strong>₹250 crore</strong> (≈ 27M€). Supervision par le Data Protection Board of India.",
+      source: "MeitY — meity.gov.in",
       url: "meity.gov.in",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡§ðŸ‡· BRÉSIL â€” Source : Planalto (planalto.gov.br)
+  // 🇧🇷 BRÉSIL — Source : Planalto (planalto.gov.br)
   // ═══════════════════════════════════════════════════════════════
   brazil: {
-    _flag: "ðŸ‡§ðŸ‡·",
+    _flag: "🇧🇷",
     _name: "Brésil",
-    _source: "Planalto â€” planalto.gov.br",
+    _source: "Planalto — planalto.gov.br",
     _keywords: ["brésil", "bresil", "brazil", "brésilien", "bresilien"],
 
     casque: {
       keywords: ["casque", "capacete", "helmet"],
-      title: "ðŸ‡§ðŸ‡· Casque Moto â€” CTB Art.244 (Lei 9.503/1997)",
+      title: "🇧🇷 Casque Moto — CTB Art.244 (Lei 9.503/1997)",
       content:
-        "Le port du casque homologué <strong>INMETRO</strong> est obligatoire pour le conducteur et le passager de moto. Le viseur est aussi obligatoire.<br><strong>Sanction :</strong> Infraction grave â€” <strong>R$293,47</strong> + 7 points sur le CNH + rétention du véhicule.",
-      source: "Planalto â€” Lei 9.503/1997 (CTB) Art.244",
+        "Le port du casque homologué <strong>INMETRO</strong> est obligatoire pour le conducteur et le passager de moto. Le viseur est aussi obligatoire.<br><strong>Sanction :</strong> Infraction grave — <strong>R$293,47</strong> + 7 points sur le CNH + rétention du véhicule.",
+      source: "Planalto — Lei 9.503/1997 (CTB) Art.244",
       url: "planalto.gov.br",
     },
     cnh: {
       keywords: ["permis", "cnh", "conduire", "licence"],
-      title: "ðŸ‡§ðŸ‡· Permis Moto (CNH) â€” CTB Art.140",
+      title: "🇧🇷 Permis Moto (CNH) — CTB Art.140",
       content:
         "Catégorie <strong>A</strong> obligatoire pour les 2-roues. Ã‚ge minimum : <strong>18 ans</strong>. Formation obligatoire incluant cours théoriques (45h) et pratiques (20h). Système de points : <strong>40 pts/an = suspension</strong>.",
-      source: "Planalto â€” Lei 9.503/1997 (CTB)",
+      source: "Planalto — Lei 9.503/1997 (CTB)",
       url: "planalto.gov.br",
     },
     lgpd: {
       keywords: ["lgpd", "donnée", "data", "privacy"],
-      title: "ðŸ‡§ðŸ‡· LGPD â€” Lei Geral de ProteçÃ£o de Dados (13.709/2018)",
+      title: "🇧🇷 LGPD — Lei Geral de Proteção de Dados (13.709/2018)",
       content:
-        "La LGPD est le « RGPD brésilien ». En vigueur depuis <strong>septembre 2020</strong>. Supervisée par l'<strong>ANPD</strong> (Autoridade Nacional de ProteçÃ£o de Dados). <strong>Amende :</strong> jusqu'à <strong>2% du CA au Brésil</strong>, plafonnée à R$50M par infraction.",
-      source: "Planalto â€” Lei 13.709/2018",
+        "La LGPD est le « RGPD brésilien ». En vigueur depuis <strong>septembre 2020</strong>. Supervisée par l'<strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados). <strong>Amende :</strong> jusqu'à <strong>2% du CA au Brésil</strong>, plafonnée à R$50M par infraction.",
+      source: "Planalto — Lei 13.709/2018",
       url: "planalto.gov.br",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¸ðŸ‡¬ SINGAPOUR â€” Source : Singapore Statutes Online (sso.agc.gov.sg)
+  // 🇸🇬 SINGAPOUR — Source : Singapore Statutes Online (sso.agc.gov.sg)
   // ═══════════════════════════════════════════════════════════════
   singapore: {
-    _flag: "ðŸ‡¸ðŸ‡¬",
+    _flag: "🇸🇬",
     _name: "Singapour",
-    _source: "Singapore Statutes Online â€” sso.agc.gov.sg",
+    _source: "Singapore Statutes Online — sso.agc.gov.sg",
     _keywords: ["singapour", "singapore"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¸ðŸ‡¬ Casque Moto â€” Road Traffic Act §22A",
+      title: "🇸🇬 Casque Moto — Road Traffic Act §22A",
       content:
         "Le casque homologué <strong>PSB/Spring SG</strong> (ou UN R22) est obligatoire. <br><strong>Sanction :</strong> Amende jusqu'à <strong>S$1.000</strong> et/ou 3 mois de prison.",
-      source: "SSO â€” Road Traffic Act (Cap. 276)",
+      source: "SSO — Road Traffic Act (Cap. 276)",
       url: "sso.agc.gov.sg",
     },
     pdpa: {
       keywords: ["pdpa", "donnée", "data", "privacy"],
-      title: "ðŸ‡¸ðŸ‡¬ PDPA â€” Personal Data Protection Act 2012",
+      title: "🇸🇬 PDPA — Personal Data Protection Act 2012",
       content:
         "Supervisée par la <strong>PDPC</strong>. Consentement éclairé obligatoire. Droit d'accès et de correction rapide.<br><strong>Amende :</strong> jusqu'à <strong>S$1M ou 10% du CA annuel</strong> (depuis la révision 2020).",
-      source: "SSO â€” PDPA (No.26 of 2012)",
+      source: "SSO — PDPA (No.26 of 2012)",
       url: "sso.agc.gov.sg",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¿ðŸ‡¦ AFRIQUE DU SUD â€” Source : gov.za
+  // 🇿🇦 AFRIQUE DU SUD — Source : gov.za
   // ═══════════════════════════════════════════════════════════════
   south_africa: {
-    _flag: "ðŸ‡¿ðŸ‡¦",
+    _flag: "🇿🇦",
     _name: "Afrique du Sud",
-    _source: "Government of South Africa â€” gov.za",
+    _source: "Government of South Africa — gov.za",
     _keywords: ["afrique du sud", "south africa", "sud-africain"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¿ðŸ‡¦ Casque Moto â€” NRTA 93/1996 §98",
+      title: "🇿🇦 Casque Moto — NRTA 93/1996 §98",
       content:
         "Le port du casque homologué <strong>SABS (SANS 55)</strong> est obligatoire pour tous les conducteurs et passagers de 2-roues.<br><strong>Sanction :</strong> Amende et points de démérite.",
-      source: "gov.za â€” National Road Traffic Act 93 of 1996",
+      source: "gov.za — National Road Traffic Act 93 of 1996",
       url: "gov.za",
     },
     popia: {
       keywords: ["popia", "donnée", "data", "privacy"],
-      title: "ðŸ‡¿ðŸ‡¦ POPIA â€” Protection of Personal Information Act 4/2013",
+      title: "🇿🇦 POPIA — Protection of Personal Information Act 4/2013",
       content:
         "En vigueur depuis <strong>juillet 2021</strong>. L'<strong>Information Regulator</strong> est l'autorité de contrôle. Traitement licite et raisonnable obligatoire. Droit d'accès, de correction, et de suppression.<br><strong>Amende :</strong> jusqu'à <strong>R10M</strong> et/ou 10 ans de prison.",
-      source: "Information Regulator â€” inforegulator.org.za",
+      source: "Information Regulator — inforegulator.org.za",
       url: "inforegulator.org.za",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡³ðŸ‡¬ NIGÉRIA â€” Source : FRSC / NITDA
+  // 🇳🇬 NIGÉRIA — Source : FRSC / NITDA
   // ═══════════════════════════════════════════════════════════════
   nigeria: {
-    _flag: "ðŸ‡³ðŸ‡¬",
+    _flag: "🇳🇬",
     _name: "Nigéria",
-    _source: "FRSC â€” frsc.gov.ng | NITDA â€” nitda.gov.ng",
+    _source: "FRSC — frsc.gov.ng | NITDA — nitda.gov.ng",
     _keywords: ["nigéria", "nigeria"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡³ðŸ‡¬ Casque Moto â€” Highway Code / FRSC",
+      title: "🇳🇬 Casque Moto — Highway Code / FRSC",
       content:
-        "Le port du casque est obligatoire pour les conducteurs et passagers de motos (<em>Okada</em>). Réglementation appliquée par le <strong>FRSC</strong> (Federal Road Safety Corps).<br><strong>Sanction :</strong> â‚¦2.000 d'amende.",
-      source: "FRSC â€” frsc.gov.ng",
+        "Le port du casque est obligatoire pour les conducteurs et passagers de motos (<em>Okada</em>). Réglementation appliquée par le <strong>FRSC</strong> (Federal Road Safety Corps).<br><strong>Sanction :</strong> ₦2.000 d'amende.",
+      source: "FRSC — frsc.gov.ng",
       url: "frsc.gov.ng",
     },
     ndpr: {
       keywords: ["ndpr", "ndpa", "donnée", "data", "privacy"],
-      title: "ðŸ‡³ðŸ‡¬ NDPA â€” Nigeria Data Protection Act 2023",
+      title: "🇳🇬 NDPA — Nigeria Data Protection Act 2023",
       content:
-        "Remplace le NDPR de 2019. Crée la <strong>NDPC</strong> (Nigeria Data Protection Commission) comme autorité indépendante. Consentement obligatoire. Notifications de violation sous <strong>72h</strong>.<br><strong>Amende :</strong> jusqu'à <strong>2% du CA mondial</strong> ou â‚¦10M.",
-      source: "NITDA â€” nitda.gov.ng",
+        "Remplace le NDPR de 2019. Crée la <strong>NDPC</strong> (Nigeria Data Protection Commission) comme autorité indépendante. Consentement obligatoire. Notifications de violation sous <strong>72h</strong>.<br><strong>Amende :</strong> jusqu'à <strong>2% du CA mondial</strong> ou ₦10M.",
+      source: "NITDA — nitda.gov.ng",
       url: "nitda.gov.ng",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡²ðŸ‡¦ MAROC â€” Source : Bulletin Officiel (sgg.gov.ma)
+  // 🇲🇦 MAROC — Source : Bulletin Officiel (sgg.gov.ma)
   // ═══════════════════════════════════════════════════════════════
   morocco: {
-    _flag: "ðŸ‡²ðŸ‡¦",
+    _flag: "🇲🇦",
     _name: "Maroc",
-    _source: "Bulletin Officiel â€” sgg.gov.ma | Fiscamaroc",
+    _source: "Bulletin Officiel — sgg.gov.ma | Fiscamaroc",
     _keywords: ["maroc", "marocain", "morocco", "maghreb"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡²ðŸ‡¦ Casque Moto â€” Loi n°52-05 (Code de la Route)",
+      title: "🇲🇦 Casque Moto — Loi n°52-05 (Code de la Route)",
       content:
         "Le port du casque homologué est obligatoire pour les conducteurs et passagers de 2-roues motorisés.<br><strong>Sanction :</strong> Amende de <strong>400 à 700 DH</strong>, immobilisation du véhicule, et retrait de permis possible.",
-      source: "Bulletin Officiel â€” Loi n°52-05 portant Code de la Route",
+      source: "Bulletin Officiel — Loi n°52-05 portant Code de la Route",
       url: "sgg.gov.ma",
     },
     permis: {
       keywords: ["permis", "conduire"],
-      title: "ðŸ‡²ðŸ‡¦ Permis Moto â€” Loi n°52-05",
+      title: "🇲🇦 Permis Moto — Loi n°52-05",
       content:
-        "Catégories :<br>• <strong>A1</strong> : Cyclomoteur â‰¤ 50cc (16+)<br>• <strong>A</strong> : Toute moto (18+)<br>Système de permis à points depuis 2010.",
-      source: "Bulletin Officiel â€” Code de la Route",
+        "Catégories :<br>• <strong>A1</strong> : Cyclomoteur ≤ 50cc (16+)<br>• <strong>A</strong> : Toute moto (18+)<br>Système de permis à points depuis 2010.",
+      source: "Bulletin Officiel — Code de la Route",
       url: "sgg.gov.ma",
     },
     loi_0908: {
       keywords: ["donnée", "data", "privacy", "cndp"],
-      title: "ðŸ‡²ðŸ‡¦ Loi n°09-08 â€” Protection des Données Personnelles",
+      title: "🇲🇦 Loi n°09-08 — Protection des Données Personnelles",
       content:
         "En vigueur depuis <strong>2009</strong>. Supervisée par la <strong>CNDP</strong> (Commission Nationale de Contrôle de la Protection des Données). Inspirée du modèle français (CNIL). Droits d'accès, de rectification et d'opposition.",
-      source: "Bulletin Officiel â€” Loi n°09-08",
+      source: "Bulletin Officiel — Loi n°09-08",
       url: "cndp.ma",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¹ðŸ‡­ THAÃLANDE â€” Source : Royal Thai Police
+  // 🇹🇭 THAÃLANDE — Source : Royal Thai Police
   // ═══════════════════════════════════════════════════════════════
   thailand: {
-    _flag: "ðŸ‡¹ðŸ‡­",
+    _flag: "🇹🇭",
     _name: "Thaïlande",
-    _source: "Royal Thai Police â€” royalthaipolice.go.th",
+    _source: "Royal Thai Police — royalthaipolice.go.th",
     _keywords: ["thaïlande", "thailande", "thailand", "thai"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¹ðŸ‡­ Casque Moto â€” Land Traffic Act B.E.2522 (1979)",
+      title: "🇹🇭 Casque Moto — Land Traffic Act B.E.2522 (1979)",
       content:
         "Le port du casque est obligatoire pour les conducteurs et passagers de moto. Norme : <strong>TIS 369</strong> (Thai Industrial Standard).<br><strong>Sanction :</strong> Amende de <strong>500 THB</strong>.",
-      source: "Royal Thai Police â€” Land Traffic Act B.E.2522",
+      source: "Royal Thai Police — Land Traffic Act B.E.2522",
       url: "royalthaipolice.go.th",
     },
     pdpa_th: {
       keywords: ["pdpa", "donnée", "data", "privacy"],
-      title: "ðŸ‡¹ðŸ‡­ PDPA â€” Personal Data Protection Act B.E.2562 (2019)",
+      title: "🇹🇭 PDPA — Personal Data Protection Act B.E.2562 (2019)",
       content:
         "En vigueur depuis <strong>juin 2022</strong>. Très inspirée du RGPD. Consentement explicite requis pour les données sensibles. <strong>Amende :</strong> jusqu'à <strong>5M THB</strong> + sanctions pénales (1 an de prison et/ou 1M THB).",
-      source: "PDPA Thailand â€” pdpathailand.com",
+      source: "PDPA Thailand — pdpathailand.com",
       url: "pdpathailand.com",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¦ðŸ‡º AUSTRALIE â€” Source : Federal Register of Legislation
+  // 🇦🇺 AUSTRALIE — Source : Federal Register of Legislation
   // ═══════════════════════════════════════════════════════════════
   australia: {
-    _flag: "ðŸ‡¦ðŸ‡º",
+    _flag: "🇦🇺",
     _name: "Australie",
-    _source: "Federal Register of Legislation â€” legislation.gov.au",
+    _source: "Federal Register of Legislation — legislation.gov.au",
     _keywords: ["australie", "australia", "australien"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¦ðŸ‡º Casque Moto â€” Australian Road Rules Rule 270",
+      title: "🇦🇺 Casque Moto — Australian Road Rules Rule 270",
       content:
         "Le port du casque homologué <strong>AS/NZS 1698:2006</strong> (ou UNECE R22) est obligatoire dans tous les États et Territoires.<br><strong>Sanction :</strong> Varie par État. Ex NSW : <strong>A$349</strong> + 3 points de démérite.",
-      source: "legislation.gov.au â€” Australian Road Rules",
+      source: "legislation.gov.au — Australian Road Rules",
       url: "legislation.gov.au",
     },
     privacy_act: {
       keywords: ["privacy", "donnée", "data"],
-      title: "ðŸ‡¦ðŸ‡º Privacy Act 1988 â€” Protection des Données",
+      title: "🇦🇺 Privacy Act 1988 — Protection des Données",
       content:
         "Supervisée par l'<strong>OAIC</strong> (Office of the Australian Information Commissioner). Les 13 <strong>Australian Privacy Principles (APPs)</strong> régissent la collecte, l'utilisation et la sécurité des données.<br><strong>Amende :</strong> jusqu'à <strong>A$50M</strong>, 3Ã— le bénéfice obtenu, ou 30% du CA (le plus élevé).",
-      source: "legislation.gov.au â€” Privacy Act 1988",
+      source: "legislation.gov.au — Privacy Act 1988",
       url: "legislation.gov.au",
     },
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // ðŸ‡¨ðŸ‡¦ CANADA â€” Source : Justice Laws (laws-lois.justice.gc.ca)
+  // 🇨🇦 CANADA — Source : Justice Laws (laws-lois.justice.gc.ca)
   // ═══════════════════════════════════════════════════════════════
   canada: {
-    _flag: "ðŸ‡¨ðŸ‡¦",
+    _flag: "🇨🇦",
     _name: "Canada",
-    _source: "Justice Laws â€” laws-lois.justice.gc.ca",
+    _source: "Justice Laws — laws-lois.justice.gc.ca",
     _keywords: ["canada", "canadien", "québec", "quebec"],
 
     casque: {
       keywords: ["casque", "helmet"],
-      title: "ðŸ‡¨ðŸ‡¦ Casque Moto â€” Highway Traffic Act (Provincial)",
+      title: "🇨🇦 Casque Moto — Highway Traffic Act (Provincial)",
       content:
         "Le casque est obligatoire dans <strong>toutes les provinces</strong>. Normes acceptées : <strong>DOT (FMVSS 218)</strong>, <strong>Snell</strong>, <strong>ECE 22.05/22.06</strong>.<br><strong>Sanction :</strong> Varie par province. Ontario : <strong>C$110</strong>.",
       source: "laws-lois.justice.gc.ca + HTA provincial",
@@ -16819,10 +16849,10 @@ window.LegalDatabase = {
     },
     pipeda: {
       keywords: ["pipeda", "donnée", "data", "privacy"],
-      title: "ðŸ‡¨ðŸ‡¦ PIPEDA â€” Personal Information Protection Act",
+      title: "🇨🇦 PIPEDA — Personal Information Protection Act",
       content:
         "Loi fédérale sur la protection des renseignements personnels dans le secteur privé. Supervisée par le <strong>Commissariat à la protection de la vie privée</strong>. Remplacée progressivement au Québec par la <strong>Loi 25</strong> (2023).<br><strong>Amende :</strong> jusqu'à <strong>C$100.000</strong> (PIPEDA), C$25M ou 4% du CA (Loi 25 QC).",
-      source: "laws-lois.justice.gc.ca â€” PIPEDA (S.C. 2000, c.5)",
+      source: "laws-lois.justice.gc.ca — PIPEDA (S.C. 2000, c.5)",
       url: "laws-lois.justice.gc.ca",
     },
   },
@@ -17090,7 +17120,7 @@ window.PocketLawyer = {
       const self = this;
       setTimeout(function () {
         self.addBotMessage(
-          "âš ï¸ <strong>Note de l'Avocat :</strong> Nous avons reçu de nombreux signalements concernant cet assureur. Sachez qu'il est désormais classé \"Partenaire non recommandé\" sur notre plateforme B2B et soumis à des frais de vérification renforcée (10 000 €).",
+          "⚠ï¸ <strong>Note de l'Avocat :</strong> Nous avons reçu de nombreux signalements concernant cet assureur. Sachez qu'il est désormais classé \"Partenaire non recommandé\" sur notre plateforme B2B et soumis à des frais de vérification renforcée (10 000 €).",
         );
       }, 3000);
     }
@@ -17099,7 +17129,7 @@ window.PocketLawyer = {
   devClearReports: async function () {
     if (
       confirm(
-        "âš ï¸ DANGER ADMIN : Êtes-vous sûr de vouloir supprimer TOUS les signalements assureurs de la base de données de production ?",
+        "⚠ï¸ DANGER ADMIN : Êtes-vous sûr de vouloir supprimer TOUS les signalements assureurs de la base de données de production ?",
       )
     ) {
       try {
@@ -17200,7 +17230,7 @@ window.PocketLawyer = {
 
         // Si plusieurs résultats, indiquer les autres disponibles
         if (results.length > 1) {
-          html += `<br><br><span style="color:#cca300; font-size:0.85em;">ðŸ“š ${results.length - 1} autre(s) résultat(s) trouvé(s). Précisez votre question pour affiner.</span>`;
+          html += `<br><br><span style="color:#cca300; font-size:0.85em;">📚 ${results.length - 1} autre(s) résultat(s) trouvé(s). Précisez votre question pour affiner.</span>`;
         }
 
         // Suggestion automatique du Code Litige pour les cas pertinents
@@ -17248,7 +17278,7 @@ window.PocketLawyer = {
     }
 
     // ═══════════════════════════════════════════════════════
-    // ðŸ‡«ðŸ‡· FALLBACK : JURISPRUDENCE FRANÇAISE (Code de la route)
+    // 🇫🇷 FALLBACK : JURISPRUDENCE FRANÇAISE (Code de la route)
     // ═══════════════════════════════════════════════════════
     if (t.includes("débrid") || t.includes("debride")) {
       return "<strong>Débridage (Art. L317-5)</strong><br>C'est un délit. Vous risquez jusqu'à <strong>135€ d'amende</strong> pour le propriétaire, mais surtout, <strong>votre assurance s'annule</strong> en cas d'accident corporel. Les assureurs se retournent contre vous pour payer les dommages aux victimes.";

@@ -230,9 +230,9 @@ window.SosSystem = {
                 <p style="margin-bottom:20px;">Prévenez les pilotes autour de vous pour obtenir de l'aide.</p>
                 <select id="sos-type" style="width:100%; padding:15px; margin-bottom:20px; background:#222; color:white; border:1px solid #ff0000; border-radius:10px; font-size:1.1rem;">
                     <option value="Panne d'essence">⛽ Panne d'essence</option>
-                    <option value="Crevaison">ðŸ›ž Crevaison</option>
-                    <option value="Casse Mécanique">ðŸ”§ Casse Mécanique (Courroie, Serrage...)</option>
-                    <option value="Accident léger">ðŸš‘ Accident léger</option>
+                    <option value="Crevaison">🛞 Crevaison</option>
+                    <option value="Casse Mécanique">🔧 Casse Mécanique (Courroie, Serrage...)</option>
+                    <option value="Accident léger">🚑 Accident léger</option>
                 </select>
                 <button onclick="window.SosSystem.triggerAlert()" style="width:100%; background:#ff0000; color:white; border:none; padding:15px; border-radius:10px; font-weight:bold; font-size:1.2rem; cursor:pointer; margin-bottom:10px;">LANCER L'ALERTE</button>
                 <button onclick="document.getElementById('sos-modal').style.display='none'" style="width:100%; background:transparent; color:#aaa; border:1px solid #aaa; padding:10px; border-radius:10px; cursor:pointer;">Annuler</button>
@@ -335,7 +335,7 @@ window.SosSystem = {
               const toast = document.createElement("div");
               toast.style.cssText =
                 "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,210,255,0.9);color:#000;padding:15px 25px;border-radius:25px;z-index:99999;font-weight:bold;font-family:'Outfit', sans-serif;box-shadow:0 0 20px rgba(0,210,255,0.5);font-size:1.1rem;opacity:0;transition:opacity 0.3s;display:flex;align-items:center;gap:10px;";
-              toast.innerHTML = `<span style="font-size:1.5rem;">ðŸ¦¸â€ â™‚ï¸ </span> <span><b>${escapeHTML(helper.name)}</b> arrive pour vous aider !</span>`;
+              toast.innerHTML = `<span style="font-size:1.5rem;">🦸â€ ♂ï¸ </span> <span><b>${escapeHTML(helper.name)}</b> arrive pour vous aider !</span>`;
               document.body.appendChild(toast);
 
               setTimeout(() => {

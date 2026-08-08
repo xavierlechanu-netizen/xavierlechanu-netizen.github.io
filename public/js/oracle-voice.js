@@ -72,7 +72,7 @@ class OracleVoice {
         console.error(
           "Oracle Voice : Permission micro refusée. Arrêt de la reconnaissance.",
         );
-        this.active = false; // STOP â€” ne pas relancer
+        this.active = false; // STOP — ne pas relancer
         const overlay = document.getElementById("oracle-listening-overlay");
         if (overlay) overlay.classList.add("hidden");
         // Informer l'utilisateur une seule fois
@@ -119,7 +119,7 @@ class OracleVoice {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
-        // Permission accordée â€” libérer le stream immédiatement
+        // Permission accordée — libérer le stream immédiatement
         stream.getTracks().forEach((track) => track.stop());
       }
     } catch (permErr) {
@@ -307,7 +307,7 @@ class OracleVoice {
 
     // 3. Moteur de détection d'intentions (Regex NLP) - FALLBACK LOCAL
     
-    // â”€â”€ Dangers & Alertes â”€â”€
+    // ── Dangers & Alertes ──
     if (commandText.match(/(alerte rouge|danger immédiat|chauffard|accident)/i)) {
         if (typeof window.saveHazard === "function") {
             window.saveHazard("danger_immediat", commandText);
@@ -320,7 +320,7 @@ class OracleVoice {
             reply(["C'est noté, j'ai signalé la zone à la communauté.", "Information transmise au réseau. Gardez l'œil ouvert."]);
         }
     }
-    // â”€â”€ Vitesse & Dashboard â”€â”€
+    // ── Vitesse & Dashboard ──
     else if (commandText.match(/(vitesse|vite|rapide)/i)) {
         const speed = document.getElementById("speed")?.textContent || "0";
         reply([`Vous roulez actuellement à ${speed} kilomètres-heure.`, `Vitesse enregistrée à ${speed} km/h.`]);
@@ -329,7 +329,7 @@ class OracleVoice {
         const km = window.session?.totalDistance || 0;
         reply([`Vous avez parcouru ${km.toFixed(1)} kilomètres.`, `Le compteur affiche ${km.toFixed(1)} kilomètres pour cette session.`]);
     }
-    // â”€â”€ Navigation Intelligente (Extraction) â”€â”€
+    // ── Navigation Intelligente (Extraction) ──
     else if (commandText.match(/(emmène|amène|aller|navigue|itinéraire|route|guidage)/i)) {
         // Detection contournement centre-ville
         const avoidCityCenter = commandText.match(/(sans|évite|éviter|contourne|contourner|ne pas passer).*(centre|ville)/i);
@@ -382,7 +382,7 @@ class OracleVoice {
             reply("Je n'ai pas bien compris la destination. Pouvez-vous répéter le nom de la ville ou de la rue ?");
         }
     }
-    // â”€â”€ Menu & Thèmes â”€â”€
+    // ── Menu & Thèmes ──
     else if (commandText.match(/(menu|ouvre|panneau)/i)) {
         window.toggleMenu();
         reply(["Menu ouvert.", "Voici vos options.", "J'ouvre le panneau de contrôle."]);
@@ -395,7 +395,7 @@ class OracleVoice {
         document.body.classList.remove("day-mode");
         reply(["Passage en mode nuit. Interface tactique restaurée.", "Mode sombre activé pour reposer vos yeux."]);
     }
-    // â”€â”€ Localisation & Météo â”€â”€
+    // ── Localisation & Météo ──
     else if (commandText.match(/(où|position|localisation|suis-je)/i)) {
         const pos = window.currentPosition;
         if (pos) reply([`Vos coordonnées actuelles sont latitude ${pos.lat.toFixed(3)} et longitude ${pos.lng.toFixed(3)}.`, "Je vous ai localisé sur la grille. Tout est normal."]);
@@ -410,7 +410,7 @@ class OracleVoice {
             reply([`Mes capteurs indiquent qu'il fait environ ${temp}.`, `La température extérieure est de ${temp}.`]);
         }
     }
-    // â”€â”€ Mécanique & Diagnostic â”€â”€
+    // ── Mécanique & Diagnostic ──
     else if (commandText.match(/(diagnostic|état|santé|mécanique|panne|révision|cassé|bruit)/i)) {
         if (window.PredictiveMeca) {
             const score = Math.round(window.PredictiveMeca.getGlobalHealthScore());
@@ -429,7 +429,7 @@ class OracleVoice {
             reply("Mes modules de diagnostic sont temporairement indisponibles.");
         }
     }
-    // â”€â”€ Urgences (SOS, Constat, Avocat) â”€â”€
+    // ── Urgences (SOS, Constat, Avocat) ──
     else if (commandText.match(/(mode constat|sos|secours|urgence|accrochage)/i)) {
         reply("Activation du protocole d'urgence. Restez calme, je m'occupe de tout.");
         if (window.SOSEmergency) window.SOSEmergency.trigger();
@@ -442,7 +442,7 @@ class OracleVoice {
         reply("J'invoque l'avocat de poche. Préparez-vous à exposer votre défense.");
         if (window.PocketLawyer && window.PocketLawyer.toggleLawyer) window.PocketLawyer.toggleLawyer();
     }
-    // â”€â”€ Marketplace & Wallet â”€â”€
+    // ── Marketplace & Wallet ──
     else if (commandText.match(/(solde|points|bvc|combien j'ai)/i)) {
         const solde = window.session?.bvc_points || 0;
         reply([`Votre compte affiche ${solde} points BVC.`, `Vous avez ${solde} crédits BVC en banque.`]);
@@ -456,7 +456,7 @@ class OracleVoice {
             reply("Que cherchez-vous exactement sur la Marketplace ?");
         }
     }
-    // â”€â”€ Modes Spéciaux (Social, Ghost, Cortège) â”€â”€
+    // ── Modes Spéciaux (Social, Ghost, Cortège) ──
     else if (commandText.match(/(équipe|autres|crew|radar)/i)) {
         if (window.SocialRadar) {
             const count = window.SocialRadar.getNearbyCrewCount ? window.SocialRadar.getNearbyCrewCount() : 0;
@@ -477,7 +477,7 @@ class OracleVoice {
         if (window.SentinelV2 && window.SentinelV2.arm) window.SentinelV2.arm();
         else if (window.Sentinel && window.Sentinel.arm) window.Sentinel.arm();
     }
-    // â”€â”€ Easter Eggs & Conversations â”€â”€
+    // ── Easter Eggs & Conversations ──
     else if (commandText.match(/(merci|t'es le meilleur|super)/i)) {
         reply(["C'est un plaisir de vous assister.", "À votre service.", "Je suis là pour ça !"]);
     }
@@ -487,7 +487,7 @@ class OracleVoice {
     else if (commandText.match(/(aide|commande|que peux|que sais)/i)) {
         reply("Je peux lancer le GPS, activer le mode fantôme, analyser la mécanique, ou vous donner la météo. Parlez-moi naturellement !");
     }
-    // â”€â”€ Fallback NLP â”€â”€
+    // ── Fallback NLP ──
     else {
         reply([
             "Je n'ai pas saisi votre demande. Pouvez-vous reformuler ?", 

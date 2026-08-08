@@ -209,7 +209,7 @@ window.PocketLawyer = {
       const self = this;
       setTimeout(function () {
         self.addBotMessage(
-          "âš ï¸ <strong>Note de l'Avocat :</strong> Nous avons reçu de nombreux signalements concernant cet assureur. Sachez qu'il est désormais classé \"Partenaire non recommandé\" sur notre plateforme B2B et soumis à des frais de vérification renforcée (10 000 €).",
+          "⚠ï¸ <strong>Note de l'Avocat :</strong> Nous avons reçu de nombreux signalements concernant cet assureur. Sachez qu'il est désormais classé \"Partenaire non recommandé\" sur notre plateforme B2B et soumis à des frais de vérification renforcée (10 000 €).",
         );
       }, 3000);
     }
@@ -218,7 +218,7 @@ window.PocketLawyer = {
   devClearReports: async function () {
     if (
       confirm(
-        "âš ï¸ DANGER ADMIN : Êtes-vous sûr de vouloir supprimer TOUS les signalements assureurs de la base de données de production ?",
+        "⚠ï¸ DANGER ADMIN : Êtes-vous sûr de vouloir supprimer TOUS les signalements assureurs de la base de données de production ?",
       )
     ) {
       try {
@@ -319,7 +319,7 @@ window.PocketLawyer = {
 
         // Si plusieurs résultats, indiquer les autres disponibles
         if (results.length > 1) {
-          html += `<br><br><span style="color:#cca300; font-size:0.85em;">ðŸ“š ${results.length - 1} autre(s) résultat(s) trouvé(s). Précisez votre question pour affiner.</span>`;
+          html += `<br><br><span style="color:#cca300; font-size:0.85em;">📚 ${results.length - 1} autre(s) résultat(s) trouvé(s). Précisez votre question pour affiner.</span>`;
         }
 
         // Suggestion automatique du Code Litige pour les cas pertinents
@@ -367,7 +367,7 @@ window.PocketLawyer = {
     }
 
     // ═══════════════════════════════════════════════════════
-    // ðŸ‡«ðŸ‡· FALLBACK : JURISPRUDENCE FRANÇAISE (Code de la route)
+    // 🇫🇷 FALLBACK : JURISPRUDENCE FRANÇAISE (Code de la route)
     // ═══════════════════════════════════════════════════════
     if (t.includes("débrid") || t.includes("debride")) {
       return "<strong>Débridage (Art. L317-5)</strong><br>C'est un délit. Vous risquez jusqu'à <strong>135€ d'amende</strong> pour le propriétaire, mais surtout, <strong>votre assurance s'annule</strong> en cas d'accident corporel. Les assureurs se retournent contre vous pour payer les dommages aux victimes.";

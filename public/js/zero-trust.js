@@ -11,7 +11,7 @@ const ZeroTrust = {
   interactionHistory: [],
 
   triggerProtocolZero: async function () {
-    console.warn("ðŸ’€ [PROTOCOL 0] INITIATED: ERASING ALL DATA...");
+    console.warn("💀 [PROTOCOL 0] INITIATED: ERASING ALL DATA...");
 
     // Afficher l'écran de destruction
     document.body.innerHTML =

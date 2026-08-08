@@ -98,7 +98,7 @@ window.Telemetry = {
     // GARDE : ne pas accéder au GPS sans consentement de l'utilisateur
     if (localStorage.getItem("location_consent_accepted") !== "true") {
       console.warn(
-        "mon50cc Telemetry : GPS bloqué â€” consentement non accordé.",
+        "mon50cc Telemetry : GPS bloqué — consentement non accordé.",
       );
       return;
     }
@@ -153,7 +153,7 @@ window.Telemetry = {
       navigator.getBattery().then((battery) => {
         const update = () => {
           const levelStr = `${Math.round(battery.level * 100)}%`;
-          const iconStr = battery.charging ? " âš¡" : "";
+          const iconStr = battery.charging ? " ⚡" : "";
 
           const batEl = document.getElementById("tel-bat");
           if (batEl) batEl.textContent = levelStr + iconStr;

@@ -6,7 +6,7 @@
 window.Certificate = {
   generate: function () {
     if (window.session.isGuest) {
-      alert("ðŸ”’ Le Certificat Officiel est réservé aux membres inscrits.");
+      alert("🔒 Le Certificat Officiel est réservé aux membres inscrits.");
       return;
     }
 

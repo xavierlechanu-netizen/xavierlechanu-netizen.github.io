@@ -1,9 +1,9 @@
-﻿// F11 : MÃƒâ€°CANO Ãƒ€ LA DEMANDE (Garages Partenaires Certifiés)
-// Modèle : Frais d'entrée unique 49,90ââ€š¬ pour le garage
+﻿// F11 : MÃƒ‰CANO Ãƒ€ LA DEMANDE (Garages Partenaires Certifiés)
+// Modèle : Frais d'entrée unique 49,90â‚¬ pour le garage
 // L'accès pilote est entièrement GRATUIT
 // ============================================================
 window.MecanoDemande = {
-  // Garages certifiés (frais d'entrée unique 49,90ââ€š¬ pour Ãƒªtre référencé)
+  // Garages certifiés (frais d'entrée unique 49,90â‚¬ pour Ãƒªtre référencé)
   // En production, ces données viendront de Firebase
   _getCertifiedGarages() {
     return JSON.parse(localStorage.getItem("certified_garages") || "[]");
@@ -37,7 +37,7 @@ window.MecanoDemande = {
                 <p style="font-size:0.7rem; color:#333; margin-top:10px;">Vous Ãƒªtes garagiste ? Rejoignez notre réseau.</p>
                 <a href="mailto:contact@mon50ccetmoi.com?subject=Rejoindre le réseau partenaire" 
                    style="display:inline-block; margin-top:10px; padding:8px 15px; background:var(--accent); color:#000; border-radius:10px; font-size:0.75rem; text-decoration:none; font-weight:bold;">
-                   âÅ“â€°ï¸ Nous contacter
+                   âÅ“‰ï¸ Nous contacter
                 </a>
             </div>`;
     }
@@ -53,9 +53,9 @@ window.MecanoDemande = {
                     </div>
                     <div style="text-align:right;">
                         <div style="font-size:0.65rem; font-weight:bold; color:${g.status === "dispo" ? "#2ecc71" : g.status === "busy" ? "#f1c40f" : "#ff4d4d"};">
-                            ${g.status === "dispo" ? "âÅ“… Dispo" : g.status === "busy" ? "â³ Sur RDV" : "Ã°Å¸Å¡« Complet"}
+                            ${g.status === "dispo" ? "âÅ“… Dispo" : g.status === "busy" ? "â³ Sur RDV" : "ðŸš« Complet"}
                         </div>
-                        <div style="font-size:0.6rem; color:#555; margin-top:2px;">âËœ… CERTIFIÃƒâ€°</div>
+                        <div style="font-size:0.6rem; color:#555; margin-top:2px;">âËœ… CERTIFIÃƒ‰</div>
                     </div>
                 </div>
                 <div style="display:flex; gap:8px; margin-top:10px;">
@@ -135,15 +135,15 @@ window.showPage = function (page) {
       es: {
         title: "Black Box Seguro",
         subtitle: "Informe Pericial Digital",
-        desc: "En caso de accidente, tu Black Box registra automÃ¡ticamente la velocidad, trayectoria GPS y Ã¡ngulo de inclinaciÃ³n.<br><br>Este informe certificado es <strong style='color:#2ecc71;'>gratuito para ti</strong>. Si tu compañÃ­a de seguros solicita un informe oficial certificado, se les factura <strong style='color:#f1c40f;'>49,90 € por expediente</strong>.",
+        desc: "En caso de accidente, tu Black Box registra automáticamente la velocidad, trayectoria GPS y ángulo de inclinación.<br><br>Este informe certificado es <strong style='color:#2ecc71;'>gratuito para ti</strong>. Si tu compañía de seguros solicita un informe oficial certificado, se les factura <strong style='color:#f1c40f;'>49,90 € por expediente</strong>.",
         available: "Datos disponibles",
-        pts: "puntos GPS registrados en el Ãºltimo viaje.",
+        pts: "puntos GPS registrados en el último viaje.",
         replay: "Repetir Viaje",
         generate: "Generar Informe PDF",
         nodata:
-          "NingÃºn viaje registrado. Inicia la navegaciÃ³n para activar la Black Box.",
+          "Ningún viaje registrado. Inicia la navegación para activar la Black Box.",
         footer:
-          "Informe gratuito para el piloto â€” 49,90 €/expediente facturados a la compañÃ­a de seguros.",
+          "Informe gratuito para el piloto — 49,90 €/expediente facturados a la compañía de seguros.",
       },
       it: {
         title: "Black Box Assicurazione",
@@ -156,7 +156,7 @@ window.showPage = function (page) {
         nodata:
           "Nessun viaggio registrato. Avvia la navigazione per attivare la Black Box.",
         footer:
-          "Rapporto gratuito per il piloto â€” 49,90 €/pratica addebitati alla compagnia assicurativa.",
+          "Rapporto gratuito per il piloto — 49,90 €/pratica addebitati alla compagnia assicurativa.",
       },
       de: {
         title: "Black Box Versicherung",
@@ -169,7 +169,7 @@ window.showPage = function (page) {
         nodata:
           "Keine Fahrt aufgezeichnet. Starten Sie die Navigation, um die Black Box zu aktivieren.",
         footer:
-          "Kostenloser Bericht für den Fahrer â€” 49,90 €/Fall wird der Versicherung in Rechnung gestellt.",
+          "Kostenloser Bericht für den Fahrer — 49,90 €/Fall wird der Versicherung in Rechnung gestellt.",
       },
     };
     const lang = navigator.language.split("-")[0].toLowerCase();
@@ -380,7 +380,7 @@ window.BlackBoxInsurance = {
 
 // =============================================
 
-// â”€â”€â”€ TRACÉ GPS DE LA BALADE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── TRACÉ GPS DE LA BALADE ──────────────────────────────────────────────────
 let rideTracePolyline = null;
 let rideTraceCoords = [];
 

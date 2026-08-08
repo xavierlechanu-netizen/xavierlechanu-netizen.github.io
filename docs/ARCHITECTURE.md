@@ -275,4 +275,116 @@ Assureur                    Frontend                 Cloud Function           Re
 | Caméra | `MediaDevices.getUserMedia()` | Caméra certifiée |
 | Microphone | `SpeechRecognition API` | Commandes vocales |
 | Haut-parleur | `SpeechSynthesis API` | Synthèse vocale IA |
+
+---
+
+## Architecture Matérielle Sécurisée (Boîte Noire IoT/Edge)
+
+### A. Capteurs de Détection d'Ouverture
+- **Capteur de lumière interne (Photodiode/Phototransistor)** : Placé sous la coque. Si le boîtier est fendu ou percé, la moindre lumière extérieure déclenche le capteur.
+- **Grille de sécurité (Tamper Mesh)** : Une fine trace de cuivre serpentine parcourt la face interne de la coque ou les couches externes du PCB. Si cette ligne est coupée ou mise en court-circuit (lors d'un perçage ou d'un meulage), le circuit le détecte.
+- **Capteur de pression / Bouton micro-poussoir** : Maintenu appuyé par la coque scellée. S'il est relâché, le contact est rompu.
+
+### B. Effacement Instantané des Clés & Données (Zeroization)
+
+```text
+[ Tentative d'ouverture / Perçage ] 
+              │
+              ▼
+    [ Capteur Anti-Tamper ]
+              │
+              ▼
+ [ Interruption Matérielle Ultra-Rapide ]
+              │
+              ▼
+ ┌─────────────────────────────────────────┐
+ │  1. Effacement Flash / Clés AES en µs   │
+ │  2. Mise en court-circuit de la mémoire │
+ │  3. Blocage définitif du Microcontrôleur│
+ └─────────────────────────────────────────┘
+```
+
+- **Mémoire Chiffrée** : Toutes les données de la boîte noire (positions GPS, vitesse, logs) sont chiffrées en AES-256 dans la mémoire Flash.
+- **Effacement Flash** : Dès que le capteur est déclenché, le microcontrôleur efface immédiatement la clé de déchiffrement (stockée en RAM volatile) en quelques microsecondes, rendant toutes les données stockées définitivement illisibles.
+- **Verrouillage du Chip (eFuse / Lock Bits)** : Écriture des eFuses du processeur pour désactiver définitivement l'interface de débogage (JTAG/SWD) et bloquer toute lecture future.
+
+### C. Maintenance et Mises à Jour (Sans Ouverture)
+Puisque le boîtier ne s'ouvre jamais :
+- **Pas de port USB / Connecteur physique** : Aucun port physique ne doit traverser le boîtier (cela créerait une faille d'étanchéité et de sécurité).
+- **Mise à jour FOTA (Firmware Over-The-Air)** : Les mises à jour du programme se font exclusivement via Bluetooth (BLE) de manière chiffrée et authentifiée.
+- **Diagnostic sans fil** : L'état de la batterie intégrée, la santé de la mémoire et les erreurs système sont transmis à l'application mobile en BLE.
+
+### D. Résumé de la Protection "Boîte Noire"
+
+| Menace | Réponse de la Carte |
+|---|---|
+| Tentative de meulage / découpe | La résine arrache les pistes du PCB + la grille de sécurité coupe l'alimentation de la mémoire. |
+| Tentative de perçage / Ouverture | Le capteur de lumière / pression déclenche l'effacement immédiat des clés de chiffrement. |
+| Attaque par eau / essence / feu | Résine ignifuge UL 94-V0 et étanchéité IP68 protègent les composants contre l'environnement du 50 cc. |
+
+### E. Liste des Composants Principaux (BOM - Prototype V1)
+Voici les références exactes recommandées pour constituer le premier prototype :
+
+| Catégorie | Composant / Référence | Rôle & Caractéristiques |
+|---|---|---|
+| Cerveau & BLE | ESP32-C3-MINI-1 ou nRF52840 | MCU RISC-V 32-bit, BLE 5.0, Chiffrement AES-128/256 matériel, petit format QFN. |
+| Module GPS | Quectel L76-LB ou u-blox EVA-M8M | Sensibilité élevée, format ultra-compact (9.7 x 10.1 mm). |
+| Power Path (Ideal Diode) | TI TPS44000 ou LTC4412 | Commutation instantanée 12V ➔ LiPo sans coupure. |
+| Convertisseur Buck (12V) | TI LMR16006 | Entrée jusqu'à 60V (supporte les surtensions du 50 cc). |
+| Chargeur LiPo | Microchip MCP73831 | Chargeur ultra-compact 4.2V programmable par résistance. |
+| Batterie LiPo | Cellule Pouch LiPo 1S 3.7V (350-400 mAh) | Épaisseur ≈ 3.2 mm, plage temp. -20°C à +65°C. |
+| Capteur Anti-Tamper | Vishay TEMD6200FX01 | Photodiode SMD ultra-plate (0805). |
+| Protections Électriques | TVS SMAJ18A + Fusible PTC 250mA | Protection contre l'inversion de polarité et les pics Load Dump. |
+| Résine d'Enrobage | Wevo-Set PU 260 ou Electrolube UR5604 | Polyurethane bi-composant ignifuge UL 94-V0. |
+
+### F. Cahier des Charges Fonctionnel (Synthèse pour Fabrication)
+
+#### Executive Summary
+- **Objet** : Boîtier enregistreur/traceur inviolable "Boîte Noire" sous bac à batterie pour véhicule 50 cc.
+- **Format cible** : 85.6 x 53.98 x 6.5 mm (Format ID-1 carte bancaire étendu).
+
+#### Spécifications Techniques & Contraintes
+- **Environnement** :
+  - Température de fonctionnement : -20°C à +65°C.
+  - Étanchéité : IP67/IP68 (résistance à l'immersion, l'essence et la boue).
+  - Inflammabilité : Norme UL 94-V0 (arrêt de combustion < 10 s).
+- **Alimentation & Énergie** :
+  - Tension d'entrée : 9V à 18V DC (réseau 12V du 50 cc).
+  - Autonomie sur batterie interne : Minimum 24 à 48 heures en veille (Deep Sleep + envoi d'alerte ponctuel).
+  - Bascule d'alimentation : Temps de commutation < 50 µs (Power Path).
+- **Connectivité & Données** :
+  - Interface RF : Bluetooth Low Energy (BLE 5.0) + GPS/GLONASS.
+  - Antenne : Interne sous fenêtre Polycarbonate (pas d'antenne externe).
+  - Chiffrement : AES-256 bits pour la mémoire locale et les échanges BLE.
+- **Sécurité Matérielle (Inviolabilité)** :
+  - Boîtier enrobé sous vide dans de la résine PU.
+  - Aucun port physique externe (mises à jour FOTA uniquement).
+  - Système d'autodestruction logique des clés AES sur détection d'ouverture/perçage.
+
+### G. Synthèse du Boîtier "Boîte Noire" 50 cc
+
+```text
+ ┌──────────────────────────────────────────────────────────────┐
+ │              Coque Hybride Aluminium / PC UL94-V0            │
+ │ ┌──────────────────────────────────────────────────────────┐ │
+ │ │            Résine de Coulée PU (IP68 & Ignifuge)         │ │
+ │ │                                                          │ │
+ │ │  [Batterie LiPo]   [Circuit Power Path]  [Antenne BLE/GPS]│ │
+ │ │        │                    │                   │        │ │
+ │ │  [BMS Sécurité]    [ESP32-C3/nRF52]   [Capteur Tamper]   │ │
+ │ │        └────────────────────┼───────────────────┘        │ │
+ │ │                     [PCB FR-4 High-Tg]                   │ │
+ │ └──────────────────────────────────────────────────────────┘ │
+ └──────────────────────────────┬───────────────────────────────┘
+                                │ (Câble Silicone 12V Surmoulé)
+                                ▼
+                       [Faisceau du 50 cc]
+```
+
+#### Les 5 Piliers du Modèle :
+- **Format Compact & Plat** : Conçu pour se glisser sous le bac à batterie (6.5 mm d'épaisseur).
+- **Ignifuge & Incassable** : Résine bi-composant certifiée UL 94-V0 et structure alu/polycarbonate.
+- **Autonomie & Commutation Ininterrompue** : Un circuit Power Path qui bascule sur la LiPo interne en quelques microsecondes sans éteindre le système.
+- **Communication RF Optimisée** : Fenêtre radio-transparente pour que le Bluetooth et le GPS traversent l'enveloppe.
+- **Inviolabilité Boîte Noire** : Un système scellé à vie avec destruction matérielle et logicielle (chiffrement AES) en cas d'ouverture forcée.
 ]]>

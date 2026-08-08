@@ -189,7 +189,7 @@ window.closePrivacyPolicy = function () {
   if (modal) modal.classList.add("hidden");
 };
 
-// â”€â”€â”€ Droit à l'effacement (Droit à l'oubli / Protocol Zero) â”€â”€
+// ─── Droit à l'effacement (Droit à l'oubli / Protocol Zero) ──
 window.revokeAndEraseData = async function () {
   if (
     confirm(
@@ -247,7 +247,7 @@ window.revokeAndEraseData = async function () {
   }
 };
 
-// â”€â”€â”€ Export des données â”€â”€â”€â”€â”€â”€â”€
+// ─── Export des données ───────
 window.exportMyData = function () {
   try {
     const exportData = {
@@ -315,7 +315,7 @@ window.exportMyData = function () {
   }
 };
 
-// â”€â”€â”€ Vérification au chargement â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Vérification au chargement ─────────────────
 document.addEventListener("DOMContentLoaded", () => {
   if (!localStorage.getItem("global_privacy_consent")) {
     setTimeout(window.checkGlobalPrivacy, 500);

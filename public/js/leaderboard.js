@@ -126,13 +126,13 @@ window.Leaderboard = {
       let crownIcon = "";
       let color = "#fff";
       if (index === 0) {
-        crownIcon = "ðŸ‘‘";
+        crownIcon = "👑";
         color = "#ffd700";
       } else if (index === 1) {
-        crownIcon = "ðŸ¥ˆ";
+        crownIcon = "🥈";
         color = "#c0c0c0";
       } else if (index === 2) {
-        crownIcon = "ðŸ¥‰";
+        crownIcon = "🥉";
         color = "#cd7f32";
       }
 

@@ -238,7 +238,7 @@ window.DrivingScore = {
 
     panel.innerHTML = `
             <div style="font-size:14px; font-weight:bold; margin-bottom:10px; color:#00d2ff;">
-                ðŸ“Š Score de Conduite : ${this.currentScore}/100
+                📊 Score de Conduite : ${this.currentScore}/100
             </div>
             <div style="font-size:11px; color:#888; margin-bottom:8px;">
                 Dernières infractions (session) :

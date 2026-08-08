@@ -531,7 +531,7 @@ window.startApp = function () {
     window.ExchangeMarket.init();
   }
 
-  // â”€â”€ Initialisation des Cartes Hors Ligne â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Initialisation des Cartes Hors Ligne ──────────────────────
   if (window.OfflineMapManager) {
     try {
       window.OfflineMapManager.init();
@@ -555,7 +555,7 @@ window.startApp = function () {
       console.warn("mon50cc OfflineMap : Erreur init", e);
     }
   }
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────────────────────
 
   // Check Parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -582,7 +582,7 @@ window.startApp = function () {
   checkLegalConsent();
 };
 
-// â”€â”€ Panneau Cartes Hors Ligne : ouverture / fermeture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Panneau Cartes Hors Ligne : ouverture / fermeture ────────────
 window.toggleOfflinePanel = function () {
   const panel = document.getElementById("offline-panel");
   if (!panel) return;
@@ -602,8 +602,8 @@ window.toggleOfflinePanel = function () {
                 color: ${online ? "#00ff88" : "#ff4d6d"};
             `;
       statusEl.innerHTML = `
-                <span style="font-size:1rem; margin-right:8px;">${online ? "ðŸŸ¢" : "ðŸ”´"}</span>
-                ${online ? "CONNECTÉ â€” Google Maps actif" : "HORS LIGNE â€” Carte locale active"}
+                <span style="font-size:1rem; margin-right:8px;">${online ? "🟢" : "🔴"}</span>
+                ${online ? "CONNECTÉ — Google Maps actif" : "HORS LIGNE — Carte locale active"}
             `;
     }
 
@@ -658,7 +658,7 @@ window.toggleTilt = function () {
   map.setTilt(currentTilt === 45 ? 0 : 45);
 };
 
-// â”€â”€â”€ Wake Lock résilient (se réactive automatiquement en cas de perte) â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Wake Lock résilient (se réactive automatiquement en cas de perte) ────────
 let wakeLockRef = null;
 async function requestWakeLock() {
   if (!("wakeLock" in navigator)) return;
@@ -679,16 +679,17 @@ async function requestWakeLock() {
 
 // Réacquérir le Wake Lock quand l'app revient au premier plan
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && !wakeLockRef) {
-    requestWakeLock();
-    // Relancer le GPS si on a perdu la position pendant le sleep (SEULEMENT si consentement donné)
-    if (!currentPosition && gpsWatchId === null && hasLocationConsent()) {
-      startGeolocation();
+  if (document.visibilityState === "visible") {
+    if (!wakeLockRef) requestWakeLock();
+    // Relancer le GPS de force car iOS/Android tuent souvent le watcher en arrière-plan
+    if (hasLocationConsent()) {
+      console.log("mon50cc GPS : App resume, relance du GPS pour forcer le fix.");
+      window.retryGps();
     }
   }
 });
 
-// â”€â”€ Garde de consentement : vérifie si l'utilisateur a accepté la divulgation â”€â”€
+// ── Garde de consentement : vérifie si l'utilisateur a accepté la divulgation ──
 function hasLocationConsent() {
   return localStorage.getItem("location_consent_accepted") === "true";
 }
@@ -710,7 +711,7 @@ async function checkLegalConsent() {
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // DIVULGATION BIEN VISIBLE (Prominent Disclosure) â€” Google Play
+  // DIVULGATION BIEN VISIBLE (Prominent Disclosure) — Google Play
   // Conforme à la politique relative aux données de l'utilisateur.
   // Affiché AVANT toute collecte de données de localisation.
   // ══════════════════════════════════════════════════════════════════
@@ -772,7 +773,7 @@ async function checkLegalConsent() {
             text-align:center; font-size:0.85rem; z-index:19999; line-height:1.4;
         `;
     banner.innerHTML = `
-            <strong>âš ï¸ Localisation requise</strong><br>
+            <strong>⚠ï¸ Localisation requise</strong><br>
             L'application ne peut pas fonctionner sans accès à votre position.
             <br><button onclick="checkLegalConsent()" style="margin-top:8px; padding:8px 24px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; cursor:pointer;">Réessayer</button>
         `;
@@ -850,7 +851,7 @@ function showGpsBanner(msg, code) {
     document.body.appendChild(banner);
   }
 
-  const repairBtn = `<button onclick="window.retryGps()" style="margin-top:10px; padding:8px 20px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; font-size:0.85rem; cursor:pointer;">ðŸ”„ Réessayer</button>`;
+  const repairBtn = `<button onclick="window.retryGps()" style="margin-top:10px; padding:8px 20px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; font-size:0.85rem; cursor:pointer;">🔄 Réessayer</button>`;
 
   banner.innerHTML = `<div style="font-weight:bold; margin-bottom:4px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i>GPS : ${msg}</div><div style="font-size:0.72rem; color:#fca5a5;">(Code erreur: ${code})</div>${repairBtn}`;
   banner.style.display = "block";
@@ -872,13 +873,13 @@ window.repairGps = function () {
   const appUrl = "mon50ccetmoi.com";
   const instructions = `
         <div style="text-align:left; font-size:0.9rem; line-height:1.5;">
-            <b style="color:#ffb703;">ðŸ“± Sur Android Chrome :</b><br>
-            1. Appuie sur les 3 points â‹® en haut à droite<br>
+            <b style="color:#ffb703;">📱 Sur Android Chrome :</b><br>
+            1. Appuie sur les 3 points ⋮ en haut à droite<br>
             2. Paramètres ←’ Paramètres du site<br>
             3. Localisation ←’ Cherche '${appUrl}'<br>
             4. Passe de 'Bloquer' à 'Autoriser'<br>
             5. Recharge l'application<br><br>
-            <b style="color:#ffb703;">ðŸ“± Dans l'app Android :</b><br>
+            <b style="color:#ffb703;">📱 Dans l'app Android :</b><br>
             1. Appui long sur l'icône de l'app<br>
             2. Infos sur l'appli ←’ Autorisations<br>
             3. Position ←’ Autoriser (ou Toujours autoriser)
@@ -938,7 +939,7 @@ async function startGeolocation() {
       "mon50cc GPS : Consentement de localisation non accordé. GPS bloqué.",
     );
     alert(
-      "âš ï¸ Accès GPS bloqué : Le consentement de géolocalisation est requis. Vous allez être redirigé vers l'accueil.",
+      "⚠ï¸ Accès GPS bloqué : Le consentement de géolocalisation est requis. Vous allez être redirigé vers l'accueil.",
     );
     window.location.href = "index.html";
     return;
@@ -985,7 +986,7 @@ async function startGeolocation() {
   // On utilise uniquement watchPosition car iOS gère très mal les appels concurrents (getCurrentPosition + watchPosition)
   const geoOptions = {
     enableHighAccuracy: true,
-    timeout: 30000, // 30s â€” laisse le temps aux satellites en intérieur
+    timeout: 30000, // 30s — laisse le temps aux satellites en intérieur
     maximumAge: 3000, // 3s de cache max pour les updates fréquents
   };
 
@@ -1020,14 +1021,14 @@ async function startGeolocation() {
 
   gpsWatchId = navigator.geolocation.watchPosition(
     (pos) => {
-      // Filtrage qualité : accepter la première position à tout prix, puis filtrer à < 500m
+      // Filtrage qualité : accepter les positions même > 500m si c'est tout ce qu'on a,
+      // pour éviter que l'utilisateur reste bloqué sur la carte.
       const acc = pos.coords.accuracy || 0;
-      if (currentPosition && acc > 500) {
-        console.warn(
-          `mon50cc GPS : Position ignorée (précision: ${acc.toFixed(0)}m > 500m)`,
-        );
+      if (currentPosition && window.lastAccuracy && acc > 2000 && acc > window.lastAccuracy * 2) {
+        console.warn(`mon50cc GPS : Position ignorée (précision très dégradée: ${acc.toFixed(0)}m)`);
         return;
       }
+      window.lastAccuracy = acc;
       updatePosition(pos);
       hideGpsBanner();
       gpsRetryCount = 0; // Reset du compteur de retry
@@ -1036,7 +1037,7 @@ async function startGeolocation() {
     geoOptions,
   );
 
-  // ÉTAPE 4 : Timer de sécurité â€” si aucune position après 15s, forcer le fallback
+  // ÉTAPE 4 : Timer de sécurité — si aucune position après 15s, forcer le fallback
   setTimeout(() => {
     if (!currentPosition && fallbackWatchId === null) {
       console.warn(
@@ -1047,7 +1048,7 @@ async function startGeolocation() {
   }, 15000);
 }
 
-// Fallback basse précision (WiFi/Cellulaire) â€” déclenché automatiquement
+// Fallback basse précision (WiFi/Cellulaire) — déclenché automatiquement
 function activateLowAccuracyFallback() {
   if (fallbackWatchId !== null) return; // Déjà actif
   if (gpsRetryCount >= GPS_MAX_RETRIES) {
@@ -1118,7 +1119,14 @@ class NeuralPredictionEngine {
 window.NeuralEngine = new NeuralPredictionEngine();
 
 let speedHistory = [];
-function getSmoothedSpeed(rawSpeed) {
+function getSmoothedSpeed(rawSpeed, speedIsNull) {
+  // Si la vitesse est null (ex: fix WiFi), on ne l'ajoute pas à l'historique 
+  // pour ne pas fausser la moyenne avec des "0" intempestifs.
+  if (speedIsNull && speedHistory.length > 0) {
+    // Retourne la dernière moyenne connue
+    return speedHistory.reduce((a, b) => a + b, 0) / speedHistory.length;
+  }
+  
   speedHistory.push(rawSpeed);
   if (speedHistory.length > 5) speedHistory.shift();
   const sum = speedHistory.reduce((a, b) => a + b, 0);
@@ -1126,10 +1134,10 @@ function getSmoothedSpeed(rawSpeed) {
 }
 
 function updatePosition(position) {
-  // Arrêt du fallback basse précision si on récupère un signal GPS haute précision décent (< 30m)
+  // Arrêt du fallback basse précision si on récupère un signal GPS décent (< 100m)
   if (
     position.coords.accuracy !== null &&
-    position.coords.accuracy < 30 &&
+    position.coords.accuracy < 100 &&
     fallbackWatchId !== null
   ) {
     navigator.geolocation.clearWatch(fallbackWatchId);
@@ -1208,15 +1216,16 @@ function updatePosition(position) {
         if (el)
           el.onclick = () =>
             alert(
-              "Veuillez créer un compte pour accéder à l'Arbitre de la Route ! ⚖️ðŸ›µ",
+              "Veuillez créer un compte pour accéder à l'Arbitre de la Route ! ⚖️🛵",
             );
       },
     );
   }
 
   // Vitesse (HUD) avec Smoothing Neural
-  const rawSpeed = speed !== null && speed >= 0 ? speed * 3.6 : 0;
-  const speedKmh = Math.round(getSmoothedSpeed(rawSpeed));
+  const speedIsNull = speed === null;
+  const rawSpeed = !speedIsNull && speed >= 0 ? speed * 3.6 : 0;
+  const speedKmh = Math.round(getSmoothedSpeed(rawSpeed, speedIsNull));
   const speedEl = document.getElementById("speed");
   const speedBar = document.getElementById("speed-bar");
 
@@ -1686,41 +1695,41 @@ window.OracleEngine = {
     },
     zh: {
       standard: {
-        start: "ç³»ç»Ÿå°±ç»ªã€‚è¿žæŽ¥å·²å»ºç«‹ã€‚",
-        speed: "è­¦å‘Šï¼šé€Ÿåº¦è¿‡å¿«ã€‚è¯·ç«‹å³å‡é€Ÿã€‚",
-        threat_detected: "åˆ†æžï¼šå‘çŽ°å¨èƒã€‚å»ºè®®è°¨æ…Žã€‚",
-        level_up: "æ­å–œè½¦æ‰‹ã€‚æ‚¨çš„ç»éªŒå€¼å·²æå‡ã€‚",
-        start_guardian: "å®ˆæŠ¤å¤©ä½¿å·²å¼€å¯ã€‚æ­£åœ¨ç›‘æŽ§ã€‚",
-        stop_guardian: "å®ˆæŠ¤å¤©ä½¿å·²å…³é—­ã€‚ç›‘æŽ§ç»“æŸã€‚",
-        danger_overtake: "è­¦å‘Šï¼šæ£€æµ‹åˆ°å±é™©è¶…è½¦ã€‚",
+        start: "系统就绪。连接已建立。",
+        speed: "警告：速度过快。请立å³å‡速。",
+        threat_detected: "分æž：å‘现å¨èƒ。建议谨慎。",
+        level_up: "æ­喜车手。您的ç»验值已æå‡。",
+        start_guardian: "守护天使已开å¯。正在监控。",
+        stop_guardian: "守护天使已关闭。监控结æŸ。",
+        danger_overtake: "警告：检测到å±险超车。",
       },
     },
     ja: {
       standard: {
-        start: "ã‚·ã‚¹ãƒ†ãƒ æº–å‚™å®Œäº†ã€‚æŽ¥ç¶šãŒç¢ºç«‹ã•ã‚Œã¾ã—ãŸã€‚",
-        speed: "è­¦å‘Šï¼šé€Ÿåº¦è¶…éŽã§ã™ã€‚ç›´ã¡ã«æ¸›é€Ÿã—ã¦ãã ã•ã„ã€‚",
-        threat_detected: "åˆ†æžï¼šè„…å¨ã‚’æ¤œçŸ¥ã€‚æ³¨æ„ã—ã¦ãã ã•ã„ã€‚",
-        level_up: "ãŠã‚ã§ã¨ã†ã”ã–ã„ã¾ã™ã€‚ãƒ¬ãƒ™ãƒ«ãŒä¸ŠãŒã‚Šã¾ã—ãŸã€‚",
-        start_guardian: "å®ˆè­·å¤©ä½¿ãŒèµ·å‹•ã—ã¾ã—ãŸã€‚ç›£è¦–ä¸­ã€‚",
-        stop_guardian: "å®ˆè­·å¤©ä½¿ãŒè§£é™¤ã•ã‚Œã¾ã—ãŸã€‚ç›£è¦–çµ‚äº†ã€‚",
-        danger_overtake: "è­¦å‘Šï¼šå±é™ºãªè¿½ã„è¶Šã—ã‚’æ¤œçŸ¥ã—ã¾ã—ãŸã€‚",
+        start: "システム準備完了。接続ãŒ確立ã•れã¾ã—ãŸ。",
+        speed: "警告：速度超éŽã§ã™。直ã¡ã«減速ã—ã¦ãã ã•ã„。",
+        threat_detected: "分æž：脅å¨を検知。注æ„ã—ã¦ãã ã•ã„。",
+        level_up: "ãŠã‚ã§ã¨ã†ã”ã–ã„ã¾ã™。レベルãŒ上ãŒりã¾ã—ãŸ。",
+        start_guardian: "守護天使ãŒ起動ã—ã¾ã—ãŸ。監視中。",
+        stop_guardian: "守護天使ãŒ解除ã•れã¾ã—ãŸ。監視終了。",
+        danger_overtake: "警告：å±険ãª追ã„越ã—を検知ã—ã¾ã—ãŸ。",
       },
     },
     es: {
       andalucia: {
-        start: "¡Ole! El OrÃ¡culo estÃ¡ listo, mi arma. ¡VÃ¡monos!",
-        speed: "¡Eh, chiquillo! Vas mu' rÃ¡pido, frena un poco.",
-        threat_detected: "Cuidao, que hay un jaleo ahÃ­ delante.",
+        start: "¡Ole! El Oráculo está listo, mi arma. ¡Vámonos!",
+        speed: "¡Eh, chiquillo! Vas mu' rápido, frena un poco.",
+        threat_detected: "Cuidao, que hay un jaleo ahí delante.",
         level_up: "¡Qué arte tienes! Has subido de nivel.",
-        start_guardian: "El Ãngel de la Guarda estÃ¡ contigo, mi arma.",
+        start_guardian: "El Ãngel de la Guarda está contigo, mi arma.",
         stop_guardian: "El Ãngel se va a echar una siestecita, ten cuidao.",
         danger_overtake:
-          "¡Chiquillo! Ese adelantamiento ha sÃ­o mu' peligroso.",
+          "¡Chiquillo! Ese adelantamiento ha sío mu' peligroso.",
       },
       standard: {
-        start: "Sistemas listos. ConexiÃ³n establecida.",
+        start: "Sistemas listos. Conexión establecida.",
         speed: "Alerta: Exceso de velocidad. Reduzca inmediatamente.",
-        threat_detected: "ANÃLISIS: Amenaza identificada. Tenga precauciÃ³n.",
+        threat_detected: "ANÃLISIS: Amenaza identificada. Tenga precaución.",
         level_up: "Felicidades Piloto. Su experiencia ha aumentado.",
         start_guardian: "Ãngel de la Guarda activado. Vigilancia en curso.",
         stop_guardian: "Ãngel de la Guarda desactivado. Fin de la vigilancia.",
@@ -1765,12 +1774,12 @@ window.OracleEngine = {
     },
     pt: {
       standard: {
-        start: "Sistema pronto. ConexÃ£o estabelecida.",
+        start: "Sistema pronto. Conexão estabelecida.",
         speed: "Alerta: Velocidade excessiva. Reduza imediatamente.",
         threat_detected: "ANÃLISE: Ameaça identificada. Cuidado aconselhado.",
         level_up: "Parabéns Piloto. A sua experiência aumentou.",
-        start_guardian: "Anjo da Guarda ativado. MonitorizaçÃ£o em curso.",
-        stop_guardian: "Anjo da Guarda desativado. Fim da monitorizaçÃ£o.",
+        start_guardian: "Anjo da Guarda ativado. Monitorização em curso.",
+        stop_guardian: "Anjo da Guarda desativado. Fim da monitorização.",
         danger_overtake: "AVISO: ULTRAPASSAGEM PERIGOSA DETETADA.",
       },
     },
@@ -1792,11 +1801,11 @@ window.OracleEngine = {
         start: "System gotowy. PoÅ‚Ä…czenie nawiÄ…zane.",
         speed: "Alert: Nadmierna prÄ™dkoÅ›Ä‡. ProszÄ™ natychmiast zwolniÄ‡.",
         threat_detected:
-          "ANALIZA: Zidentyfikowano zagroÅ¼enie. Zalecana ostroÅ¼noÅ›Ä‡.",
+          "ANALIZA: Zidentyfikowano zagrożenie. Zalecana ostrożnoÅ›Ä‡.",
         level_up: "Gratulacje Pilocie. Twoje doÅ›wiadczenie wzrosÅ‚o.",
-        start_guardian: "AnioÅ‚ StrÃ³Å¼ aktywowany. Monitorowanie w toku.",
-        stop_guardian: "AnioÅ‚ StrÃ³Å¼ dezaktywowany. Koniec monitorowania.",
-        danger_overtake: "OSTRZEÅ»ENIE: WYKRYTO NIEBEZPIECZNE WYPRZEDZANIE.",
+        start_guardian: "AnioÅ‚ Stróż aktywowany. Monitorowanie w toku.",
+        stop_guardian: "AnioÅ‚ Stróż dezaktywowany. Koniec monitorowania.",
+        danger_overtake: "OSTRZEŻENIE: WYKRYTO NIEBEZPIECZNE WYPRZEDZANIE.",
       },
     },
     sv: {
@@ -1848,42 +1857,42 @@ window.OracleEngine = {
     el: {
       standard: {
         start:
-          "Î£ÏÏƒÏ„Î·Î¼Î± Î­Ï„Î¿Î¹Î¼Î¿. Î— ÏƒÏÎ½Î´ÎµÏƒÎ· Î¿Î»Î¿ÎºÎ»Î·ÏÏŽÎ¸Î·ÎºÎµ.",
+          "ΣÏÏƒÏ„ημα έÏ„οιμο. Î— ÏƒÏνδεÏƒη ολοκληÏÏŽθηκε.",
         speed:
-          "Î•Î¹Î´Î¿Ï€Î¿Î¯Î·ÏƒÎ·: Î¥Ï€ÎµÏÎ²Î¿Î»Î¹ÎºÎ® Ï„Î±Ï‡ÏÏ„Î·Ï„Î±. Î•Ï€Î¹Î²ÏÎ±Î´ÏÎ½ÎµÏ„Îµ Î±Î¼Î­ÏƒÏ‰Ï‚.",
+          "Î•ιδοÏ€οίηÏƒη: ΥÏ€εÏβολική Ï„αÏ‡ÏÏ„ηÏ„α. Î•Ï€ιβÏαδÏνεÏ„ε αμέÏƒÏ‰Ï‚.",
         threat_detected:
-          "Î‘ÎÎ‘Î›Î¥Î£Î—: Î•Î½Ï„Î¿Ï€Î¯ÏƒÏ„Î·ÎºÎµ Î±Ï€ÎµÎ¹Î»Î®. Î£Ï…Î½Î¹ÏƒÏ„Î¬Ï„Î±Î¹ Ï€ÏÎ¿ÏƒÎ¿Ï‡Î®.",
+          "Î‘ÎÎ‘Î›ΥΣÎ—: Î•νÏ„οÏ€ίÏƒÏ„ηκε αÏ€ειλή. ΣÏ…νιÏƒÏ„άÏ„αι Ï€ÏοÏƒοÏ‡ή.",
         level_up:
-          "Î£Ï…Î³Ï‡Î±ÏÎ·Ï„Î®ÏÎ¹Î± Î Î¹Î»ÏŒÏ„Îµ. Î— ÎµÎ¼Ï€ÎµÎ¹ÏÎ¯Î± ÏƒÎ±Ï‚ Î±Ï…Î¾Î®Î¸Î·ÎºÎµ.",
+          "ΣÏ…γÏ‡αÏηÏ„ήÏια ΠιλÏŒÏ„ε. Î— εμÏ€ειÏία ÏƒαÏ‚ αÏ…ξήθηκε.",
         start_guardian:
-          "Î¦ÏÎ»Î±ÎºÎ±Ï‚ Î†Î³Î³ÎµÎ»Î¿Ï‚ ÎµÎ½ÎµÏÎ³Î¿Ï€Î¿Î¹Î®Î¸Î·ÎºÎµ. Î Î±ÏÎ±ÎºÎ¿Î»Î¿ÏÎ¸Î·ÏƒÎ· ÏƒÎµ ÎµÎ¾Î­Î»Î¹Î¾Î·.",
+          "ΦÏλακαÏ‚ Î†γγελοÏ‚ ενεÏγοÏ€οιήθηκε. ΠαÏακολοÏθηÏƒη Ïƒε εξέλιξη.",
         stop_guardian:
-          "Î¦ÏÎ»Î±ÎºÎ±Ï‚ Î†Î³Î³ÎµÎ»Î¿Ï‚ Î±Ï€ÎµÎ½ÎµÏÎ³Î¿Ï€Î¿Î¹Î®Î¸Î·ÎºÎµ. Î¤Î­Î»Î¿Ï‚ Ï€Î±ÏÎ±ÎºÎ¿Î»Î¿ÏÎ¸Î·ÏƒÎ·Ï‚.",
+          "ΦÏλακαÏ‚ Î†γγελοÏ‚ αÏ€ενεÏγοÏ€οιήθηκε. ΤέλοÏ‚ Ï€αÏακολοÏθηÏƒηÏ‚.",
         danger_overtake:
-          "Î Î¡ÎŸÎ£ÎŸÎ§Î—: Î•ÎÎ¤ÎŸÎ Î™Î£Î¤Î—ÎšÎ• Î•Î Î™ÎšÎ™ÎÎ”Î¥ÎÎ— Î Î¡ÎŸÎ£Î Î•Î¡Î‘Î£Î—.",
+          "ΠΡÎŸΣÎŸΧÎ—: Î•ÎΤÎŸΠÎ™ΣΤÎ—ÎšÎ• Î•ΠÎ™ÎšÎ™ÎÎ”ΥÎÎ— ΠΡÎŸΣΠÎ•ΡÎ‘ΣÎ—.",
       },
     },
     cs: {
       standard: {
-        start: "Systém pÅ™ipraven. PÅ™ipojenÃ­ navÃ¡zÃ¡no.",
-        speed: "UpozornÄ›nÃ­: NadmÄ›rnÃ¡ rychlost. OkamÅ¾itÄ› zpomalte.",
+        start: "Systém pÅ™ipraven. PÅ™ipojení navázáno.",
+        speed: "UpozornÄ›ní: NadmÄ›rná rychlost. OkamžitÄ› zpomalte.",
         threat_detected:
-          "ANALÃZA: IdentifikovÃ¡na hrozba. DoporuÄuje se opatrnost.",
-        level_up: "Gratulujeme Pilote. VaÅ¡e zkuÅ¡enosti se zvÃ½Å¡ily.",
-        start_guardian: "AndÄ›l strÃ¡Å¾nÃ½ aktivovÃ¡n. SledovÃ¡nÃ­ probÃ­hÃ¡.",
-        stop_guardian: "AndÄ›l strÃ¡Å¾nÃ½ deaktivovÃ¡n. Konec sledovÃ¡nÃ­.",
-        danger_overtake: "VAROVÃNÃ: ZJIÅ TÄšNO NEBEZPEÄŒNÉ PÅ˜EDBÃHÃNÃ.",
+          "ANALÃZA: Identifikována hrozba. DoporuÄuje se opatrnost.",
+        level_up: "Gratulujeme Pilote. Vaše zkušenosti se zvýšily.",
+        start_guardian: "AndÄ›l strážný aktivován. Sledování probíhá.",
+        stop_guardian: "AndÄ›l strážný deaktivován. Konec sledování.",
+        danger_overtake: "VAROVÃNÃ: ZJIŠTÄšNO NEBEZPEÄŒNÉ PÅ˜EDBÃHÃNÃ.",
       },
     },
     hu: {
       standard: {
         start: "Rendszer kész. Kapcsolat létrejött.",
-        speed: "RiasztÃ¡s: TÃºl nagy sebesség. Azonnal lassÃ­tson.",
+        speed: "Riasztás: Túl nagy sebesség. Azonnal lassítson.",
         threat_detected:
-          "ELEMZÉS: Fenyegetés azonosÃ­tva. Ã“vatossÃ¡g ajÃ¡nlott.",
-        level_up: "GratulÃ¡lunk PilÃ³ta. Tapasztalata nÅ‘tt.",
-        start_guardian: "Årangyal aktivÃ¡lva. Megfigyelés folyamatban.",
-        stop_guardian: "Årangyal deaktivÃ¡lva. Megfigyelés vége.",
+          "ELEMZÉS: Fenyegetés azonosítva. Ã“vatosság ajánlott.",
+        level_up: "Gratulálunk Pilóta. Tapasztalata nÅ‘tt.",
+        start_guardian: "Årangyal aktiválva. Megfigyelés folyamatban.",
+        stop_guardian: "Årangyal deaktiválva. Megfigyelés vége.",
         danger_overtake: "FIGYELEM: VESZÉLYES ELÅZÉS ÉSZLELVE.",
       },
     },
@@ -2010,10 +2019,10 @@ async function speak(phraseKey) {
   // Simulation d'accents régionaux (pitch/rate)
   if (region && region !== "standard" && voiceMode === "standard") {
     switch (region) {
-      // Système A â€” Régions administratives (Nominatim)
+      // Système A — Régions administratives (Nominatim)
       case "provence-alpes-côte d'azur":
       case "occitanie":
-      // Système B â€” Villes/zones (GPS)
+      // Système B — Villes/zones (GPS)
       case "marseille":
       case "reunion":
         rate = 0.85;

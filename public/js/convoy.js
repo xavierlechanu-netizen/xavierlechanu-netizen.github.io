@@ -1,5 +1,5 @@
 ﻿/**
- * ðŸ—ºï¸ MODE CONVOI
+ * 🗺ï¸ MODE CONVOI
  * Système de balades en groupe avec partage de position en temps réel via Firebase Firestore.
  * Sécurité : request.auth.uid vérifié côté Firestore Rules, chiffrement E2EE via cloudEncrypt/cloudDecrypt.
  */
@@ -347,7 +347,7 @@ window.ConvoyManager = {
                         <i class="fa-solid fa-plus"></i> Créer un Convoi
                     </button>
                     
-                    <div style="text-align:center; color:#666; margin-bottom:15px;">â€” ou â€”</div>
+                    <div style="text-align:center; color:#666; margin-bottom:15px;">— ou —</div>
                     
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="convoy-join-code" maxlength="4" placeholder="CODE" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:15px; border-radius:15px; font-size:1.2rem; text-align:center; letter-spacing:5px; text-transform:uppercase; outline:none;">

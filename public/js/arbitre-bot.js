@@ -13,36 +13,36 @@ window.processArbitreQuery = async function (query) {
   const legalContent = {
     fr: {
       disclaimer:
-        '<br><br><small style="color:#666; font-size:0.7rem;">âš ï¸ <em>Ceci est un assistant basé sur les textes officiels, pas un conseil juridique professionnel.</em></small>',
+        '<br><br><small style="color:#666; font-size:0.7rem;">⚠ï¸ <em>Ceci est un assistant basé sur les textes officiels, pas un conseil juridique professionnel.</em></small>',
       notFound: `<strong>Verdict de l'Arbitre :</strong> Je n'ai pas trouvé de texte de loi spécifique.<br><br>ðŸ” <em>Précisez (ex: gants, casque, débridage...).</em>`,
       scenarios: [
         {
           keywords: ["accident", "débridé", "assurance", "responsable"],
-          response: `<strong>âš ï¸ CAS CRITIQUE : Accident & Conformité</strong><br><br>
+          response: `<strong>⚠ï¸ CAS CRITIQUE : Accident & Conformité</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Article L211-1 (Assurances).<br>
                     🌍 <strong>International :</strong> Dans toute l'UE, la modification des performances annule l'homologation.<br>
-                    ðŸ”¹ <strong>Verdict :</strong> L'assureur peut exercer un "Droit de Recours" et vous réclamer le remboursement des dommages versés aux tiers.`,
+                    🔹 <strong>Verdict :</strong> L'assureur peut exercer un "Droit de Recours" et vous réclamer le remboursement des dommages versés aux tiers.`,
         },
         {
           keywords: ["débridage", "vitesse", "45", "km/h", "moteur"],
-          response: `<strong>ðŸš€ RÈGLE : Vitesse & Catégorie AM</strong><br><br>
+          response: `<strong>🚀 RÈGLE : Vitesse & Catégorie AM</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Article R311-1 (France).<br>
                     🌍 <strong>International :</strong> Directive Européenne 2006/126/CE : La catégorie AM est limitée à <strong>45 km/h</strong>.<br>
-                    ðŸ”¹ <strong>Sanction :</strong> Amende (135€ en FR) et confiscation du véhicule.`,
+                    🔹 <strong>Sanction :</strong> Amende (135€ en FR) et confiscation du véhicule.`,
         },
         {
           keywords: ["casque", "gants", "protection", "homologué", "ce"],
-          response: `<strong>ðŸª– ÉQUIPEMENT : Normes de sécurité</strong><br><br>
+          response: `<strong>🪖 ÉQUIPEMENT : Normes de sécurité</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Articles R431-1 et R431-1-2.<br>
                     🌍 <strong>International :</strong> Norme <strong>ECE 22.06</strong> pour les casques et <strong>EN 13594</strong> pour les gants.<br>
-                    ðŸ”¹ <strong>Obligation :</strong> Le marquage CE est obligatoire pour circuler en Europe.`,
+                    🔹 <strong>Obligation :</strong> Le marquage CE est obligatoire pour circuler en Europe.`,
         },
         {
           keywords: ["contrôle technique", "ct", "visite"],
-          response: `<strong>ðŸ”§ RÉGLEMENTATION : Contrôle Technique</strong><br><br>
+          response: `<strong>🔧 RÉGLEMENTATION : Contrôle Technique</strong><br><br>
                     ⚖️ <strong>France :</strong> Obligatoire depuis le 15 avril 2024.<br>
                     🌍 <strong>International :</strong> Directive 2014/45/UE imposant le contrôle technique des deux-roues dans l'Union Européenne.<br>
-                    ðŸ”¹ <strong>Défaut :</strong> Amende de 135€ et immobilisation.`,
+                    🔹 <strong>Défaut :</strong> Amende de 135€ et immobilisation.`,
         },
         {
           keywords: ["interfiles", "remontée", "file"],
@@ -52,27 +52,27 @@ window.processArbitreQuery = async function (query) {
         },
         {
           keywords: ["pot", "échappement", "bruit", "chicane", "db"],
-          response: `<strong>ðŸ”Š NUISANCE : Échappement & Bruit</strong><br><br>
+          response: `<strong>🔊 NUISANCE : Échappement & Bruit</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Article R318-3 du Code de la Route.<br>
-                    ðŸ”¹ <strong>Règle :</strong> Tout dispositif réduisant le bruit (chicane) doit être présent. L'absence de chicane est passible d'une amende de 135€ et peut entraîner l'immobilisation du véhicule.`,
+                    🔹 <strong>Règle :</strong> Tout dispositif réduisant le bruit (chicane) doit être présent. L'absence de chicane est passible d'une amende de 135€ et peut entraîner l'immobilisation du véhicule.`,
         },
         {
           keywords: ["passager", "duo", "place", "selle"],
-          response: `<strong>ðŸ‘¥ DUO : Transport d'un passager</strong><br><br>
+          response: `<strong>👥 DUO : Transport d'un passager</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Article R431-5.<br>
-                    ðŸ”¹ <strong>Condition :</strong> Le cyclomoteur doit posséder une selle biplace et des repose-pieds. Le passager doit obligatoirement porter un casque et des gants homologués.`,
+                    🔹 <strong>Condition :</strong> Le cyclomoteur doit posséder une selle biplace et des repose-pieds. Le passager doit obligatoirement porter un casque et des gants homologués.`,
         },
         {
           keywords: ["feu", "éclairage", "phare", "clignotant"],
-          response: `<strong>ðŸ’¡ VISIBILITÉ : Éclairage obligatoire</strong><br><br>
+          response: `<strong>💡 VISIBILITÉ : Éclairage obligatoire</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Articles R313-1 à R313-32.<br>
-                    ðŸ”¹ <strong>Obligation :</strong> Feux de croisement allumés de jour comme de nuit. Tout feu non fonctionnel est passible d'une contravention de 3ème classe (68€).`,
+                    🔹 <strong>Obligation :</strong> Feux de croisement allumés de jour comme de nuit. Tout feu non fonctionnel est passible d'une contravention de 3ème classe (68€).`,
         },
         {
           keywords: ["autocollant", "réfléchissant", "casque", "nuit"],
-          response: `<strong>âœ¨ SÉCURITÉ : Stickers réfléchissants</strong><br><br>
+          response: `<strong>✨ SÉCURITÉ : Stickers réfléchissants</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Article R431-1 et homologation ECE 22.05/22.06.<br>
-                    ðŸ”¹ <strong>Règle :</strong> 4 stickers réfléchissants (un sur chaque face) sont obligatoires sur le casque. Absence = 3 points de moins et 135€ d'amende.`,
+                    🔹 <strong>Règle :</strong> 4 stickers réfléchissants (un sur chaque face) sont obligatoires sur le casque. Absence = 3 points de moins et 135€ d'amende.`,
         },
         {
           keywords: [
@@ -82,41 +82,41 @@ window.processArbitreQuery = async function (query) {
             "kit",
             "main libre",
           ],
-          response: `<strong>ðŸ“± USAGE : Téléphone et Écouteurs</strong><br><br>
+          response: `<strong>📱 USAGE : Téléphone et Écouteurs</strong><br><br>
                     ⚖️ <strong>Loi :</strong> Article R412-6-1.<br>
-                    ðŸ”¹ <strong>Interdiction :</strong> Tout dispositif porté à l'oreille (écouteurs, casque audio) est interdit. Seuls les systèmes intégrés au casque (Bluetooth sans contact direct avec l'oreille) sont tolérés.`,
+                    🔹 <strong>Interdiction :</strong> Tout dispositif porté à l'oreille (écouteurs, casque audio) est interdit. Seuls les systèmes intégrés au casque (Bluetooth sans contact direct avec l'oreille) sont tolérés.`,
         },
       ],
     },
     en: {
       disclaimer:
-        '<br><br><small style="color:#666; font-size:0.7rem;">âš ï¸ <em>This is an assistant based on official texts, not professional legal advice.</em></small>',
+        '<br><br><small style="color:#666; font-size:0.7rem;">⚠ï¸ <em>This is an assistant based on official texts, not professional legal advice.</em></small>',
       notFound: `<strong>Referee's Verdict:</strong> I couldn't find a specific law for this.<br><br>ðŸ” <em>Please clarify (e.g., helmet, gloves, tuning...).</em>`,
       scenarios: [
         {
           keywords: ["accident", "tuned", "insurance", "liable"],
-          response: `<strong>âš ï¸ CRITICAL CASE: Accident & Compliance</strong><br><br>
+          response: `<strong>⚠ï¸ CRITICAL CASE: Accident & Compliance</strong><br><br>
                     ⚖️ <strong>Law :</strong> EU Directive 2009/103/EC.<br>
                     🌍 <strong>International :</strong> Modifying performance voids the vehicle's type-approval (homologation) worldwide.<br>
-                    ðŸ”¹ <strong>Verdict :</strong> The insurer may exercise a "Right of Recourse" and demand you repay all damages paid to third parties.`,
+                    🔹 <strong>Verdict :</strong> The insurer may exercise a "Right of Recourse" and demand you repay all damages paid to third parties.`,
         },
         {
           keywords: ["tuning", "speed", "45", "km/h", "unrestricted"],
-          response: `<strong>ðŸš€ RULE: Speed & AM Category</strong><br><br>
+          response: `<strong>🚀 RULE: Speed & AM Category</strong><br><br>
                     🌍 <strong>International :</strong> EU Directive 2006/126/EC: The AM category is strictly limited to <strong>45 km/h (28 mph)</strong>.<br>
-                    ðŸ”¹ <strong>Sanction :</strong> Heavy fines and vehicle impoundment in most countries.`,
+                    🔹 <strong>Sanction :</strong> Heavy fines and vehicle impoundment in most countries.`,
         },
         {
           keywords: ["helmet", "gloves", "protection", "certified", "ce"],
-          response: `<strong>ðŸª– EQUIPMENT: Safety Standards</strong><br><br>
+          response: `<strong>🪖 EQUIPMENT: Safety Standards</strong><br><br>
                     🌍 <strong>International :</strong> <strong>ECE 22.06</strong> standard for helmets and <strong>EN 13594</strong> for gloves.<br>
-                    ðŸ”¹ <strong>Obligation :</strong> CE marking is mandatory for riding in Europe and many international territories.`,
+                    🔹 <strong>Obligation :</strong> CE marking is mandatory for riding in Europe and many international territories.`,
         },
         {
           keywords: ["inspection", "technical", "mot"],
-          response: `<strong>ðŸ”§ REGULATION: Technical Inspection</strong><br><br>
+          response: `<strong>🔧 REGULATION: Technical Inspection</strong><br><br>
                     🌍 <strong>International :</strong> EU Directive 2014/45/EU mandating roadworthiness tests for powered two-wheelers.<br>
-                    ðŸ”¹ <strong>Note :</strong> Rules vary by country (e.g., MOT in UK, CT in France). Always check local dates.`,
+                    🔹 <strong>Note :</strong> Rules vary by country (e.g., MOT in UK, CT in France). Always check local dates.`,
         },
       ],
     },

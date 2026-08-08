@@ -34,7 +34,7 @@ window.GuardianBot = {
     }
 
     alert(
-      `[Guardian Bot] ðŸ¤– Désolé @${author}, ton contenu sur ${type} a été censuré car il ne respecte pas les règles de la communauté.`,
+      `[Guardian Bot] 🤖 Désolé @${author}, ton contenu sur ${type} a été censuré car il ne respecte pas les règles de la communauté.`,
     );
   },
 
@@ -53,7 +53,7 @@ window.GuardianBot = {
             // Si pas safe, on masque immédiatement l'élément DOM si possible
             const ticker = document.getElementById("ticker-text");
             if (ticker)
-              ticker.textContent = "[Message censuré par Guardian Bot ðŸ¤–]";
+              ticker.textContent = "[Message censuré par Guardian Bot 🤖]";
           }
         });
       });

@@ -166,7 +166,7 @@ window.PrivacyManager = {
   deleteMyData: async function () {
     if (
       !confirm(
-        "âš ï¸ ATTENTION âš ï¸\nCette action est irréversible. Votre compte, vos points BVC, vos territoires et vos traces seront définitivement supprimés.\n\nÊtes-vous absolument sûr(e) de vouloir tout supprimer ?",
+        "⚠ï¸ ATTENTION ⚠ï¸\nCette action est irréversible. Votre compte, vos points BVC, vos territoires et vos traces seront définitivement supprimés.\n\nÊtes-vous absolument sûr(e) de vouloir tout supprimer ?",
       )
     ) {
       return;

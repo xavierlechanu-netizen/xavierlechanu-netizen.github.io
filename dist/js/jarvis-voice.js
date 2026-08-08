@@ -281,7 +281,7 @@ window.JarvisEngine = {
     switch (result.action) {
       case "EMERGENCY_CALL":
         if (typeof window.triggerSOS === "function") window.triggerSOS();
-        else alert("âš ï¸ URGENCE : Appeler le 112");
+        else alert("⚠ï¸ URGENCE : Appeler le 112");
         break;
       case "COMPARE_GAS_PRICES":
         if (typeof window.CommunityGas === "object") {

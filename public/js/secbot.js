@@ -361,7 +361,7 @@ window.SecBot = {
         "La géolocalisation sert à votre sécurité et à la navigation.";
     } else if (query.includes("bonjour") || query.includes("salut")) {
       response =
-        "ðŸ¤– Bonjour pilote ! Que puis-je scanner pour vous aujourd'hui ?";
+        "🤖 Bonjour pilote ! Que puis-je scanner pour vous aujourd'hui ?";
       voiceResponse = "Bonjour pilote !";
     }
 

@@ -34,17 +34,32 @@ async function calculateRouteSansAutoroute(start, end) {
     travelMode: "DRIVING",
     avoidHighways: true,
     avoidTolls: true,
-    provideRouteAlternatives: window.isRodageActive,
+    provideRouteAlternatives: window.isRodageActive || window.avoidCityCenters,
   };
 
   directionsService.route(legacyRequest, (result, status) => {
     if (status === "OK") {
+      let routeIndex = 0;
+      if (window.avoidCityCenters && result.routes.length > 1) {
+          // On choisit la route la plus longue en distance (qui correspond souvent à un contournement)
+          let maxDist = -1;
+          for (let i = 0; i < result.routes.length; i++) {
+              if (result.routes[i].legs[0].distance.value > maxDist) {
+                  maxDist = result.routes[i].legs[0].distance.value;
+                  routeIndex = i;
+              }
+          }
+      }
+
       if (directionsRenderer) {
         directionsRenderer.setMap(map);
         directionsRenderer.setDirections(result);
+        if (window.avoidCityCenters && result.routes.length > 1) {
+            directionsRenderer.setRouteIndex(routeIndex);
+        }
       }
 
-      const leg = result.routes[0].legs[0];
+      const leg = result.routes[routeIndex].legs[0];
       const infoBar = document.getElementById("nav-info-bar");
       if (infoBar) {
         infoBar.style.setProperty("display", "flex", "important");

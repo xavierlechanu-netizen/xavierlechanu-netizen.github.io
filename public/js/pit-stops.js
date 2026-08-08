@@ -54,7 +54,7 @@ window.PitStopSystem = {
 
     const info = new google.maps.InfoWindow({
       content: `<div style="color:black; font-family:'Outfit';">
-                        <h3 style="margin:0;">${isGas ? "⛽" : "ðŸ”§"} ${data.name}</h3>
+                        <h3 style="margin:0;">${isGas ? "⛽" : "🔧"} ${data.name}</h3>
                         <p style="margin:5px 0;">${data.desc || ""}</p>
                         <small>Ajouté par: ${data.author}</small><br>
                         <button onclick="window.calculateRoute(new google.maps.LatLng(${data.lat}, ${data.lng}))" style="margin-top:5px; background:#111; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer;">Y aller</button>
@@ -88,7 +88,7 @@ window.PitStopSystem = {
                 
                 <select id="pitstop-type" style="width:100%; padding:10px; margin-bottom:10px; background:#222; color:white; border:1px solid #333; border-radius:5px;">
                     <option value="gas">⛽ Station Service (Friendly 50cc)</option>
-                    <option value="garage">ðŸ”§ Garage 2-Roues de confiance</option>
+                    <option value="garage">🔧 Garage 2-Roues de confiance</option>
                 </select>
                 
                 <input type="text" id="pitstop-name" placeholder="Nom du lieu (ex: Total Access)" style="width:100%; padding:10px; margin-bottom:10px; background:#222; color:white; border:1px solid #333; border-radius:5px;">

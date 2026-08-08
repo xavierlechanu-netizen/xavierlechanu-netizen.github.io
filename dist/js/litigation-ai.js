@@ -1,14 +1,14 @@
 ﻿/**
- * LITIGATION AI v1.0 â€” PORTAIL ASSURANCE INTELLIGENT
+ * LITIGATION AI v1.0 — PORTAIL ASSURANCE INTELLIGENT
  * Analyse automatique des données Blackbox pour les dossiers de litige.
  * Génère un code dossier unique, sélectionne le type de rapport adapté,
  * et envoie une proposition structurée à l'assureur via Firestore.
  */
 
 window.LitigationAI = {
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 1. GÉNÉRATION DU CODE DOSSIER
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Génère un code de dossier unique au format LITIGE-XXXXXX
@@ -21,9 +21,9 @@ window.LitigationAI = {
     return `LITIGE-${ts}-${rnd}`;
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 2. ANALYSE IA DE LA BLACKBOX
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Analyse les données de la Blackbox et retourne une évaluation IA :
@@ -43,7 +43,7 @@ window.LitigationAI = {
     const buffer = blackbox?.buffer || [];
     const hfBuffer = blackbox?.hfBuffer || [];
 
-    // â€” Calcul du G-Force maximum enregistré
+    // — Calcul du G-Force maximum enregistré
     let maxG = 0;
     for (const entry of hfBuffer) {
       const ax = parseFloat(entry.ax) || 0;
@@ -53,24 +53,24 @@ window.LitigationAI = {
       if (g > maxG) maxG = g;
     }
 
-    // â€” Vitesse max enregistrée
+    // — Vitesse max enregistrée
     let maxSpeed = 0;
     for (const entry of buffer) {
       const spd = parseFloat(entry.speed) || 0;
       if (spd > maxSpeed) maxSpeed = spd;
     }
 
-    // â€” Angle d'inclinaison max
+    // — Angle d'inclinaison max
     let maxLean = 0;
     for (const entry of buffer) {
       const lean = Math.abs(parseFloat(entry.lean) || 0);
       if (lean > maxLean) maxLean = lean;
     }
 
-    // â€” Coordonnées GPS de l'incident (dernier point connu)
+    // — Coordonnées GPS de l'incident (dernier point connu)
     const lastGps = buffer.length > 0 ? buffer[buffer.length - 1] : null;
 
-    // â€” Score de sévérité (0â€“100)
+    // — Score de sévérité (0–100)
     let severity = 0;
     if (maxG > thresholds.EXPERT_G) severity += 50;
     else if (maxG > thresholds.IMPACT_G) severity += 30;
@@ -78,7 +78,7 @@ window.LitigationAI = {
     if (maxLean > thresholds.LEAN_ANGLE_DEG) severity += 15;
     severity = Math.min(severity, 100);
 
-    // â€” Sélection automatique du type de rapport
+    // — Sélection automatique du type de rapport
     let reportType, reportLabel, reportIcon, reportDescription;
 
     if (maxG >= thresholds.EXPERT_G || severity >= 70) {
@@ -90,13 +90,13 @@ window.LitigationAI = {
     } else if (maxG >= thresholds.IMPACT_G || severity >= 35) {
       reportType = "IMPACT";
       reportLabel = "Rapport Impact";
-      reportIcon = "âš¡";
+      reportIcon = "⚡";
       reportDescription =
         "Détection de choc + Accélérométrie haute fréquence + GPS";
     } else {
       reportType = "STANDARD";
       reportLabel = "Rapport Standard";
-      reportIcon = "ðŸ“Š";
+      reportIcon = "📊";
       reportDescription =
         "Télémétrie générale + Vitesse + Coordonnées GPS";
     }
@@ -117,9 +117,9 @@ window.LitigationAI = {
     };
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 3. CONSTRUCTION DE LA PROPOSITION
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Construit un objet de proposition complet destiné à l'assureur.
@@ -174,9 +174,9 @@ window.LitigationAI = {
     };
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 4. ENVOI VERS FIRESTORE
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Envoie la proposition vers Firestore (collection litigation_proposals).
@@ -184,7 +184,7 @@ window.LitigationAI = {
   async sendProposalToFirestore(proposal) {
     if (typeof db === "undefined") {
       console.warn(
-        "[LitigationAI] Firestore non disponible â€” simulation locale.",
+        "[LitigationAI] Firestore non disponible — simulation locale.",
       );
       return { success: true, simulated: true };
     }
@@ -207,9 +207,9 @@ window.LitigationAI = {
     }
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 5. ORCHESTRATION PRINCIPALE
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Point d'entrée principal.
@@ -217,24 +217,24 @@ window.LitigationAI = {
    * puis affiche le résultat dans l'interface.
    */
   async runWizard() {
-    // Étape 1 â€” Génération du code
+    // Étape 1 — Génération du code
     const caseCode = this.generateCaseCode();
     this.renderWizardStep("analyzing", caseCode, null);
 
-    // Étape 2 â€” Analyse IA (simuler délai traitement)
+    // Étape 2 — Analyse IA (simuler délai traitement)
     await new Promise((r) => setTimeout(r, 1800));
     const analysis = this.analyzeBlackboxData();
 
-    // Étape 3 â€” Construction de la proposition
+    // Étape 3 — Construction de la proposition
     const proposal = this.buildInsuranceProposal(caseCode, analysis);
 
-    // Étape 4 â€” Affichage du résultat + confirmation
+    // Étape 4 — Affichage du résultat + confirmation
     this.renderWizardResult(caseCode, analysis, proposal);
   },
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
   // 6. INTERFACE UTILISATEUR
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─────────────────────────────────────────────
 
   /**
    * Affiche le portail du wizard dans l'overlay existant.
@@ -360,7 +360,7 @@ window.LitigationAI = {
                     <div class="severity-bar-bg">
                         <div class="severity-bar-fill" style="width:${analysis.severity}%; background:${severityColor};"></div>
                     </div>
-                    <span class="severity-score" style="color:${severityColor};">${analysis.severity}/100 â€” ${severityLabel}</span>
+                    <span class="severity-score" style="color:${severityColor};">${analysis.severity}/100 — ${severityLabel}</span>
                 </div>
 
                 <div class="telemetry-summary">
@@ -379,7 +379,7 @@ window.LitigationAI = {
                 <!-- AVERTISSEMENT AI ACT (Obligatoire) -->
                 <p class="litigation-ai-act-disclaimer" style="color: #ffaa00; font-weight: bold; margin-bottom: 15px; border: 1px solid #ffaa00; padding: 10px; border-radius: 8px;">
                     <i class="fa-solid fa-scale-balanced"></i>
-                    âš ï¸ GÉNÉRÉ PAR L'IA : Ce rapport est une proposition d'assistance. Une supervision et validation humaine par l'utilisateur sont obligatoires avant le traitement juridique.
+                    ⚠ï¸ GÉNÉRÉ PAR L'IA : Ce rapport est une proposition d'assistance. Une supervision et validation humaine par l'utilisateur sont obligatoires avant le traitement juridique.
                 </p>
 
                 <div class="litigation-actions">

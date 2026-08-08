@@ -1,18 +1,18 @@
-const CACHE_NAME = 'mon50cc-cache-v1008003';
+const CACHE_NAME = 'mon50cc-cache-v1008004';
 const urlsToCache = [
   '/',
-  '/index.html?v=1008003',
-  '/app.html?v=1008003',
+  '/index.html?v=1008004',
+  '/app.html?v=1008004',
   '/offline.html',
-  '/css/premium.css?v=1008003',
-  '/css/style.min.css?v=1008003',
-  '/js/config.js?v=1008003',
-  '/js/infallible.js?v=1008003',
-  '/js/error-tracking.js?v=1008003',
-  '/js/oracle-voice.js?v=1008003',
-  '/js/crypto-native.js?v=1008003',
-  '/js/auth.js?v=1008003',
-  '/js/database.js?v=1008003',
+  '/css/premium.css?v=1008004',
+  '/css/style.min.css?v=1008004',
+  '/js/config.js?v=1008004',
+  '/js/infallible.js?v=1008004',
+  '/js/error-tracking.js?v=1008004',
+  '/js/oracle-voice.js?v=1008004',
+  '/js/crypto-native.js?v=1008004',
+  '/js/auth.js?v=1008004',
+  '/js/database.js?v=1008004',
   '/js/mon50cc-bundle.js'
 ];
 
@@ -60,11 +60,14 @@ self.addEventListener('fetch', event => {
           });
         }
         return networkResponse;
-      }).catch(() => {
+      }).catch((err) => {
         // Offline fallback for navigation requests
         if (event.request.mode === 'navigate') {
           return caches.match('/offline.html');
         }
+        // Pour éviter l'erreur "Failed to convert value to 'Response'" 
+        // quand fetchPromise retourne undefined.
+        throw err;
       });
       
       // Retourner la version en cache immédiatement (instantané),

@@ -20,7 +20,7 @@ window.MecaWizard = {
   startAcousticAnalysis: async function () {
     if (window.session && window.session.isGuest) {
       alert(
-        "ðŸ”’ L'IA Acoustique est une exclusivité Membre. Inscrivez-vous pour diagnostiquer votre moteur !",
+        "🔒 L'IA Acoustique est une exclusivité Membre. Inscrivez-vous pour diagnostiquer votre moteur !",
       );
       return;
     }

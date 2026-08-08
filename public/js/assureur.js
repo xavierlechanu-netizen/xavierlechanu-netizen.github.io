@@ -35,7 +35,7 @@ async function authenticateInsurer() {
 
   if (isEuroAssuranceAttempt) {
     const accept = confirm(
-      "âš ï¸ ALERTE : Cet organisme est classé 'Partenaire non recommandé' suite à de multiples signalements.\nPour créer un compte ou vous connecter, un tarif de vérification renforcée de 10 000 € est exigé.\n\nAcceptez-vous de payer ces 10 000 € ?",
+      "⚠ï¸ ALERTE : Cet organisme est classé 'Partenaire non recommandé' suite à de multiples signalements.\nPour créer un compte ou vous connecter, un tarif de vérification renforcée de 10 000 € est exigé.\n\nAcceptez-vous de payer ces 10 000 € ?",
     );
     if (!accept) {
       errorEl.innerHTML =

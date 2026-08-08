@@ -12,7 +12,7 @@ window.Chronos = {
   syncCalendar: async function () {
     if (window.session && window.session.isGuest) {
       alert(
-        "ðŸ”’ La synchronisation Nexus Calendar est réservée aux membres officiels. Rejoignez la communauté pour automatiser vos trajets !",
+        "🔒 La synchronisation Nexus Calendar est réservée aux membres officiels. Rejoignez la communauté pour automatiser vos trajets !",
       );
       return;
     }
