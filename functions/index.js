@@ -15,7 +15,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-const { onRequest } = require("firebase-functions/v2/https");
+const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const { Client } = require("@notionhq/client");
@@ -93,7 +93,10 @@ exports.createRevolutOrder = onRequest(
             'BATTERY_CERT_PREMIUM': 1499,    // 14.99 €
             'BATTERY_CERT_QUANTUM': 2999,    // 29.99 € (anciennement BLOCKCHAIN)
             // Garage Partenaire (B2B)
-            'GARAGE_FEE': 5000           // 50.00 €
+            'GARAGE_FEE': 5000,          // 50.00 €
+            // Abonnement Boîte Noire "Sentinel Care" (HaaS)
+            'BLACKBOX_CARE_MONTHLY': 500,    // 5.00 € / mois
+            'BLACKBOX_CARE_ANNUAL': 5000     // 50.00 € / an (2 mois offerts)
         };
 
         if (!report_type || !prices[report_type]) {
@@ -306,35 +309,64 @@ exports.revolutWebhook = onRequest(
 // 4. sendEmergencySOS
 //    Enregistre et simule l'envoi d'une alerte SOS aux contacts d'urgence.
 // ─────────────────────────────────────────────────────────────────────────────
-exports.sendEmergencySOS = onRequest(
+exports.sendEmergencySOS = onCall(
     { region: "europe-west1" },
-    async (req, res) => {
-        setCorsHeaders(res);
-        if (req.method === "OPTIONS") return res.status(204).send("");
-        if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
-
-        // Sécurité : Vérifier le token Firebase Auth (OWASP A01)
-        const authUser = await verifyAuthToken(req);
-        if (!authUser) {
-            return res.status(401).json({ error: "Authentification requise." });
+    async (request) => {
+        // Sécurité : Vérifier l'authentification (OWASP A01)
+        if (!request.auth || !request.auth.uid) {
+            throw new HttpsError('unauthenticated', 'Authentification requise.');
         }
 
-        const { location, contacts, message } = req.body;
+        const uid = request.auth.uid;
+        const { location, contacts, message, blackboxReportId } = request.data;
+
+        if (!contacts || contacts.length === 0) {
+            console.log(`[SOS] Aucun contact d'urgence défini pour ${uid}`);
+            return { success: false, message: "Aucun contact défini." };
+        }
 
         try {
-            await db.collection("sos_alerts").add({
-                user_id: authUser.uid,
+            const batch = db.batch();
+
+            // 1. Enregistrement de l'alerte dans sos_alerts
+            const alertRef = db.collection("sos_alerts").doc();
+            batch.set(alertRef, {
+                user_id: uid,
                 location: location || "Unknown",
-                contacts: contacts || [],
+                contacts: contacts,
                 message: message || "SOS Alert",
-                status: "sent_simulation",
+                blackbox_id: blackboxReportId || null,
+                status: "processing",
                 timestamp: admin.firestore.FieldValue.serverTimestamp()
             });
-            console.log(`[SOS] Alert sent to ${contacts?.length || 0} contacts for user ${authUser.uid}`);
-            return res.status(200).json({ success: true, message: "SOS envoyé avec succès." });
+
+            // Construction du message final
+            let finalMessage = message + ` Position: ${location}`;
+            if (blackboxReportId) {
+                finalMessage += ` [Preuve Blackbox Télémétrie Sécurisée générée]`;
+            }
+
+            // 2. Création des messages sortants dans sms_outbox pour la passerelle Custom
+            for (const contact of contacts) {
+                if (contact.phone) {
+                    const smsRef = db.collection("sms_outbox").doc();
+                    batch.set(smsRef, {
+                        to: contact.phone,
+                        body: finalMessage,
+                        user_id: uid,
+                        status: "PENDING",
+                        created_at: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }
+
+            await batch.commit();
+
+            console.log(`[SOS] Alert sent to ${contacts.length} contacts for user ${uid} via sms_outbox`);
+            return { success: true, message: "SOS transmis à la passerelle SMS avec succès." };
         } catch(e) {
             console.error("[SOS] Error", e);
-            return res.status(500).json({ error: "Internal Error" });
+            throw new HttpsError('internal', 'Erreur interne lors de la création du SOS.');
         }
     }
 );
@@ -694,3 +726,266 @@ exports.getVigilanceMeteo = onRequest(
     }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. uploadBlackboxTelemetry (Télémétrie Sécurisée - Zero Knowledge)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.uploadBlackboxTelemetry = onCall(
+    { region: "europe-west1" },
+    async (request) => {
+        // 1. Vérification de l'authentification
+        if (!request.auth || !request.auth.uid) {
+            throw new HttpsError('unauthenticated', 'Vous devez être connecté pour synchroniser la télémétrie.');
+        }
+
+        const uid = request.auth.uid;
+        const { hardwareId, encryptedPayload, frameCount, timestamp } = request.data;
+
+        // 2. Validation des paramètres
+        if (!hardwareId || !encryptedPayload) {
+            throw new HttpsError('invalid-argument', 'Paramètres manquants : hardwareId ou encryptedPayload.');
+        }
+
+        try {
+            // 3. Stockage dans Firestore (architecture Zero-Knowledge)
+            // Le cloud ne déchiffre RIEN. Il stocke juste le blob AES-256.
+            const docRef = admin.firestore().collection(`blackbox_telemetry/${uid}/frames`).doc();
+            
+            await docRef.set({
+                hardwareId: hardwareId,
+                payload_b64: encryptedPayload, // Chaîne Base64 des octets chiffrés
+                frameCount: frameCount || 0,
+                deviceTimestamp: timestamp || 0,
+                serverTimestamp: admin.firestore.FieldValue.serverTimestamp(),
+                status: "LOCKED" // Indique que la donnée est brute et non déchiffrée
+            });
+
+            console.log(`[Blackbox] Télémétrie chiffrée stockée pour UID: ${uid} (Doc: ${docRef.id})`);
+            return { success: true, docId: docRef.id };
+            
+        } catch (error) {
+            console.error("[Blackbox] Erreur lors du stockage :", error);
+            throw new HttpsError('internal', 'Erreur interne lors de la sauvegarde de la télémétrie.');
+        }
+    }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. FIDO2 / WEBAUTHN (Passkeys)
+// ─────────────────────────────────────────────────────────────────────────────
+const {
+    generateRegistrationOptions,
+    verifyRegistrationResponse,
+    generateAuthenticationOptions,
+    verifyAuthenticationResponse
+} = require("@simplewebauthn/server");
+
+const RP_NAME = "mon50ccetmoi";
+// Pour accepter le localhost et la prod:
+const EXPECTED_ORIGINS = ["https://mon50ccetmoi.com", "http://localhost:5000", "http://127.0.0.1:5000"];
+const RP_IDS = ["mon50ccetmoi.com", "localhost", "127.0.0.1"];
+
+exports.fidoGenerateRegistration = onCall({ region: "europe-west1" }, async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'User must be logged in to register a passkey.');
+    }
+    const uid = request.auth.uid;
+    const userDoc = await db.collection("users").doc(uid).get();
+    const userData = userDoc.data() || {};
+    const username = userData.username || uid;
+
+    const options = await generateRegistrationOptions({
+        rpName: RP_NAME,
+        rpID: request.data?.rpId || RP_IDS[0],
+        userID: Buffer.from(uid),
+        userName: username,
+        timeout: 60000,
+        attestationType: 'none',
+        authenticatorSelection: {
+            authenticatorAttachment: 'platform',
+            userVerification: 'required',
+        }
+    });
+
+    // Save challenge to firestore temporarily
+    await db.collection("fido_challenges").doc(uid).set({
+        challenge: options.challenge,
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return options;
+});
+
+exports.fidoVerifyRegistration = onCall({ region: "europe-west1" }, async (request) => {
+    if (!request.auth || !request.auth.uid) {
+        throw new HttpsError('unauthenticated', 'User must be logged in.');
+    }
+    const uid = request.auth.uid;
+    const { response, rpId, origin } = request.data; // passed from client
+
+    const challengeDoc = await db.collection("fido_challenges").doc(uid).get();
+    if (!challengeDoc.exists) throw new HttpsError('failed-precondition', 'No challenge found.');
+    const expectedChallenge = challengeDoc.data().challenge;
+
+    let verification;
+    try {
+        verification = await verifyRegistrationResponse({
+            response,
+            expectedChallenge,
+            expectedOrigin: origin || EXPECTED_ORIGINS,
+            expectedRPID: rpId || RP_IDS,
+        });
+    } catch (error) {
+        console.error("FIDO Register Error", error);
+        throw new HttpsError('invalid-argument', error.message);
+    }
+
+    if (verification.verified && verification.registrationInfo) {
+        const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+        
+        // Save to users/{uid}/fido_credentials
+        // encode Uint8Arrays to base64 string for firestore
+        const credIdB64 = Buffer.from(credentialID).toString('base64');
+        const pubKeyB64 = Buffer.from(credentialPublicKey).toString('base64');
+
+        await db.collection("users").doc(uid).collection("fido_credentials").doc(credIdB64).set({
+            credentialID: credIdB64,
+            credentialPublicKey: pubKeyB64,
+            counter,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        await db.collection("fido_challenges").doc(uid).delete();
+        return { success: true };
+    }
+    return { success: false };
+});
+
+exports.fidoGenerateAuthentication = onCall({ region: "europe-west1" }, async (request) => {
+    const { uid, rpId } = request.data;
+    if (!uid) throw new HttpsError('invalid-argument', 'UID required.');
+
+    const credsSnapshot = await db.collection("users").doc(uid).collection("fido_credentials").get();
+    if (credsSnapshot.empty) {
+        throw new HttpsError('not-found', 'No passkeys found for this user.');
+    }
+
+    const allowCredentials = credsSnapshot.docs.map(doc => ({
+        id: Buffer.from(doc.data().credentialID, 'base64').toString('base64url'), // SimpleWebAuthn expects base64url or Uint8Array
+        type: 'public-key',
+        transports: ['internal']
+    }));
+
+    const options = await generateAuthenticationOptions({
+        timeout: 60000,
+        allowCredentials,
+        userVerification: 'required',
+        rpID: rpId || RP_IDS[0]
+    });
+
+    await db.collection("fido_challenges").doc(uid).set({
+        challenge: options.challenge,
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return options;
+});
+
+exports.fidoVerifyAuthentication = onCall({ region: "europe-west1" }, async (request) => {
+    const { uid, response, rpId, origin } = request.data;
+    if (!uid) throw new HttpsError('invalid-argument', 'UID required.');
+
+    const challengeDoc = await db.collection("fido_challenges").doc(uid).get();
+    if (!challengeDoc.exists) throw new HttpsError('failed-precondition', 'No challenge found.');
+    const expectedChallenge = challengeDoc.data().challenge;
+
+    // Find the specific credential used. SimpleWebAuthn client returns base64url for id.
+    const rawIdB64url = response.id;
+    // We saved it as base64 in firestore. Let's convert base64url to base64.
+    const credIdB64 = Buffer.from(rawIdB64url, 'base64url').toString('base64');
+    
+    const credDoc = await db.collection("users").doc(uid).collection("fido_credentials").doc(credIdB64).get();
+    if (!credDoc.exists) {
+        throw new HttpsError('not-found', 'Credential not found.');
+    }
+    const credData = credDoc.data();
+    
+    const authenticator = {
+        credentialID: Buffer.from(credData.credentialID, 'base64'),
+        credentialPublicKey: Buffer.from(credData.credentialPublicKey, 'base64'),
+        counter: credData.counter,
+        transports: ['internal']
+    };
+
+    let verification;
+    try {
+        verification = await verifyAuthenticationResponse({
+            response,
+            expectedChallenge,
+            expectedOrigin: origin || EXPECTED_ORIGINS,
+            expectedRPID: rpId || RP_IDS,
+            authenticator
+        });
+    } catch (error) {
+        console.error("FIDO Auth Error", error);
+        throw new HttpsError('invalid-argument', error.message);
+    }
+
+    if (verification.verified) {
+        // Update counter
+        await credDoc.ref.update({ counter: verification.authenticationInfo.newCounter });
+        await db.collection("fido_challenges").doc(uid).delete();
+
+        // Mint custom token
+        const customToken = await admin.auth().createCustomToken(uid);
+        return { success: true, customToken };
+    }
+    return { success: false };
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. IoT FIDO Device Onboard (FDO) Rendezvous Server Mock
+// ─────────────────────────────────────────────────────────────────────────────
+exports.iotFdoRendezvous = onRequest({ region: "europe-west1" }, async (req, res) => {
+    setCorsHeaders(res);
+    if (req.method === "OPTIONS") return res.status(204).send("");
+    if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
+
+    // Expecting Ownership Voucher { hardware_id, signature, fdo_version }
+    const { hardware_id, signature } = req.body;
+    if (!hardware_id || !signature) {
+        return res.status(400).json({ error: "Voucher incomplet. hardware_id et signature requis." });
+    }
+
+    try {
+        const voucherDoc = await db.collection("fdo_vouchers").doc(hardware_id).get();
+        if (!voucherDoc.exists) {
+            return res.status(404).json({ error: "Voucher non reconnu (Non provisionné par le fabricant)." });
+        }
+
+        const voucherData = voucherDoc.data();
+        if (voucherData.status !== "PENDING_ONBOARDING") {
+            return res.status(403).json({ error: "Boîtier déjà onboardé ou révoqué." });
+        }
+
+        // Renvoie l'endpoint cible (BMS/Cloud Final) et un token IoT
+        const targetEndpoint = "https://europe-west1-mon50ccetmoi.cloudfunctions.net/uploadBlackboxTelemetry";
+        // Mint a custom token for the device
+        const customToken = await admin.auth().createCustomToken(hardware_id, { is_iot_device: true });
+
+        // Marque l'onboarding comme réussi
+        await voucherDoc.ref.update({
+            status: "ONBOARDED",
+            onboarded_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`[FDO] Onboarding réussi pour le device ${hardware_id}`);
+        return res.status(200).json({
+            success: true,
+            target_cloud: targetEndpoint,
+            iot_token: customToken
+        });
+    } catch (e) {
+        console.error("[FDO] Erreur serveur :", e);
+        return res.status(500).json({ error: "Internal Error" });
+    }
+});

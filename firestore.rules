@@ -27,6 +27,12 @@ service cloud.firestore {
       allow create: if isSignedIn() && isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
+
+      // FIDO2 Credentials (Écriture via Cloud Functions uniquement)
+      match /fido_credentials/{credId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false; 
+      }
     }
 
     // Certificats de Batterie : Lecture restreinte, création par le propriétaire
@@ -41,6 +47,13 @@ service cloud.firestore {
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
       allow read: if isOwner(resource.data.userId) || isAdmin() || (resource.data.isUnlocked == true);
       allow update: if false; // Un rapport Blackbox est IMMUABLE (non modifiable) une fois créé
+    }
+
+    // Blackbox Télémétrie : Zero-Knowledge Storage. Création exclusive par le propriétaire via Cloud Function, immuable.
+    match /blackbox_telemetry/{userId}/frames/{frameId} {
+      allow create: if isSignedIn() && isOwner(userId);
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow update, delete: if false; // IMMUABILITE ABSOLUE
     }
 
     // Coffre-fort ANTS : Sanctuaire absolu
@@ -328,6 +341,22 @@ service cloud.firestore {
         request.resource.data.sender == getUsername()
       );
       allow update, delete: if false; // Messages immutables
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // FIDO DEVICE ONBOARD (FDO) VOUCHERS
+    // ─────────────────────────────────────────────────────────────
+    match /fdo_vouchers/{voucherId} {
+      // Les vouchers sont lus/écrits par les Cloud Functions ou l'admin
+      allow read, write: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SMS OUTBOX (Passerelle SMS Custom)
+    // ─────────────────────────────────────────────────────────────
+    match /sms_outbox/{msgId} {
+      // Seul un admin ou la passerelle SMS (connectée en Admin) peut lire/écrire
+      allow read, write: if isAdmin();
     }
   }
 }

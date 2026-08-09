@@ -62,6 +62,7 @@ static bool is_external_power_present(void);
 static void telemetry_task(void *pvParameters);
 static void enter_deep_sleep(void);
 static void on_export_request(uint32_t start_index, uint32_t count);
+static uint16_t read_battery_mv(void);
 
 /* ============================================================================
  * app_main() — Point d'entrée (remplace main() sur ESP-IDF)
@@ -146,15 +147,16 @@ void app_main(void)
     }
 
     /* ================================================================
-     * ÉTAPE 6 : Initialisation IMU (I2C)
+     * 5. SÉCURITÉ MATÉRIELLE (Anti-Tamper) — Désactivé pour la V1 (pas sur le PCB)
      * ================================================================ */
-    ESP_LOGI(TAG, "[6/6] Initialisation Capteur IMU...");
-    imu_init();
+    ESP_LOGI(TAG, "[5/6] Initialisation Tamper (Désactivé)");
+    // tamper_init();
 
     /* ================================================================
-     * LANCEMENT DE LA BOUCLE TÉLÉMÉTRIQUE (1 Hz)
+     * 6. CAPTEUR INERTIEL (MPU6050) — Désactivé pour la V1 (pas sur le PCB)
      * ================================================================ */
-    ESP_LOGI(TAG, "═══════════════════════════════════════════════");
+    ESP_LOGI(TAG, "[6/6] Initialisation Capteur IMU (Désactivé)");
+    // imu_init();
     ESP_LOGI(TAG, "  Boîte Noire opérationnelle. Acquisition 1 Hz.");
     ESP_LOGI(TAG, "═══════════════════════════════════════════════");
 
@@ -182,11 +184,11 @@ static void telemetry_task(void *pvParameters)
     int64_t last_ext_power_time = esp_timer_get_time();
 
     while (1) {
-        /* ---- Vérifier le tamper à chaque cycle (paranoïa) ---- */
-        if (tamper_get_state() != TAMPER_STATE_SAFE) {
-            ESP_LOGE(TAG, "TAMPER DÉTECTÉ EN BOUCLE — arrêt immédiat.");
-            tamper_zeroize();  /* Ne reviendra jamais */
-        }
+        /* ---- Vérifier le tamper à chaque cycle (Désactivé V1) ---- */
+        // if (tamper_get_state() != TAMPER_STATE_SAFE) {
+        //     ESP_LOGE(TAG, "TAMPER DÉTECTÉ EN BOUCLE — arrêt immédiat.");
+        //     tamper_zeroize();  /* Ne reviendra jamais */
+        // }
 
         /* ---- Lire les trames NMEA du GPS ---- */
         int len = uart_read_bytes(
@@ -210,17 +212,16 @@ static void telemetry_task(void *pvParameters)
 
         /* ---- Compléter la trame avec les données système ---- */
         frame.timestamp_utc = (uint32_t)(esp_timer_get_time() / 1000000);
-        frame.tamper_state = (uint8_t)tamper_get_state();
-        frame.flags = is_external_power_present() ? 0x01 : 0x00;
+        frame.tamper_state = TAMPER_STATE_SAFE; // Fixe pour V1
+        frame.flags = 0x01; // Considère alim toujours présente pour V1
 
-        /* TODO : Lire ADC pour tension batterie */
-        frame.battery_mv = 3700;  /* Placeholder */
+        frame.battery_mv = read_battery_mv();
 
-        /* ---- Lire le capteur inertiel (IMU) ---- */
-        imu_data_t imu_data;
-        imu_read_data(&imu_data);
-        frame.g_force_x10 = (uint16_t)(imu_data.accel_g * 10.0f);
-        frame.lean_angle_deg = (uint8_t)imu_data.lean_angle;
+        /* ---- Lire le capteur inertiel (IMU) — Désactivé V1 ---- */
+        // imu_data_t imu_data;
+        // imu_read_data(&imu_data);
+        frame.g_force_x10 = 0; //(uint16_t)(imu_data.accel_g * 10.0f);
+        frame.lean_angle_deg = 0; //(uint8_t)imu_data.lean_angle;
 
         /* Mettre à jour les valeurs BLE */
         ble_comm_update_battery(frame.battery_mv);
@@ -233,7 +234,8 @@ static void telemetry_task(void *pvParameters)
                      (unsigned long)blackbox_storage_count());
         }
 
-        /* ---- Gestion Deep Sleep (économie d'énergie) ---- */
+        /* ---- Gestion Deep Sleep (économie d'énergie) — Désactivé V1 car pas de contrôle GPS ---- */
+        /*
         if (is_external_power_present()) {
             last_ext_power_time = esp_timer_get_time();
         } else {
@@ -244,9 +246,20 @@ static void telemetry_task(void *pvParameters)
                 enter_deep_sleep();
             }
         }
+        */
 
         vTaskDelay(pdMS_TO_TICKS(TELEMETRY_PERIOD_MS));
     }
+}
+
+/* ============================================================================
+ * read_battery_mv() — Lecture ADC tension batterie
+ * ============================================================================
+ */
+static uint16_t read_battery_mv(void)
+{
+    /* TODO: Implémenter la lecture ADC réelle via PIN_VBAT_ADC */
+    return 3700; /* Retourne 3.7V par défaut (Placeholder propre) */
 }
 
 /* ============================================================================

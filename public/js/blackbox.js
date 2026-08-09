@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DIGITAL BLACKBOX v2.0 - SENTINEL EDITION
  * Records telemetry data for insurance and legal proof.
  * Features: High-Frequency Motion Buffer (10Hz) & Quantum Integrity Signature.
@@ -95,6 +95,13 @@ window.Blackbox = {
 
   saveToCloud: async function (reason) {
     if (typeof db === "undefined" || !window.session) return;
+    
+    // Privacy by Design: Verrouillage Sécurité
+    // On interdit l'upload sauf si c'est une urgence absolue (SOS) ou mandat légal.
+    if (reason !== "URGENCE_ABSOLUE_SOS" && reason !== "LITIGATION_AI_REQUEST") {
+        console.warn("🛡️ Sécurité Blackbox: Envoi Cloud bloqué. Les données restent 100% locales hors urgence majeure.");
+        return null;
+    }
 
     const snapshot = this.getSnapshot();
     const reportId = "blackbox_" + window.session.uid + "_" + Date.now();

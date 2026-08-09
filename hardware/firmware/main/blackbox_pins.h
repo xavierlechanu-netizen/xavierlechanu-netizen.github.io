@@ -12,38 +12,35 @@
 #ifndef BLACKBOX_PINS_H
 #define BLACKBOX_PINS_H
 
-/* ---- Capteurs Anti-Tamper (Sécurité Matérielle) ---- */
-/** Photodiode Vishay TEMD6200FX01 — Détection de lumière (ouverture coque) */
-#define PIN_TAMPER_LIGHT        GPIO_NUM_2
+/* ---- Capteurs Anti-Tamper (Non câblés pour le moment) ---- */
+#define PIN_TAMPER_LIGHT        -1
+#define PIN_TAMPER_MESH         -1
 
-/** Grille de sécurité (Tamper Mesh) — Piste cuivre serpentine sur PCB */
-#define PIN_TAMPER_MESH         GPIO_NUM_3
+/* ---- Module GPS (Connecté sur IO16 / IO17) ---- */
+/** GPS TX → ESP32 RX (IO16) */
+#define PIN_GPS_RX              GPIO_NUM_16
 
-/* ---- Module GPS (Quectel L76-LB) ---- */
-/** GPS TX → ESP32 RX (UART1) */
-#define PIN_GPS_RX              GPIO_NUM_4
+/** GPS RX ← ESP32 TX (IO17) */
+#define PIN_GPS_TX              GPIO_NUM_17
 
-/** GPS RX ← ESP32 TX (UART1) */
-#define PIN_GPS_TX              GPIO_NUM_5
+/** Contrôle alimentation GPS (Non câblé, direct 3V3) */
+#define PIN_GPS_POWER           -1
 
-/** Contrôle alimentation GPS (MOSFET gate) — HIGH = GPS ON */
-#define PIN_GPS_POWER           GPIO_NUM_10
+/* ---- UART0 — Réservé flashage initial ---- */
+#define PIN_UART0_TX            GPIO_NUM_1
+#define PIN_UART0_RX            GPIO_NUM_3
 
-/* ---- UART0 — Réservé flashage initial (Test Pads internes) ---- */
-#define PIN_UART0_TX            GPIO_NUM_21
-#define PIN_UART0_RX            GPIO_NUM_20
+/* ---- LED de statut ---- */
+#define PIN_LED_STATUS          -1
 
-/* ---- LED de statut (Debug — désactivée en production) ---- */
-#define PIN_LED_STATUS          GPIO_NUM_8
+/* ---- Détection alimentation externe 12V ---- */
+#define PIN_VEXT_SENSE          -1
 
-/* ---- Détection alimentation externe 12V (via pont diviseur) ---- */
-#define PIN_VEXT_SENSE          GPIO_NUM_0
+/* ---- Niveau de batterie LiPo ---- */
+#define PIN_VBAT_ADC            -1
 
-/* ---- Niveau de batterie LiPo (ADC via pont diviseur) ---- */
-#define PIN_VBAT_ADC            GPIO_NUM_1
-
-/* ---- Capteur IMU (I2C) ---- */
-#define PIN_IMU_SDA             GPIO_NUM_6
-#define PIN_IMU_SCL             GPIO_NUM_7
+/* ---- Capteur IMU (Non câblé pour le moment) ---- */
+#define PIN_IMU_SDA             -1
+#define PIN_IMU_SCL             -1
 
 #endif /* BLACKBOX_PINS_H */

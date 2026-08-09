@@ -1,4 +1,4 @@
-﻿/**
+/**
  * GUARDIAN ANGEL SYSTEM v2.0
  * The ultimate safety shield for mon50ccetmoi riders.
  */
@@ -259,7 +259,7 @@ window.GuardianAngel = {
   },
 
   triggerSOS: async function (reason) {
-    if (!this.sessionId || typeof db === "undefined") return;
+    if (!this.sessionId || typeof db === "undefined" || !window.session) return;
 
     speak("ALERTE SOS LANÇÉE. Transfert des données aux secours.");
     if (typeof Hardware !== "undefined" && Hardware.vibratePattern) {
@@ -270,7 +270,17 @@ window.GuardianAngel = {
       ? window.Blackbox.getStructuralScore()
       : "UNKNOWN";
 
+    const sosData = {
+        userId: window.session.uid,
+        username: window.session.username,
+        pos: currentPosition || { lat: "unknown", lng: "unknown" },
+        reason: reason,
+        deviceIntegrity: structural,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
     if (navigator.onLine) {
+      // Mettre à jour la session Guardian
       db.collection("guardian_sessions").doc(this.sessionId).update({
         status: "DANGER",
         alertReason: reason,
@@ -278,20 +288,110 @@ window.GuardianAngel = {
         alertTime: firebase.firestore.FieldValue.serverTimestamp(),
       });
 
-      db.collection("emergency_alerts").add({
-        userId: window.session.uid,
-        username: window.session.username,
-        pos: currentPosition,
-        reason: reason,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      });
+      // Extraction et Upload Exceptionnel de la Boîte Noire (URGENCE ABSOLUE)
+      let bbReportId = null;
+      if (window.Blackbox) {
+          bbReportId = await window.Blackbox.saveToCloud("URGENCE_ABSOLUE_SOS");
+      }
+
+      // Appeler le serveur via Cloud Function (Passerelle SMS)
+      try {
+        const sendEmergencySOS = firebase.functions("europe-west1").httpsCallable("sendEmergencySOS");
+        
+        // On récupère les contacts de l'utilisateur
+        const userDoc = await db.collection("users").doc(window.session.uid).get();
+        const emergencyContacts = userDoc.exists ? userDoc.data().emergencyContacts || [] : [];
+
+        await sendEmergencySOS({
+            location: `https://maps.google.com/?q=${sosData.pos.lat},${sosData.pos.lng}`,
+            contacts: emergencyContacts,
+            message: `URGENCE MON50CC: Crash détecté (${reason}). Pilote: ${window.session.username}.`,
+            blackboxReportId: bbReportId
+        });
+        
+        console.log("SOS envoyé via le Cloud (Passerelle SMS) avec succès !");
+      } catch (err) {
+        console.error("Échec de l'envoi SOS via le Cloud:", err);
+      }
+    } else {
+        // Mode hors-ligne : On garde le fallback SMS si réseau 2G uniquement disponible
+        const smsBody = encodeURIComponent(
+          `URGENCE MON50CC ! ${reason} Position GPS: https://maps.google.com/?q=${sosData.pos.lat},${sosData.pos.lng}`
+        );
+        window.location.href = `sms:?body=${smsBody}`;
+    }
+  },
+
+  manageEmergencyContacts: async function () {
+    if (!window.session || !window.session.uid) {
+        return alert("Vous devez être connecté pour gérer vos contacts d'urgence.");
     }
 
-    // SMS Fallback
-    const smsBody = encodeURIComponent(
-      `URGENCE MON50CC ! ${reason} Position GPS: https://maps.google.com/?q=${currentPosition?.lat},${currentPosition?.lng}`,
-    );
-    window.location.href = `sms:?body=${smsBody}`;
+    const userDoc = await db.collection("users").doc(window.session.uid).get();
+    let contacts = userDoc.exists ? (userDoc.data().emergencyContacts || []) : [];
+
+    const prompt = document.createElement("div");
+    prompt.className = "emergency-contacts-overlay";
+    prompt.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:20000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; padding:30px; text-align:center;";
+    
+    const updateUI = () => {
+        let contactsHtml = contacts.map((c, i) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:10px; margin-bottom:10px; border-radius:8px;">
+                <div style="text-align:left;">
+                    <strong style="color:#00d2ff;">${c.name}</strong><br>
+                    <span style="color:#aaa;">${c.phone}</span>
+                </div>
+                <button onclick="window.GuardianAngel.removeContact(${i})" style="background:#ff4444; border:none; border-radius:5px; color:white; padding:5px 10px;">Supprimer</button>
+            </div>
+        `).join("");
+
+        if (contacts.length === 0) contactsHtml = "<p style='color:#777;'>Aucun contact défini.</p>";
+
+        prompt.innerHTML = `
+            <i class="fa-solid fa-address-book" style="font-size:3rem; color:#00d2ff; margin-bottom:15px;"></i>
+            <h2>Vos Anges Gardiens</h2>
+            <p style="margin-bottom:20px; font-size:0.9rem; color:#ccc;">Ces contacts recevront un SMS de détresse automatique avec votre localisation si un crash est détecté.</p>
+            
+            <div id="contacts-list" style="width:100%; max-width:400px; margin-bottom:20px;">
+                ${contactsHtml}
+            </div>
+
+            ${contacts.length < 3 ? `
+                <div style="width:100%; max-width:400px; background:#111; padding:15px; border-radius:8px; margin-bottom:20px;">
+                    <input type="text" id="new-contact-name" placeholder="Nom du contact" style="width:100%; padding:10px; margin-bottom:10px; background:#333; color:white; border:none; border-radius:5px;">
+                    <input type="tel" id="new-contact-phone" placeholder="Numéro de téléphone" style="width:100%; padding:10px; margin-bottom:10px; background:#333; color:white; border:none; border-radius:5px;">
+                    <button id="btn-add-contact" style="width:100%; padding:10px; background:#00d2ff; color:black; border:none; border-radius:5px; font-weight:bold;">+ Ajouter</button>
+                </div>
+            ` : "<p style='color:#ffaa00; margin-bottom:20px;'>Maximum 3 contacts atteints.</p>"}
+
+            <button id="btn-close-contacts" style="width:100%; max-width:400px; padding:15px; background:#333; color:white; border:none; border-radius:15px; font-weight:bold;">Fermer</button>
+        `;
+
+        const btnAdd = prompt.querySelector("#btn-add-contact");
+        if (btnAdd) {
+            btnAdd.onclick = async () => {
+                const n = document.getElementById("new-contact-name").value.trim();
+                const p = document.getElementById("new-contact-phone").value.trim();
+                if (!n || !p) return alert("Veuillez remplir le nom et le numéro.");
+                contacts.push({ name: n, phone: p });
+                await db.collection("users").doc(window.session.uid).update({ emergencyContacts: contacts });
+                updateUI();
+            };
+        }
+
+        prompt.querySelector("#btn-close-contacts").onclick = () => {
+            prompt.remove();
+        };
+    };
+
+    window.GuardianAngel.removeContact = async (index) => {
+        contacts.splice(index, 1);
+        await db.collection("users").doc(window.session.uid).update({ emergencyContacts: contacts });
+        updateUI();
+    };
+
+    updateUI();
+    document.body.appendChild(prompt);
   },
 
   stopSession: function () {

@@ -346,10 +346,35 @@
     </script>
     <script defer src="js/vehicle-config.js" charset="utf-8"></script>
     <script defer src="js/beyond-maps.js" charset="utf-8"></script>
-    <script defer src="js/social-map.js" charset="utf-8"></script>
     <script defer src="js/self-evolution.js" charset="utf-8"></script>
+    <script defer src="js/gamification.js" charset="utf-8"></script>
+    <script defer src="js/radar-social.js" charset="utf-8"></script>
 
-    <!-- SOCIAL RADAR BUTTON -->
+    <!-- GAMIFICATION HUD -->
+    <div id="gamification-hud" style="position: fixed; top: 15px; left: 15px; z-index: 1000; background: rgba(0,0,0,0.8); border: 1px solid rgba(0, 210, 255, 0.5); padding: 10px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer;">
+        <div style="font-size: 2rem;">
+            <i id="gami-icon" class="fa-solid fa-motorcycle" style="color: #a0a0a0; filter: drop-shadow(0 0 5px currentColor);"></i>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span id="gami-rank-name" style="color: #fff; font-weight: bold; font-family: 'Inter', sans-serif; font-size: 0.9rem;">Novice</span>
+                <span id="gami-xp-text" style="color: #00d2ff; font-family: monospace; font-size: 0.8rem;">0 XP</span>
+            </div>
+            <div style="width: 120px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden;">
+                <div id="gami-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00d2ff, #00ff88); transition: width 0.5s;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOCIAL RADAR & ROADBOOKS BUTTONS -->
+    <div style="position: fixed; top: 110px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;">
+        <button id="btn-ghost-mode" onclick="window.RadarSocial.toggleGhostMode()" style="background: rgba(0,0,0,0.8); color: white; border: 1px solid #00f0ff; padding: 10px; border-radius: 5px; font-family: monospace; cursor: pointer;">
+            <i class="fa-solid fa-ghost"></i> Ghost Mode
+        </button>
+        <button id="btn-roadbook-record" onclick="window.Roadbooks.toggleRecording()" style="background: rgba(0,0,0,0.8); color: white; border: 1px solid #00ff00; padding: 10px; border-radius: 5px; font-family: monospace; cursor: pointer;">
+            <i class="fa-solid fa-route"></i> Rec Roadbook
+        </button>
+    </div>
 
     <!-- FUN MODE / SENSATION BUTTON -->
 
@@ -5261,8 +5286,27 @@
           <div id="bb-batt" style="color: #fff; font-size: 0.8rem; margin-top: 5px; font-weight: bold;">-- mV</div>
         </div>
         <div style="text-align: center;">
-          <i class="fa-solid fa-shield-halved" style="color: #00d2ff; font-size: 1.2rem;"></i>
-          <div id="bb-tamper" style="color: #fff; font-size: 0.8rem; margin-top: 5px; font-weight: bold;">Intact</div>
+          <i class="fa-solid fa-memory" style="color: #00f0ff; font-size: 1.2rem;"></i>
+          <div id="bb-mem" style="color: #fff; font-size: 0.8rem; margin-top: 5px; font-weight: bold;">-- %</div>
+        </div>
+        <div style="text-align: center;">
+          <i class="fa-solid fa-shield-halved" style="color: #ffaa00; font-size: 1.2rem;"></i>
+          <div id="bb-aes" style="color: #fff; font-size: 0.8rem; margin-top: 5px; font-weight: bold;">AES-256</div>
+        </div>
+      </div>
+
+      <!-- Section Abonnement Sentinel Care -->
+      <div style="margin-top: 20px; padding: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+        <h4 style="color: #ffaa00; margin: 0 0 10px; font-family: 'Inter', sans-serif;"><i class="fa-solid fa-gem"></i> Sentinel Care</h4>
+        <p style="color: #ccc; font-size: 0.8rem; margin-bottom: 15px;">Remplacement gratuit du matériel en fin de vie.<br><strong style="color: #00ff88;">1ère année incluse à l'achat du boîtier !</strong></p>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button onclick="window.Wallet && window.Wallet.createRevolutOrder('BLACKBOX_CARE_MONTHLY')" style="background: rgba(255, 170, 0, 0.2); color: #ffaa00; border: 1px solid #ffaa00; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;">
+            S'abonner - 5.00€ / mois
+          </button>
+          <button onclick="window.Wallet && window.Wallet.createRevolutOrder('BLACKBOX_CARE_ANNUAL')" style="background: #ffaa00; color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;">
+            Abonnement Annuel - 50.00€ (2 mois offerts)
+          </button>
         </div>
       </div>
 

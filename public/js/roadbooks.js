@@ -1,147 +1,145 @@
-﻿// --- ROADBOOKS & TRACÉS ---
-window.RoadbookSystem = {
-  isRecording: false,
-  currentPath: [],
-  recordInterval: null,
-  roadbookPolylines: {},
+/**
+ * ROADBOOKS - Carnets de Route GPS
+ * Enregistrement des trajets et partage communautaire.
+ */
 
-  init: function () {
-    if (!window.session || !window.session.uid) return;
+window.Roadbooks = {
+    isRecording: false,
+    currentTrace: [],
+    watchId: null,
+    startTime: null,
+    distanceTotal: 0, // En mètres
 
-    this.listenToRoadbooks();
-  },
+    toggleRecording: function () {
+        if (!window.session || !window.session.uid) {
+            return alert("Connectez-vous pour enregistrer un Roadbook.");
+        }
 
-  toggleRecording: function () {
-    const btn = document.getElementById("roadbook-rec-btn");
-    if (this.isRecording) {
-      // STOP
-      this.isRecording = false;
-      clearInterval(this.recordInterval);
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-route"></i> REC Trace`;
-      if (btn) btn.style.color = "#b700ff";
-      if (btn) btn.style.border = "1px solid #b700ff";
-      if (btn) btn.style.background = "none";
+        const btn = document.getElementById("btn-roadbook-record");
 
-      if (this.currentPath.length > 5) {
-        const title = prompt(
-          "Enregistrement terminé. Entrez un nom pour votre Roadbook (ex: Balade en Vallée de Chevreuse) :",
-        );
-        if (title) {
-          this.saveRoadbook(title);
+        if (!this.isRecording) {
+            // START RECORDING
+            this.isRecording = true;
+            this.currentTrace = [];
+            this.distanceTotal = 0;
+            this.startTime = Date.now();
+
+            if (btn) {
+                btn.classList.add("recording");
+                btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Trace';
+            }
+            if (typeof speak === "function") speak("Enregistrement du Roadbook démarré.");
+
+            this.startTrace();
         } else {
-          this.currentPath = [];
+            // STOP RECORDING
+            this.isRecording = false;
+            if (btn) {
+                btn.classList.remove("recording");
+                btn.innerHTML = '<i class="fa-solid fa-route"></i> Rec Roadbook';
+            }
+            
+            this.stopTrace();
+            
+            if (this.currentTrace.length > 2) {
+                this.saveRoadbookPrompt();
+            } else {
+                alert("Trace trop courte pour être sauvegardée.");
+            }
         }
-      } else {
-        alert("Tracé trop court (moins de 5 points GPS), non sauvegardé.");
-        this.currentPath = [];
-      }
-    } else {
-      // START
-      this.isRecording = true;
-      this.currentPath = [];
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-stop"></i> STOP REC`;
-      if (btn) btn.style.color = "#fff";
-      if (btn) btn.style.border = "2px solid #ff0055";
-      if (btn) btn.style.background = "#ff0055";
+    },
 
-      if (typeof speak === "function")
-        speak("Enregistrement du tracé activé.");
+    startTrace: function () {
+        if (!navigator.geolocation) return;
 
-      this.recordInterval = setInterval(() => {
-        if (window.currentPosition) {
-          this.currentPath.push({
-            lat: window.currentPosition.lat,
-            lng: window.currentPosition.lng,
-          });
+        this.watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                
+                // Ajouter le point
+                const newPoint = [lng, lat]; // Format GeoJSON [Lng, Lat]
+                
+                // Calcul de la distance
+                if (this.currentTrace.length > 0) {
+                    const lastPoint = this.currentTrace[this.currentTrace.length - 1];
+                    this.distanceTotal += this.haversineDistance(lastPoint, newPoint);
+                }
+
+                this.currentTrace.push(newPoint);
+
+                // Optionnel: Dessiner la ligne sur la carte en temps réel
+                if (typeof window.map !== "undefined") {
+                    // Logique Leaflet (L.polyline)
+                }
+            },
+            (err) => { console.error("Erreur GPS Roadbook:", err); },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
+    },
+
+    stopTrace: function () {
+        if (this.watchId !== null) {
+            navigator.geolocation.clearWatch(this.watchId);
+            this.watchId = null;
         }
-      }, 5000); // Record point every 5 seconds
+    },
+
+    saveRoadbookPrompt: async function () {
+        const title = prompt("Nom du Roadbook ?", "Balade du " + new Date().toLocaleDateString());
+        if (!title) return;
+
+        const durationMinutes = Math.round((Date.now() - this.startTime) / 60000);
+        const distanceKm = (this.distanceTotal / 1000).toFixed(2);
+
+        const confirmShare = confirm("Voulez-vous rendre ce Roadbook public (Communauté) ?");
+
+        const roadbookData = {
+            userId: window.session.uid,
+            username: window.session.username,
+            title: title,
+            distance_km: distanceKm,
+            duration_min: durationMinutes,
+            is_public: confirmShare,
+            trace: {
+                type: "LineString",
+                coordinates: this.currentTrace
+            },
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            const rbRef = await db.collection("roadbooks").add(roadbookData);
+            if (confirmShare) {
+                await db.collection("community_roadbooks").doc(rbRef.id).set(roadbookData);
+            }
+            if (typeof speak === "function") speak("Roadbook sauvegardé avec succès.");
+            
+            // Attribution de l'XP
+            if (window.Gamification) {
+                window.Gamification.awardXP(50); // 50 XP de base pour un Roadbook
+            }
+
+            this.currentTrace = [];
+            this.distanceTotal = 0;
+        } catch (e) {
+            console.error("Erreur sauvegarde Roadbook:", e);
+            alert("Erreur lors de la sauvegarde.");
+        }
+    },
+
+    // Utilitaire pour calculer la distance entre 2 points (en mètres)
+    haversineDistance: function (pt1, pt2) {
+        const R = 6371e3; // Rayon de la Terre
+        const lat1 = pt1[1] * Math.PI / 180;
+        const lat2 = pt2[1] * Math.PI / 180;
+        const dLat = (pt2[1] - pt1[1]) * Math.PI / 180;
+        const dLon = (pt2[0] - pt1[0]) * Math.PI / 180;
+
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
-  },
-
-  saveRoadbook: async function (title) {
-    try {
-      await firebase.firestore().collection("roadbooks").add({
-        title: title,
-        author: window.session.username,
-        authorUid: window.session.uid,
-        path: this.currentPath,
-        createdAt: Date.now(),
-        rating: 0,
-        votes: 0,
-      });
-      alert("Roadbook public sauvegardé avec succès sur la carte !");
-      this.currentPath = [];
-    } catch (e) {
-      console.error(e);
-      alert("Erreur de sauvegarde de la trace.");
-    }
-  },
-
-  listenToRoadbooks: function () {
-    if (typeof firebase === "undefined") return;
-
-    firebase
-      .firestore()
-      .collection("roadbooks")
-      .orderBy("createdAt", "desc")
-      .limit(20)
-      .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          const data = change.doc.data();
-          const id = change.doc.id;
-
-          if (change.type === "added" || change.type === "modified") {
-            this.drawRoadbook(id, data);
-          } else if (change.type === "removed") {
-            this.removeRoadbook(id);
-          }
-        });
-      });
-  },
-
-  drawRoadbook: function (id, data) {
-    if (!map || !data.path || data.path.length === 0) return;
-
-    this.removeRoadbook(id);
-
-    const path = data.path.map((p) => new google.maps.LatLng(p.lat, p.lng));
-
-    const polyline = new google.maps.Polyline({
-      path: path,
-      geodesic: true,
-      strokeColor: "#b700ff",
-      strokeOpacity: 0.6,
-      strokeWeight: 4,
-      map: map,
-    });
-
-    // Add info window on click
-    const info = new google.maps.InfoWindow({
-      content: `<div style="color:black; font-family:'Outfit';">
-                        <h3 style="color:#b700ff; margin:0;">${data.title}</h3>
-                        <p style="margin:5px 0 10px;">Par: ${data.author}</p>
-                        <p style="margin:0;">Points: ${data.path.length}</p>
-                      </div>`,
-    });
-
-    polyline.addListener("click", (event) => {
-      info.setPosition(event.latLng);
-      info.open(map);
-    });
-
-    this.roadbookPolylines[id] = polyline;
-  },
-
-  removeRoadbook: function (id) {
-    if (this.roadbookPolylines[id]) {
-      this.roadbookPolylines[id].setMap(null);
-      delete this.roadbookPolylines[id];
-    }
-  },
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    window.RoadbookSystem.init();
-  }, 4000);
-});

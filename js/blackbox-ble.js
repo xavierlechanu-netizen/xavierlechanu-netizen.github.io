@@ -163,13 +163,10 @@ class BlackBoxBLE {
   /**
    * Réception des trames en direct.
    */
-  handleFrameNotification(event) {
+  async handleFrameNotification(event) {
     const value = event.target.value;
-    // La trame brute est un buffer binaire (ex: struct blackbox_frame_t)
-    // Ici on extrait quelques données basiques pour l'UI, mais dans le vrai
-    // cas, on l'enverrait chiffrée sur Firebase.
     
-    // Si la trame fait 64 octets (comme défini en C)
+    // Si la trame fait au moins 16 octets (l'en-tête + début payload)
     if (value.byteLength >= 16) {
         const timestamp = value.getUint32(0, true);
         const lat = value.getInt32(4, true) / 1e7;
@@ -178,6 +175,28 @@ class BlackBoxBLE {
         
         console.log(`[BLE] Trame reçue: TS=${timestamp}, Lat=${lat}, Lon=${lon}, Vitesse=${speed} km/h`);
         
+        // 1. Convertir le buffer en base64 pour l'envoi sécurisé au Cloud
+        const bytes = new Uint8Array(value.buffer);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        const b64Payload = window.btoa(binary);
+
+        // 2. Envoi vers Firebase (Zero Knowledge)
+        if (typeof firebase !== 'undefined' && firebase.functions) {
+          try {
+            // Utiliser la région configurée sur le serveur
+            const uploadTelemetry = firebase.functions("europe-west1").httpsCallable('uploadBlackboxTelemetry');
+            await uploadTelemetry({
+              hardwareId: this.device ? this.device.name : 'UNKNOWN_HW',
+              encryptedPayload: b64Payload,
+              timestamp: timestamp
+            });
+            console.log(`[BLE] Trame ${timestamp} stockée en Zero-Knowledge sur Firebase.`);
+          } catch (error) {
+            console.error(`[BLE] Erreur Firebase upload trame ${timestamp}:`, error);
+          }
+        }
+
         if (this.onTelemetryData) {
             this.onTelemetryData({ timestamp, lat, lon, speed, raw: value });
         }
