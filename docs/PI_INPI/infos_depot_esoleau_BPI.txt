@@ -1,0 +1,30 @@
+====================================================================
+INFORMATIONS DE DÉPÔT eSOLEAU - PREUVE DE PROPRIÉTÉ INTELLECTUELLE
+====================================================================
+(Document à joindre ou à copier/coller dans le dossier Bpifrance 
+pour valider la date d'ancrage de la propriété intellectuelle)
+
+Projet concerné : mon50ccetmoi
+Type de dépôt   : eSoleau (INPI)
+Numéro national : DSO2026028777
+Date du dépôt   : 09/08/2026
+Heure UTC       : 2026-08-09 12:48:00
+Montant payé    : 15 €
+Conservation    : 5 ans (pièces jointes conservées par l'INPI)
+
+Titulaire / Signataire :
+Monsieur LE CHANU Xavier Christian Sam
+xlechanu@yahoo.com
+
+Fichier déposé :
+Nom de l'archive      : mon50ccetmoi_esoleau_deposit.zip
+Taille de l'archive   : 46.3911 Mo
+Empreinte Numérique   : mry4ENnMIfcHUGSi+Mmy8cLMPKvUPIteZRf3ouPMif4= (Base64 / SHA-256)
+
+--------------------------------------------------------------------
+Note pour Bpifrance : 
+Le code source et les éléments de conception du projet "mon50ccetmoi" 
+ont fait l'objet d'un horodatage numérique certifié auprès de l'INPI 
+à la date indiquée ci-dessus. Le reçu PDF original 
+(recap_DSO2026028777.pdf) est également disponible comme preuve légale.
+--------------------------------------------------------------------
