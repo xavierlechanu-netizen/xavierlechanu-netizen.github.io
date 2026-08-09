@@ -315,6 +315,25 @@
         margin-top: 80px;
       }
 
+      .social-icons {
+        display: flex;
+        justify-content: center;
+        gap: 25px;
+        margin: 20px 0;
+      }
+
+      .social-icons a {
+        color: var(--text-muted);
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .social-icons a:hover {
+        color: var(--neon-blue);
+        transform: translateY(-3px);
+        text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+      }
+
       .footer-links {
         margin-top: 20px;
         display: flex;
@@ -694,6 +713,14 @@
         <i class="fa-solid fa-motorcycle"></i> mon50ccetmoi
       </div>
       <p>&copy; 2026 mon50ccetmoi. Tous droits réservés.</p>
+      
+      <div class="social-icons" style="margin-top: 15px; margin-bottom: 15px;">
+        <a href="#" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="https://www.youtube.com/@chezbigboo" target="_blank" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        <a href="#" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" target="_blank" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+      </div>
+
       <div class="footer-links">
         <a href="mentions-legales.html">Mentions Légales</a>
         <a href="privacy.html">Confidentialité</a>
