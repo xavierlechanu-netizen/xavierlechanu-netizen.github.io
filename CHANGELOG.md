@@ -6,6 +6,14 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ---
 
+## [101.00.05] - 2026-08-09 - 🛡️ Dépôt eSoleau INPI
+
+### Ajouté
+- **Propriété Intellectuelle** : Ajout du reçu INPI (`recap_DSO2026028777.pdf`) dans `docs/PI_INPI/` pour conserver la preuve du dépôt eSoleau au sein du projet.
+- **Script de génération** : Création du script `scripts/generate_esoleau_archive.ps1` pour automatiser la génération d'une archive source propre (sans dépendances) pour les futurs dépôts INPI.
+
+---
+
 ## [101.00.04] — 2026-08-07 — 🚀 Signature Automatique & AAB (Google Play)
 
 ### Ajouté
