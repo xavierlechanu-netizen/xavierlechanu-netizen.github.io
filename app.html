@@ -289,9 +289,16 @@
 
       // On lance le chargement dès que config.js est lÃ
       window.addEventListener("load", () => {
-        // FORCE LEAFLET OVER GOOGLE MAPS FOR DEMO/MOBILE RELIABILITY
-        initFallbackMap();
-        window.mapsSDKLoaded = true;
+        // TENTATIVE DE CHARGEMENT DE GOOGLE MAPS (Priorité)
+        loadMapsSDK();
+        
+        // Timeout de sécurité : si Maps ne charge pas en 5s, on force le fallback
+        setTimeout(() => {
+          if (!window.mapsSDKLoaded) {
+            console.warn("mon50cc : Google Maps trop long, fallback sur Leaflet");
+            forceStartApp("TIMEOUT_SDK");
+          }
+        }, 5000);
 
         setTimeout(() => {
           const loader = document.getElementById("app-loader");

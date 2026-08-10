@@ -378,7 +378,48 @@
         </p>
       </div>
 
-      <!-- EXPERT DASHBOARD (Hidden until paid) -->
+      <!-- DECRYPTION MODAL (Hidden until paid) -->
+      <div id="decryption-modal" style="display: none; margin-top: 20px; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 8px; border: 1px solid #ff0055;">
+        <h3 style="color: #ff0055; margin-top: 0;"><i class="fa-solid fa-key"></i> Déchiffrement AES-256 (Zero-Knowledge)</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem;">Le cloud ne possède pas la clé de déchiffrement. Veuillez saisir la Master Key de l'agence pour lire le rapport localement.</p>
+        
+        <input
+          type="password"
+          id="master-key-input"
+          placeholder="Saisissez la clé privée AES (Ex: 0x...)"
+          style="
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #1e293b;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+          "
+        />
+        <button
+          onclick="decryptTelemetry()"
+          style="
+            width: 100%;
+            padding: 15px;
+            background: #00d2ff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+          "
+        >
+          <i class="fa-solid fa-unlock"></i> Déchiffrer
+        </button>
+      </div>
+
+      <!-- EXPERT DASHBOARD (Hidden until decrypted) -->
       <div id="expert-dashboard" style="display: none; margin-top: 20px">
         <div
           style="
@@ -505,6 +546,26 @@
                 "
                 id="telemetry-hash"
               ></div>
+            </div>
+
+            <!-- MODULE IA LITIGE -->
+            <div style="margin-top: 20px; background: rgba(183, 0, 255, 0.1); border: 1px solid rgba(183, 0, 255, 0.3); border-radius: 8px; padding: 15px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: #b700ff;"><i class="fa-solid fa-brain"></i> IA Litige (Reconstitution)</h4>
+                <button onclick="runLitigationAI()" style="background: linear-gradient(135deg, #b700ff, #8a2be2); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem;">
+                  Lancer l'Analyse
+                </button>
+              </div>
+              
+              <!-- Legal Warning (AI Act) -->
+              <div style="background: rgba(255, 170, 0, 0.1); border-left: 4px solid #ffaa00; padding: 10px; margin-bottom: 15px; font-size: 0.75rem; color: #ccc;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #ffaa00;"></i> <strong>AI Act Compliance :</strong> Cet outil agit à titre d'assistance. Aucune décision légale automatisée ne peut être prise sans supervision humaine par l'expert en sinistre.
+              </div>
+
+              <!-- Result Area -->
+              <div id="ai-report-area" style="display: none; background: #111; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; line-height: 1.6; border: 1px solid #333;">
+                <span id="ai-report-content">Génération du rapport en cours...</span>
+              </div>
             </div>
 
             <button

@@ -360,148 +360,6 @@ window.toggleSensationMode = function () {
 };
 
 
-/* --- social-map.js --- */
-/* --- SQUAD RADAR / SOCIAL MAP --- */
-
-window.ghostRiders = [];
-window.isSocialRadarActive = false;
-window.socialRadarUnsubscribe = null;
-
-window.initSocialRadar = function () {
-  if (!window.map || !window.currentPosition || !window.firebase) {
-    // Retry later if map or firebase is not ready
-    setTimeout(window.initSocialRadar, 2000);
-    return;
-  }
-
-  const db = window.firebase.firestore();
-
-  // Publier notre propre position sur Firestore (toutes les 10 secondes)
-  setInterval(() => {
-    if (
-      window.isSocialRadarActive &&
-      window.currentPosition &&
-      window.session?.uid
-    ) {
-      db.collection("user_locations")
-        .doc(window.session.uid)
-        .set(
-          {
-            lat: window.currentPosition.lat,
-            lng: window.currentPosition.lng,
-            pseudo: window.session.pseudo || "Pilot_Unknown",
-            vehicle: "50cc",
-            lastActive: firebase.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true },
-        )
-        .catch((err) => console.warn("SocialMap Publish Error:", err));
-    }
-  }, 10000);
-
-  // Écouter les positions des autres utilisateurs
-  window.socialRadarUnsubscribe = db
-    .collection("user_locations")
-    .onSnapshot((snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        const data = change.doc.data();
-        const uid = change.doc.id;
-
-        // Ignorer notre propre marqueur
-        if (window.session && uid === window.session.uid) return;
-
-        if (change.type === "added" || change.type === "modified") {
-          // Mettre à jour ou créer
-          let existingRider = window.ghostRiders.find((r) => r.uid === uid);
-          if (existingRider) {
-            existingRider.marker.setPosition({ lat: data.lat, lng: data.lng });
-          } else {
-            // Créer un nouveau marqueur
-            let marker = new google.maps.Marker({
-              position: { lat: data.lat, lng: data.lng },
-              map: window.isSocialRadarActive ? window.map : null,
-              icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: "#00d2ff",
-                fillOpacity: 1,
-                strokeColor: "#fff",
-                strokeWeight: 2,
-              },
-              title: data.pseudo,
-            });
-
-            let infoWindow = new google.maps.InfoWindow({
-              content: `
-                                <div style="color: #000; padding: 5px; font-family: 'Inter', sans-serif;">
-                                    <h3 style="margin: 0; font-size: 1.1rem; color: #ff0055;"><i class="fa-solid fa-user-astronaut"></i> ${data.pseudo}</h3>
-                                    <p style="margin: 5px 0 0 0; font-size: 0.9rem; font-weight: bold;">${data.vehicle || "Moto"}</p>
-                                </div>
-                            `,
-            });
-
-            marker.addListener("click", () => {
-              infoWindow.open(window.map, marker);
-            });
-
-            window.ghostRiders.push({ uid: uid, marker: marker });
-          }
-        }
-
-        if (change.type === "removed") {
-          let existingIndex = window.ghostRiders.findIndex(
-            (r) => r.uid === uid,
-          );
-          if (existingIndex > -1) {
-            window.ghostRiders[existingIndex].marker.setMap(null);
-            window.ghostRiders.splice(existingIndex, 1);
-          }
-        }
-      });
-    });
-};
-
-window.toggleSocialRadar = function () {
-  window.isSocialRadarActive = !window.isSocialRadarActive;
-  const btn = document.getElementById("btn-social-radar");
-
-  if (window.isSocialRadarActive) {
-    if (btn) {
-      btn.style.background = "#00d2ff";
-      btn.style.color = "#000";
-      btn.style.boxShadow = "0 0 30px #00d2ff";
-    }
-
-    if (window.ghostRiders.length === 0 && !window.socialRadarUnsubscribe) {
-      window.initSocialRadar();
-    }
-
-    window.ghostRiders.forEach((ghost) => ghost.marker.setMap(window.map));
-
-    if (typeof speak === "function") {
-      speak("Radar Social activé. Connexion au réseau des pilotes en cours.");
-    }
-  } else {
-    if (btn) {
-      btn.style.background = "rgba(0,0,0,0.8)";
-      btn.style.color = "#fff";
-      btn.style.boxShadow = "0 0 15px #00d2ff";
-    }
-
-    window.ghostRiders.forEach((ghost) => ghost.marker.setMap(null));
-
-    if (typeof speak === "function") {
-      speak("Radar Social désactivé.");
-    }
-  }
-};
-
-// Auto-init attempts
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(window.initSocialRadar, 5000);
-});
-
-
 /* --- self-evolution.js --- */
 /* --- NEURAL EVOLUTION ENGINE --- */
 window.aiMutations = 0;
@@ -618,6 +476,334 @@ window.applyRandomMutation = function () {
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(window.initSelfEvolution, 6000);
 });
+
+
+/* --- gamification.js --- */
+/**
+ * GAMIFICATION ENGINE
+ * Gère l'expérience (XP), les Rangs et l'affichage des Avatars.
+ */
+
+window.Gamification = {
+    xp: 0,
+    RANKS: [
+        { name: "Novice", minXp: 0, icon: "fa-motorcycle", color: "#a0a0a0" }, // Casque standard
+        { name: "Explorateur", minXp: 500, icon: "fa-compass", color: "#00d2ff" }, // Casque Jet
+        { name: "Vétéran", minXp: 2000, icon: "fa-shield-halved", color: "#ffaa00" }, // Intégral Carbone
+        { name: "Légende 50cc", minXp: 5000, icon: "fa-crown", color: "#ffcf00" } // Couronne Or
+    ],
+    
+    init: function() {
+        // Chargement local
+        this.xp = parseInt(localStorage.getItem('mon50cc_xp')) || 0;
+        this.updateHUD();
+    },
+
+    getCurrentRank: function() {
+        let current = this.RANKS[0];
+        for (let i = 0; i < this.RANKS.length; i++) {
+            if (this.xp >= this.RANKS[i].minXp) {
+                current = this.RANKS[i];
+            }
+        }
+        return current;
+    },
+
+    getNextRank: function() {
+        for (let i = 0; i < this.RANKS.length; i++) {
+            if (this.xp < this.RANKS[i].minXp) {
+                return this.RANKS[i];
+            }
+        }
+        return null; // Niveau Max atteint
+    },
+
+    /**
+     * Attribue de l'XP à la fin d'une action (ex: Roadbook)
+     */
+    awardXP: function(baseXP, context = {}) {
+        let totalXp = baseXP;
+        let reasons = [];
+
+        // 1. Bonus Conduite Prudente (Driving Score > 80)
+        let drivingScore = window.DrivingScore ? window.DrivingScore.currentScore : 100;
+        if (drivingScore >= 80) {
+            totalXp += 50;
+            reasons.push("Conduite Prudente (+50)");
+        }
+
+        // 2. Bonus Communauté (Ghost Mode désactivé)
+        let ghostMode = window.RadarSocial ? window.RadarSocial.isGhostMode : true;
+        if (!ghostMode) {
+            totalXp += 20;
+            reasons.push("Partage Communauté (+20)");
+        }
+
+        // 3. Multiplicateur Boîte Noire (Si le boîtier physique est connecté)
+        let blackboxConnected = document.getElementById('bb-batt') && document.getElementById('bb-batt').innerText !== '-- mV';
+        if (blackboxConnected) {
+            totalXp *= 2;
+            reasons.push("Bonus Boîte Noire (x2)");
+        }
+
+        const oldRank = this.getCurrentRank();
+        this.xp += totalXp;
+        localStorage.setItem('mon50cc_xp', this.xp.toString());
+        
+        // Sauvegarde Cloud si connecté
+        this.syncToCloud();
+
+        const newRank = this.getCurrentRank();
+
+        // Animation de Récompense
+        this.showRewardAnimation(totalXp, reasons);
+
+        if (newRank.name !== oldRank.name) {
+            this.showLevelUpAnimation(newRank);
+        }
+
+        this.updateHUD();
+    },
+
+    syncToCloud: function() {
+        if (typeof firebase !== 'undefined' && firebase.auth && typeof firebase.auth === 'function' && firebase.auth().currentUser) {
+            try {
+                const db = firebase.firestore();
+                db.collection('users').doc(firebase.auth().currentUser.uid).set({
+                    gamification: {
+                        xp: this.xp,
+                        rank: this.getCurrentRank().name
+                    }
+                }, { merge: true });
+            } catch(e) {
+                console.warn("Gamification: Firestore sync failed", e);
+            }
+        }
+    },
+
+    updateHUD: function() {
+        const hud = document.getElementById('gamification-hud');
+        if (!hud) return;
+
+        const rank = this.getCurrentRank();
+        const nextRank = this.getNextRank();
+
+        document.getElementById('gami-icon').className = `fa-solid ${rank.icon}`;
+        document.getElementById('gami-icon').style.color = rank.color;
+        document.getElementById('gami-rank-name').innerText = rank.name;
+        document.getElementById('gami-xp-text').innerText = `${this.xp} XP`;
+
+        const bar = document.getElementById('gami-progress-bar');
+        if (nextRank) {
+            const range = nextRank.minXp - rank.minXp;
+            const progress = this.xp - rank.minXp;
+            const percent = Math.min(100, Math.max(0, (progress / range) * 100));
+            bar.style.width = `${percent}%`;
+        } else {
+            bar.style.width = '100%';
+            bar.style.backgroundColor = '#ffcf00'; // Gold pour niveau max
+        }
+    },
+
+    showRewardAnimation: function(xpGained, reasons) {
+        // Petite pop-up temporaire
+        const toast = document.createElement('div');
+        toast.style.position = 'fixed';
+        toast.style.top = '30%';
+        toast.style.left = '50%';
+        toast.style.transform = 'translate(-50%, -50%)';
+        toast.style.background = 'rgba(0, 210, 255, 0.9)';
+        toast.style.color = '#fff';
+        toast.style.padding = '20px';
+        toast.style.borderRadius = '15px';
+        toast.style.zIndex = '10005';
+        toast.style.textAlign = 'center';
+        toast.style.boxShadow = '0 0 20px rgba(0, 210, 255, 0.5)';
+        toast.style.fontFamily = "'Inter', sans-serif";
+        toast.style.transition = 'opacity 0.5s';
+        
+        toast.innerHTML = `
+            <h2 style="margin: 0 0 10px; font-size: 2rem;">+${xpGained} XP !</h2>
+            <div style="font-size: 0.9rem; opacity: 0.9;">
+                ${reasons.join('<br>')}
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    },
+
+    showLevelUpAnimation: function(newRank) {
+        // Simple pop-up for level up
+        alert(`Félicitations ! Vous avez atteint le rang : ${newRank.name} !`);
+    }
+};
+
+// Auto-init
+window.addEventListener('DOMContentLoaded', () => {
+    // Petit délai pour s'assurer que le HUD HTML est chargé
+    setTimeout(() => {
+        window.Gamification.init();
+    }, 500);
+});
+
+
+/* --- radar-social.js --- */
+/**
+ * RADAR SOCIAL - Partage GPS Temps Réel
+ * Fonctionnalité de suivi communautaire (Privacy by Design)
+ */
+
+window.RadarSocial = {
+    isActive: false, // Ghost Mode activé par défaut (RGPD)
+    watchId: null,
+    radarUnsubscribe: null,
+    friendsMarkers: {}, // Stockage des marqueurs Leaflet/GoogleMaps des autres utilisateurs
+
+    toggleGhostMode: async function () {
+        if (!window.session || !window.session.uid) {
+            return alert("Connectez-vous pour utiliser le Radar Social.");
+        }
+
+        const btn = document.getElementById("btn-ghost-mode");
+        
+        if (!this.isActive) {
+            // DÉSACTIVER LE GHOST MODE (Passer public)
+            const confirmPublic = confirm("Radar Social : Votre position sera visible par les autres motards de la communauté. Continuer ?");
+            if (!confirmPublic) return;
+
+            this.isActive = true;
+            if (btn) {
+                btn.classList.add("active");
+                btn.innerHTML = '<i class="fa-solid fa-eye"></i> Radar ON';
+            }
+            if (typeof speak === "function") speak("Mode fantôme désactivé. Radar social actif.");
+
+            this.startBroadcasting();
+            this.listenToCommunity();
+        } else {
+            // ACTIVER LE GHOST MODE (Passer privé)
+            this.isActive = false;
+            if (btn) {
+                btn.classList.remove("active");
+                btn.innerHTML = '<i class="fa-solid fa-ghost"></i> Ghost Mode';
+            }
+            if (typeof speak === "function") speak("Mode fantôme activé. Vous êtes invisible.");
+
+            this.stopBroadcasting();
+        }
+    },
+
+    startBroadcasting: function () {
+        if (!navigator.geolocation) return;
+
+        this.watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                if (!this.isActive || typeof db === "undefined") return;
+
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const spd = pos.coords.speed || 0; // m/s
+
+                // Mise à jour optimisée dans Firestore
+                db.collection("social_radar").doc(window.session.uid).set({
+                    username: window.session.username,
+                    lat: lat,
+                    lng: lng,
+                    speed: Math.round(spd * 3.6), // km/h
+                    last_seen: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            },
+            (err) => { console.error("Erreur GPS Radar:", err); },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
+    },
+
+    stopBroadcasting: async function () {
+        if (this.watchId !== null) {
+            navigator.geolocation.clearWatch(this.watchId);
+            this.watchId = null;
+        }
+
+        // Se retirer de la base de données (Droit à l'oubli immédiat)
+        if (typeof db !== "undefined" && window.session?.uid) {
+            try {
+                await db.collection("social_radar").doc(window.session.uid).delete();
+            } catch(e) {
+                console.error("Impossible de supprimer la trace radar", e);
+            }
+        }
+
+        // Arrêter d'écouter les autres
+        if (this.radarUnsubscribe) {
+            this.radarUnsubscribe();
+            this.radarUnsubscribe = null;
+        }
+
+        this.clearMarkers();
+    },
+
+    listenToCommunity: function () {
+        if (typeof db === "undefined") return;
+
+        // On écoute la collection. On pourrait filtrer sur le timestamp pour ignorer les vieux (> 5 min)
+        this.radarUnsubscribe = db.collection("social_radar")
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    const data = change.doc.data();
+                    const uid = change.doc.id;
+
+                    // Ignorer sa propre position
+                    if (uid === window.session.uid) return;
+
+                    if (change.type === "added" || change.type === "modified") {
+                        this.updateMarker(uid, data);
+                    }
+                    if (change.type === "removed") {
+                        this.removeMarker(uid);
+                    }
+                });
+            });
+    },
+
+    updateMarker: function (uid, data) {
+        if (typeof window.map === "undefined") {
+            // Si aucune carte (Leaflet/Mapbox) n'est instanciée, on log simplement
+            console.log("📍 Radar Social Update:", data.username, "à", data.lat, data.lng, "-", data.speed, "km/h");
+            return;
+        }
+
+        // Intégration théorique avec Leaflet
+        /*
+        if (this.friendsMarkers[uid]) {
+            this.friendsMarkers[uid].setLatLng([data.lat, data.lng]);
+            this.friendsMarkers[uid].setPopupContent(`<b>${data.username}</b><br>${data.speed} km/h`);
+        } else {
+            const marker = L.marker([data.lat, data.lng], { icon: L.icon({ iconUrl: 'assets/motorcycle-icon.png' }) })
+                .bindPopup(`<b>${data.username}</b><br>${data.speed} km/h`)
+                .addTo(window.map);
+            this.friendsMarkers[uid] = marker;
+        }
+        */
+    },
+
+    removeMarker: function (uid) {
+        if (this.friendsMarkers[uid] && typeof window.map !== "undefined") {
+            // window.map.removeLayer(this.friendsMarkers[uid]);
+            delete this.friendsMarkers[uid];
+        }
+    },
+
+    clearMarkers: function () {
+        for (const uid in this.friendsMarkers) {
+            this.removeMarker(uid);
+        }
+    }
+};
 
 
 /* --- crews-territory.js --- */
@@ -2221,153 +2407,151 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 /* --- roadbooks.js --- */
-// --- ROADBOOKS & TRACÉS ---
-window.RoadbookSystem = {
-  isRecording: false,
-  currentPath: [],
-  recordInterval: null,
-  roadbookPolylines: {},
+/**
+ * ROADBOOKS - Carnets de Route GPS
+ * Enregistrement des trajets et partage communautaire.
+ */
 
-  init: function () {
-    if (!window.session || !window.session.uid) return;
+window.Roadbooks = {
+    isRecording: false,
+    currentTrace: [],
+    watchId: null,
+    startTime: null,
+    distanceTotal: 0, // En mètres
 
-    this.listenToRoadbooks();
-  },
+    toggleRecording: function () {
+        if (!window.session || !window.session.uid) {
+            return alert("Connectez-vous pour enregistrer un Roadbook.");
+        }
 
-  toggleRecording: function () {
-    const btn = document.getElementById("roadbook-rec-btn");
-    if (this.isRecording) {
-      // STOP
-      this.isRecording = false;
-      clearInterval(this.recordInterval);
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-route"></i> REC Trace`;
-      if (btn) btn.style.color = "#b700ff";
-      if (btn) btn.style.border = "1px solid #b700ff";
-      if (btn) btn.style.background = "none";
+        const btn = document.getElementById("btn-roadbook-record");
 
-      if (this.currentPath.length > 5) {
-        const title = prompt(
-          "Enregistrement terminé. Entrez un nom pour votre Roadbook (ex: Balade en Vallée de Chevreuse) :",
-        );
-        if (title) {
-          this.saveRoadbook(title);
+        if (!this.isRecording) {
+            // START RECORDING
+            this.isRecording = true;
+            this.currentTrace = [];
+            this.distanceTotal = 0;
+            this.startTime = Date.now();
+
+            if (btn) {
+                btn.classList.add("recording");
+                btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Trace';
+            }
+            if (typeof speak === "function") speak("Enregistrement du Roadbook démarré.");
+
+            this.startTrace();
         } else {
-          this.currentPath = [];
+            // STOP RECORDING
+            this.isRecording = false;
+            if (btn) {
+                btn.classList.remove("recording");
+                btn.innerHTML = '<i class="fa-solid fa-route"></i> Rec Roadbook';
+            }
+            
+            this.stopTrace();
+            
+            if (this.currentTrace.length > 2) {
+                this.saveRoadbookPrompt();
+            } else {
+                alert("Trace trop courte pour être sauvegardée.");
+            }
         }
-      } else {
-        alert("Tracé trop court (moins de 5 points GPS), non sauvegardé.");
-        this.currentPath = [];
-      }
-    } else {
-      // START
-      this.isRecording = true;
-      this.currentPath = [];
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-stop"></i> STOP REC`;
-      if (btn) btn.style.color = "#fff";
-      if (btn) btn.style.border = "2px solid #ff0055";
-      if (btn) btn.style.background = "#ff0055";
+    },
 
-      if (typeof speak === "function")
-        speak("Enregistrement du tracé activé.");
+    startTrace: function () {
+        if (!navigator.geolocation) return;
 
-      this.recordInterval = setInterval(() => {
-        if (window.currentPosition) {
-          this.currentPath.push({
-            lat: window.currentPosition.lat,
-            lng: window.currentPosition.lng,
-          });
+        this.watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                
+                // Ajouter le point
+                const newPoint = [lng, lat]; // Format GeoJSON [Lng, Lat]
+                
+                // Calcul de la distance
+                if (this.currentTrace.length > 0) {
+                    const lastPoint = this.currentTrace[this.currentTrace.length - 1];
+                    this.distanceTotal += this.haversineDistance(lastPoint, newPoint);
+                }
+
+                this.currentTrace.push(newPoint);
+
+                // Optionnel: Dessiner la ligne sur la carte en temps réel
+                if (typeof window.map !== "undefined") {
+                    // Logique Leaflet (L.polyline)
+                }
+            },
+            (err) => { console.error("Erreur GPS Roadbook:", err); },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
+    },
+
+    stopTrace: function () {
+        if (this.watchId !== null) {
+            navigator.geolocation.clearWatch(this.watchId);
+            this.watchId = null;
         }
-      }, 5000); // Record point every 5 seconds
+    },
+
+    saveRoadbookPrompt: async function () {
+        const title = prompt("Nom du Roadbook ?", "Balade du " + new Date().toLocaleDateString());
+        if (!title) return;
+
+        const durationMinutes = Math.round((Date.now() - this.startTime) / 60000);
+        const distanceKm = (this.distanceTotal / 1000).toFixed(2);
+
+        const confirmShare = confirm("Voulez-vous rendre ce Roadbook public (Communauté) ?");
+
+        const roadbookData = {
+            userId: window.session.uid,
+            username: window.session.username,
+            title: title,
+            distance_km: distanceKm,
+            duration_min: durationMinutes,
+            is_public: confirmShare,
+            trace: {
+                type: "LineString",
+                coordinates: this.currentTrace
+            },
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            const rbRef = await db.collection("roadbooks").add(roadbookData);
+            if (confirmShare) {
+                await db.collection("community_roadbooks").doc(rbRef.id).set(roadbookData);
+            }
+            if (typeof speak === "function") speak("Roadbook sauvegardé avec succès.");
+            
+            // Attribution de l'XP
+            if (window.Gamification) {
+                window.Gamification.awardXP(50); // 50 XP de base pour un Roadbook
+            }
+
+            this.currentTrace = [];
+            this.distanceTotal = 0;
+        } catch (e) {
+            console.error("Erreur sauvegarde Roadbook:", e);
+            alert("Erreur lors de la sauvegarde.");
+        }
+    },
+
+    // Utilitaire pour calculer la distance entre 2 points (en mètres)
+    haversineDistance: function (pt1, pt2) {
+        const R = 6371e3; // Rayon de la Terre
+        const lat1 = pt1[1] * Math.PI / 180;
+        const lat2 = pt2[1] * Math.PI / 180;
+        const dLat = (pt2[1] - pt1[1]) * Math.PI / 180;
+        const dLon = (pt2[0] - pt1[0]) * Math.PI / 180;
+
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
-  },
-
-  saveRoadbook: async function (title) {
-    try {
-      await firebase.firestore().collection("roadbooks").add({
-        title: title,
-        author: window.session.username,
-        authorUid: window.session.uid,
-        path: this.currentPath,
-        createdAt: Date.now(),
-        rating: 0,
-        votes: 0,
-      });
-      alert("Roadbook public sauvegardé avec succès sur la carte !");
-      this.currentPath = [];
-    } catch (e) {
-      console.error(e);
-      alert("Erreur de sauvegarde de la trace.");
-    }
-  },
-
-  listenToRoadbooks: function () {
-    if (typeof firebase === "undefined") return;
-
-    firebase
-      .firestore()
-      .collection("roadbooks")
-      .orderBy("createdAt", "desc")
-      .limit(20)
-      .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          const data = change.doc.data();
-          const id = change.doc.id;
-
-          if (change.type === "added" || change.type === "modified") {
-            this.drawRoadbook(id, data);
-          } else if (change.type === "removed") {
-            this.removeRoadbook(id);
-          }
-        });
-      });
-  },
-
-  drawRoadbook: function (id, data) {
-    if (!map || !data.path || data.path.length === 0) return;
-
-    this.removeRoadbook(id);
-
-    const path = data.path.map((p) => new google.maps.LatLng(p.lat, p.lng));
-
-    const polyline = new google.maps.Polyline({
-      path: path,
-      geodesic: true,
-      strokeColor: "#b700ff",
-      strokeOpacity: 0.6,
-      strokeWeight: 4,
-      map: map,
-    });
-
-    // Add info window on click
-    const info = new google.maps.InfoWindow({
-      content: `<div style="color:black; font-family:'Outfit';">
-                        <h3 style="color:#b700ff; margin:0;">${data.title}</h3>
-                        <p style="margin:5px 0 10px;">Par: ${data.author}</p>
-                        <p style="margin:0;">Points: ${data.path.length}</p>
-                      </div>`,
-    });
-
-    polyline.addListener("click", (event) => {
-      info.setPosition(event.latLng);
-      info.open(map);
-    });
-
-    this.roadbookPolylines[id] = polyline;
-  },
-
-  removeRoadbook: function (id) {
-    if (this.roadbookPolylines[id]) {
-      this.roadbookPolylines[id].setMap(null);
-      delete this.roadbookPolylines[id];
-    }
-  },
 };
-
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    window.RoadbookSystem.init();
-  }, 4000);
-});
 
 
 /* --- pit-stops.js --- */
@@ -3084,148 +3268,158 @@ window.registerBiometric = async function () {
       throw new Error("Vous devez être connecté pour activer la biométrie.");
     const session = JSON.parse(sessionStr);
 
-    const challenge = new Uint8Array(32);
-    window.crypto.getRandomValues(challenge);
-    const userId = new Uint8Array(16);
-    window.crypto.getRandomValues(userId);
+    const fidoGenerateReg = firebase.functions("europe-west1").httpsCallable("fidoGenerateRegistration");
+    const fidoVerifyReg = firebase.functions("europe-west1").httpsCallable("fidoVerifyRegistration");
 
-    const options = {
-      challenge: challenge,
-      rp: { name: "mon50ccetmoi" },
-      user: {
-        id: userId,
-        name: session.email || `${session.username}@mon50cc.internal`,
-        displayName: session.username,
-      },
-      pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-      authenticatorSelection: {
-        authenticatorAttachment: "platform", // Force FaceID / TouchID / Windows Hello
-        userVerification: "required",
-      },
-      timeout: 60000,
-      attestation: "none",
-    };
+    // 1. Demander le challenge au serveur
+    const optionsRes = await fidoGenerateReg({ rpId: window.location.hostname });
+    const options = optionsRes.data;
 
-    // Si on n'est pas sur localhost, on précise le domaine
-    if (
-      window.location.hostname !== "localhost" &&
-      window.location.hostname !== "127.0.0.1"
-    ) {
-      options.rp.id = window.location.hostname;
+    // Convert string base64/base64url to Uint8Array for WebAuthn API
+    function base64urlToUint8Array(base64url) {
+      const padding = '='.repeat((4 - base64url.length % 4) % 4);
+      const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
     }
 
+    options.challenge = base64urlToUint8Array(options.challenge);
+    options.user.id = base64urlToUint8Array(options.user.id);
+    if (options.excludeCredentials) {
+        options.excludeCredentials.forEach(c => {
+            c.id = base64urlToUint8Array(c.id);
+        });
+    }
+
+    // 2. Appel natif WebAuthn
     const credential = await navigator.credentials.create({
       publicKey: options,
     });
 
-    // MVP: On sauvegarde l'ID du credential localement et/ou sur le compte Firebase
-    const credentialId = bufferToBase64url(credential.rawId);
+    // Convert array buffers back to base64url or hex for the server
+    const credentialResp = {
+      id: credential.id,
+      rawId: bufferToBase64url(credential.rawId),
+      response: {
+        attestationObject: bufferToBase64url(credential.response.attestationObject),
+        clientDataJSON: bufferToBase64url(credential.response.clientDataJSON)
+      },
+      type: credential.type,
+      clientExtensionResults: credential.getClientExtensionResults()
+    };
 
-    // Sauvegarde Firebase
-    if (typeof firebase !== "undefined" && firebase.auth().currentUser) {
-      await firebase.firestore().collection("users").doc(session.uid).update({
-        webauthnCredentialId: credentialId,
-      });
+    // 3. Envoyer au serveur pour validation
+    const verifyRes = await fidoVerifyReg({
+      response: credentialResp,
+      rpId: window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" ? window.location.hostname : undefined,
+      origin: window.location.origin
+    });
+
+    if (verifyRes.data.success) {
+      // Sauvegarde Locale (pour permettre le login depuis cet appareil)
+      window.cacheSetItem("fido2_cred", credential.id);
+      window.cacheSetItem("fido2_uid", session.uid);
+
+      alert("✅ Appareil sécurisé ! Vous pourrez désormais vous connecter de manière Passwordless.");
+    } else {
+      throw new Error("Validation serveur échouée.");
     }
-
-    // Sauvegarde Locale (pour permettre le login depuis cet appareil)
-    window.cacheSetItem("fido2_cred", credentialId);
-    window.cacheSetItem("fido2_uid", session.uid);
-
-    alert(
-      "✅ Appareil sécurisé ! Vous pourrez désormais vous connecter avec votre visage ou empreinte.",
-    );
   } catch (e) {
     console.error("WebAuthn Register Error:", e);
     if (e.name === "NotAllowedError") {
       alert("Accès biométrique refusé ou annulé.");
     } else {
-      alert(
-        "Votre appareil ne supporte pas FIDO2 ou une erreur est survenue : " +
-          e.message,
-      );
+      alert("Votre appareil ne supporte pas FIDO2 ou une erreur est survenue : " + (e.message || e));
     }
   }
 };
 
 window.loginBiometric = async function () {
   try {
-    const storedCredId = window.cacheGetItem("fido2_cred");
     const storedUid = window.cacheGetItem("fido2_uid");
-
-    if (!storedCredId || !storedUid) {
+    
+    if (!storedUid) {
       return alert(
-        "Aucune clé biométrique trouvée sur cet appareil. Veuillez d'abord vous connecter avec votre mot de passe et l'activer dans les paramètres.",
+        "Aucune clé biométrique trouvée sur cet appareil. Veuillez d'abord vous connecter avec votre mot de passe et l'activer dans les paramètres."
       );
     }
 
-    // SÉCURITÉ FIDO2 (OWASP A01 + FIDO2 Certification) :
-    // Vérifier que l'utilisateur a une session Firebase Auth ACTIVE.
-    // Le biométrique sert de 2FA / déverrouillage rapide, PAS de remplacement
-    // complet de l'authentification Firebase. Sans cette vérification,
-    // n'importe quel credential WebAuthn permettrait d'accéder à un profil.
-    const currentUser = firebase.auth().currentUser;
-    if (!currentUser) {
-      return alert(
-        "Session expirée. Veuillez d'abord vous reconnecter avec votre mot de passe, puis utilisez la biométrie pour les connexions rapides.",
-      );
+    // --- PASSWORDLESS COMPLET ---
+    const fidoGenerateAuth = firebase.functions("europe-west1").httpsCallable("fidoGenerateAuthentication");
+    const fidoVerifyAuth = firebase.functions("europe-west1").httpsCallable("fidoVerifyAuthentication");
+
+    // 1. Demander le challenge d'authentification pour cet UID
+    const optionsRes = await fidoGenerateAuth({ uid: storedUid, rpId: window.location.hostname });
+    const options = optionsRes.data;
+
+    function base64urlToUint8Array(base64url) {
+      const padding = '='.repeat((4 - base64url.length % 4) % 4);
+      const base64 = (base64url + padding).replace(/\-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
     }
 
-    // Vérifier que l'UID Firebase Auth correspond à l'UID du credential stocké
-    if (currentUser.uid !== storedUid) {
-      console.warn("[FIDO2] UID mismatch: credential UID ≠ Firebase Auth UID");
-      window.cacheRemoveItem("fido2_cred");
-      window.cacheRemoveItem("fido2_uid");
-      return alert(
-        "Clé biométrique invalide pour ce compte. Veuillez la réenregistrer.",
-      );
+    options.challenge = base64urlToUint8Array(options.challenge);
+    if (options.allowCredentials) {
+        options.allowCredentials.forEach(c => {
+            c.id = base64urlToUint8Array(c.id);
+        });
     }
 
-    const challenge = new Uint8Array(32);
-    window.crypto.getRandomValues(challenge);
-
-    const options = {
-      challenge: challenge,
-      rpId:
-        window.location.hostname !== "localhost" &&
-        window.location.hostname !== "127.0.0.1"
-          ? window.location.hostname
-          : undefined,
-      userVerification: "required",
-      timeout: 60000,
-    };
-
-    // Supprime rpId si local pour éviter les erreurs
-    if (!options.rpId) delete options.rpId;
-
+    // 2. Appel WebAuthn pour signer le challenge
     const assertion = await navigator.credentials.get({ publicKey: options });
 
-    if (assertion) {
-      // L'assertion WebAuthn a été validée localement par l'authenticator.
-      // L'utilisateur a prouvé sa présence biométrique sur cet appareil.
-      // Firebase Auth est déjà actif (vérifié ci-dessus), on rafraîchit la session.
+    if (!assertion) throw new Error("Annulé par l'utilisateur.");
 
-      const doc = await firebase
-        .firestore()
-        .collection("users")
-        .doc(currentUser.uid)
-        .get();
-      if (doc.exists) {
-        const profile = doc.data();
-        cacheSetItem(
-          "session",
-          JSON.stringify({ ...profile, uid: currentUser.uid }),
-        );
-        window.session = profile;
-        window.location.href =
-          profile.role === "admin" ? "admin.html" : "app.html";
-      } else {
-        throw new Error("Profil introuvable dans Firestore.");
-      }
+    const assertionResp = {
+      id: assertion.id,
+      rawId: bufferToBase64url(assertion.rawId),
+      response: {
+        authenticatorData: bufferToBase64url(assertion.response.authenticatorData),
+        clientDataJSON: bufferToBase64url(assertion.response.clientDataJSON),
+        signature: bufferToBase64url(assertion.response.signature),
+        userHandle: assertion.response.userHandle ? bufferToBase64url(assertion.response.userHandle) : null
+      },
+      type: assertion.type,
+      clientExtensionResults: assertion.getClientExtensionResults()
+    };
+
+    // 3. Vérification côté serveur
+    const verifyRes = await fidoVerifyAuth({
+      uid: storedUid,
+      response: assertionResp,
+      rpId: window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" ? window.location.hostname : undefined,
+      origin: window.location.origin
+    });
+
+    if (verifyRes.data.success && verifyRes.data.customToken) {
+        // Connexion Firebase Auth
+        await firebase.auth().signInWithCustomToken(verifyRes.data.customToken);
+        
+        // Charger profil
+        const doc = await firebase.firestore().collection("users").doc(storedUid).get();
+        if (doc.exists) {
+            const profile = doc.data();
+            cacheSetItem("session", JSON.stringify({ ...profile, uid: storedUid }));
+            window.session = profile;
+            window.location.href = profile.role === "admin" ? "admin.html" : "app.html";
+        } else {
+            throw new Error("Profil introuvable dans Firestore.");
+        }
+    } else {
+        throw new Error("Échec de la validation biométrique par le serveur.");
     }
   } catch (e) {
     console.error("WebAuthn Login Error:", e);
-    alert("Échec de la connexion biométrique : " + e.message);
+    alert("Échec de la connexion biométrique : " + (e.message || e));
   }
 };
 
