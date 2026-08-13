@@ -209,7 +209,7 @@ class OracleVoice {
     vibrate(100);
 
     // 2. Nettoyage de la commande en retirant le mot d'activation
-    let commandText = text.replace(activationRegex, "").trim().toLowerCase();
+    let commandText = text.replaceAll(activationRegex, "").trim().toLowerCase();
     
     // Fonction utilitaire pour le dynamisme des réponses
     const reply = (responses) => {
@@ -337,16 +337,16 @@ class OracleVoice {
 
         // Extraction intelligente de la destination
         let dest = commandText
-            .replace(/.*(?:emmène(?:-moi)?|amène|aller|naviguer?|itinéraire|vers|à|au)\s+/i, "")
-            .replace(/(?:sans|en évitant|évite|éviter|contourne|contourner|ne pas passer).*(?:centre|ville|centres-villes?)/i, "")
-            .replace(/s'il te pla[iî]t/i, "")
+            .replace(/.*(?:emmène(?:-moi)?|amène|aller|naviguer?|itinéraire|vers|à|au)\s+/gi, "")
+            .replace(/(?:sans|en évitant|évite|éviter|contourne|contourner|ne pas passer).*(?:centre|ville|centres-villes?)/gi, "")
+            .replace(/s'il te pla[iî]t/gi, "")
             .trim();
             
-        const nativeMaps = dest.match(/sur (google )?maps/i);
-        const nativeWaze = dest.match(/sur waze/i);
+        const nativeWaze = dest.match(/sur waze/gi);
+        const nativeMaps = document.body.dataset.platform !== "web";
         
-        if (nativeMaps) dest = dest.replace(/sur (google )?maps/i, "").trim();
-        if (nativeWaze) dest = dest.replace(/sur waze/i, "").trim();
+        if (nativeMaps) dest = dest.replace(/sur (google )?maps/gi, "").trim();
+        if (nativeWaze) dest = dest.replace(/sur waze/gi, "").trim();
 
         if (dest && dest.length > 2) {
             const input = document.getElementById("route-search");
@@ -383,26 +383,26 @@ class OracleVoice {
         }
     }
     // ── Menu & Thèmes ──
-    else if (commandText.match(/(menu|ouvre|panneau)/i)) {
+    else if (commandText.match(/(menu|ouvre|panneau)/gi)) {
         window.toggleMenu();
         reply(["Menu ouvert.", "Voici vos options.", "J'ouvre le panneau de contrôle."]);
     }
-    else if (commandText.match(/(mode jour|thème clair|il fait beau)/i)) {
+    else if (commandText.match(/(mode jour|thème clair|il fait beau)/gi)) {
         document.body.classList.add("day-mode");
         reply(["Passage en mode jour. Gardez vos lunettes de soleil à portée de main !", "Mode clair activé."]);
     } 
-    else if (commandText.match(/(mode nuit|thème sombre|il fait nuit)/i)) {
+    else if (commandText.match(/(mode nuit|thème sombre|il fait nuit)/gi)) {
         document.body.classList.remove("day-mode");
         reply(["Passage en mode nuit. Interface tactique restaurée.", "Mode sombre activé pour reposer vos yeux."]);
     }
     // ── Localisation & Météo ──
-    else if (commandText.match(/(où|position|localisation|suis-je)/i)) {
+    else if (commandText.match(/(où|position|localisation|suis-je)/gi)) {
         const pos = window.currentPosition;
         if (pos) reply([`Vos coordonnées actuelles sont latitude ${pos.lat.toFixed(3)} et longitude ${pos.lng.toFixed(3)}.`, "Je vous ai localisé sur la grille. Tout est normal."]);
         else reply("Mes capteurs satellites cherchent encore votre position. Un instant.");
     }
-    else if (commandText.match(/(météo|temps|pluie|pleut)/i)) {
-        if (commandText.match(/(pleut|pluie)/i) && typeof window.updateWeatherUI === "function") {
+    else if (commandText.match(/(météo|temps|pluie|pleut)/gi)) {
+        if (commandText.match(/(pleut|pluie)/gi) && typeof window.updateWeatherUI === "function") {
             window.updateWeatherUI(true);
             reply("J'ai détecté de la pluie. J'adapte l'affichage et je modifie les paramètres de freinage virtuels.");
         } else {
@@ -411,7 +411,7 @@ class OracleVoice {
         }
     }
     // ── Mécanique & Diagnostic ──
-    else if (commandText.match(/(diagnostic|état|santé|mécanique|panne|révision|cassé|bruit)/i)) {
+    else if (commandText.match(/(diagnostic|état|santé|mécanique|panne|révision|cassé|bruit)/gi)) {
         if (window.PredictiveMeca) {
             const score = Math.round(window.PredictiveMeca.getGlobalHealthScore());
             let message = `Votre machine est opérationnelle à ${score} %.`;
@@ -430,7 +430,7 @@ class OracleVoice {
         }
     }
     // ── Urgences (SOS, Constat, Avocat) ──
-    else if (commandText.match(/(mode constat|sos|secours|urgence|accrochage)/i)) {
+    else if (commandText.match(/(mode constat|sos|secours|urgence|accrochage)/gi)) {
         reply("Activation du protocole d'urgence. Restez calme, je m'occupe de tout.");
         if (window.SOSEmergency) window.SOSEmergency.trigger();
         else {
@@ -438,17 +438,17 @@ class OracleVoice {
             if (timCook) timCook.classList.remove("hidden");
         }
     }
-    else if (commandText.match(/(avocat|litige)/i)) {
+    else if (commandText.match(/(avocat|litige)/gi)) {
         reply("J'invoque l'avocat de poche. Préparez-vous à exposer votre défense.");
         if (window.PocketLawyer && window.PocketLawyer.toggleLawyer) window.PocketLawyer.toggleLawyer();
     }
     // ── Marketplace & Wallet ──
-    else if (commandText.match(/(solde|points|bvc|combien j'ai)/i)) {
+    else if (commandText.match(/(solde|points|bvc|combien j'ai)/gi)) {
         const solde = window.session?.bvc_points || 0;
         reply([`Votre compte affiche ${solde} points BVC.`, `Vous avez ${solde} crédits BVC en banque.`]);
     }
-    else if (commandText.match(/(cherche|trouver|acheter)/i)) {
-        const query = commandText.replace(/.*(?:cherche|trouver(?: une pièce)?|acheter)\s+/i, "").trim();
+    else if (commandText.match(/(cherche|trouver|acheter)/gi)) {
+        const query = commandText.replace(/.*(?:cherche|trouver(?: une pièce)?|acheter)\s+/gi, "").trim();
         if (query && query.length > 2) {
             reply(`Recherche de "${query}" sur le marché clandestin. Un instant.`);
             window.location.href = "marketplace.html?q=" + encodeURIComponent(query);
