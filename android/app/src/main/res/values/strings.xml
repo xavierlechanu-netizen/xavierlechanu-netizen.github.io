@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">mon50ccetmoi</string>
+    <string name="title_activity_main">mon50ccetmoi</string>
+    <string name="package_name">com.mon50ccetmoi.app</string>
+    <string name="custom_url_scheme">com.mon50ccetmoi.app</string>
+</resources>
