@@ -7,6 +7,7 @@
 #include <ArduinoJson.h> // Make sure to install ArduinoJson via Library Manager
 #include <TinyGPSPlus.h> // Make sure to install TinyGPSPlus via Library Manager
 #include <HardwareSerial.h>
+#include "mbedtls/aes.h"
 
 // ─────────────────────────────────────────────────────────────
 // CONFIGURATION GPS (NEO-6M)
@@ -159,10 +160,52 @@ void loop() {
       doc["lng"] = longitude;
 
       char jsonBuffer[256];
-      serializeJson(doc, jsonBuffer);
+      size_t jsonLen = serializeJson(doc, jsonBuffer);
 
-      // 4. Envoyer la télémétrie en BLE
-      pCharacteristic->setValue((uint8_t*)jsonBuffer, strlen(jsonBuffer));
+      // 4. Chiffrement AES-256-CBC du JSON (Zero-Knowledge / E2EE)
+      // (En production, cette clé doit être unique par boîtier et stockée en zone sécurisée)
+      const uint8_t aes_key[32] = {
+         0x01,0x23,0x45,0x67,0x89,0xAB,0xCD,0xEF,0x01,0x23,0x45,0x67,0x89,0xAB,0xCD,0xEF,
+         0x01,0x23,0x45,0x67,0x89,0xAB,0xCD,0xEF,0x01,0x23,0x45,0x67,0x89,0xAB,0xCD,0xEF
+      };
+      uint8_t iv[16] = {0}; // IV statique pour le MVP (à randomiser en prod)
+      
+      // Padding PKCS#7
+      uint8_t pad_val = 16 - (jsonLen % 16);
+      size_t paddedLen = jsonLen + pad_val;
+      for (size_t i = jsonLen; i < paddedLen; i++) {
+          jsonBuffer[i] = pad_val;
+      }
+      
+      uint8_t encryptedPayload[256];
+      mbedtls_aes_context aes;
+      mbedtls_aes_init(&aes);
+      mbedtls_aes_setkey_enc(&aes, aes_key, 256);
+      mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, paddedLen, iv, (uint8_t*)jsonBuffer, encryptedPayload);
+      mbedtls_aes_free(&aes);
+
+      // 5. Création de la Trame Hybride (16 octets Clair + Payload Chiffré)
+      uint8_t blePacket[256 + 16];
+      
+      uint32_t timestamp = millis(); 
+      int32_t latE7 = latitude * 1e7;
+      int32_t lonE7 = longitude * 1e7;
+      uint16_t speed10 = speedKmh * 10;
+      
+      // En-tête en clair pour le Smartphone (Dashboard)
+      memcpy(blePacket + 0, &timestamp, 4);
+      memcpy(blePacket + 4, &latE7, 4);
+      memcpy(blePacket + 8, &lonE7, 4);
+      memcpy(blePacket + 12, &speed10, 2);
+      blePacket[14] = 0; // padding
+      blePacket[15] = 0; // padding
+      
+      // Concaténation de la preuve chiffrée
+      memcpy(blePacket + 16, encryptedPayload, paddedLen);
+      size_t totalLen = 16 + paddedLen;
+
+      // 6. Envoyer la télémétrie en BLE
+      pCharacteristic->setValue(blePacket, totalLen);
       pCharacteristic->notify();
     }
     

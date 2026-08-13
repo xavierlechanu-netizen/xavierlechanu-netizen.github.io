@@ -179,12 +179,15 @@ class BlackBoxBLE {
         const lon = value.getInt32(8, true) / 1e7;
         const speed = value.getUint16(12, true) / 10;
         
-        console.log(`[BLE] Trame reçue: TS=${timestamp}, Lat=${lat}, Lon=${lon}, Vitesse=${speed} km/h`);
+        console.log(`[BLE] Trame hybride reçue: TS=${timestamp}, Lat=${lat}, Lon=${lon}, Vitesse=${speed} km/h`);
         
-        // 1. Convertir le buffer en base64 pour l'envoi sécurisé au Cloud
-        const bytes = new Uint8Array(value.buffer);
+        // 1. Extraire uniquement la preuve chiffrée (à partir de l'octet 16)
+        const encryptedLength = value.byteLength - 16;
+        if (encryptedLength <= 0) return; // Ignore les trames invalides
+
+        const encryptedBytes = new Uint8Array(value.buffer, value.byteOffset + 16, encryptedLength);
         let binary = '';
-        bytes.forEach(b => binary += String.fromCharCode(b));
+        encryptedBytes.forEach(b => binary += String.fromCharCode(b));
         const b64Payload = window.btoa(binary);
 
         // 2. Batching des trames (au lieu d'un appel réseau par trame)
