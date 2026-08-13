@@ -40,6 +40,12 @@ class BlackBoxBLE {
     this.onConnectionChange = null; // Callback UI
     this.onTelemetryData = null;    // Callback Data
     this.onDiagnosticUpdate = null; // Callback UI
+    
+    // Batching logic
+    this.telemetryBuffer = [];
+    this.MAX_BATCH_SIZE = 50;
+    this.batchTimeout = null;
+    this.BATCH_TIMEOUT_MS = 5000;
   }
 
   buildUuid(shortHex) {
@@ -181,20 +187,16 @@ class BlackBoxBLE {
         bytes.forEach(b => binary += String.fromCharCode(b));
         const b64Payload = window.btoa(binary);
 
-        // 2. Envoi vers Firebase (Zero Knowledge)
-        if (typeof firebase !== 'undefined' && firebase.functions) {
-          try {
-            // Utiliser la région configurée sur le serveur
-            const uploadTelemetry = firebase.functions("europe-west1").httpsCallable('uploadBlackboxTelemetry');
-            await uploadTelemetry({
-              hardwareId: this.device ? this.device.name : 'UNKNOWN_HW',
-              encryptedPayload: b64Payload,
-              timestamp: timestamp
-            });
-            console.log(`[BLE] Trame ${timestamp} stockée en Zero-Knowledge sur Firebase.`);
-          } catch (error) {
-            console.error(`[BLE] Erreur Firebase upload trame ${timestamp}:`, error);
-          }
+        // 2. Batching des trames (au lieu d'un appel réseau par trame)
+        this.telemetryBuffer.push({
+            encryptedPayload: b64Payload,
+            timestamp: timestamp
+        });
+
+        if (this.telemetryBuffer.length >= this.MAX_BATCH_SIZE) {
+            this.flushTelemetryBuffer();
+        } else if (!this.batchTimeout) {
+            this.batchTimeout = setTimeout(() => this.flushTelemetryBuffer(), this.BATCH_TIMEOUT_MS);
         }
 
         if (this.onTelemetryData) {
@@ -204,9 +206,39 @@ class BlackBoxBLE {
   }
 
   /**
+   * Envoie le buffer de trames au Cloud (Batch) et le vide.
+   */
+  async flushTelemetryBuffer() {
+      if (this.batchTimeout) {
+          clearTimeout(this.batchTimeout);
+          this.batchTimeout = null;
+      }
+
+      if (this.telemetryBuffer.length === 0) return;
+
+      const payloadsToUpload = [...this.telemetryBuffer];
+      this.telemetryBuffer = []; // Clear buffer immediately to catch new frames
+
+      if (typeof firebase !== 'undefined' && firebase.functions) {
+          try {
+              const uploadTelemetry = firebase.functions("europe-west1").httpsCallable('uploadBlackboxTelemetry');
+              await uploadTelemetry({
+                  hardwareId: this.device ? this.device.name : 'UNKNOWN_HW',
+                  payloads: payloadsToUpload
+              });
+              console.log(`[BLE] Batch de ${payloadsToUpload.length} trames stocké en Zero-Knowledge sur Firebase.`);
+          } catch (error) {
+              console.error(`[BLE] Erreur Firebase upload batch:`, error);
+              // Optionnel: On pourrait ré-insérer les trames échouées dans le buffer ici.
+          }
+      }
+  }
+
+  /**
    * Déconnexion propre.
    */
   disconnect() {
+    this.flushTelemetryBuffer();
     if (this.device && this.device.gatt.connected) {
       this.device.gatt.disconnect();
     }

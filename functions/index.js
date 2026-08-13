@@ -738,28 +738,38 @@ exports.uploadBlackboxTelemetry = onCall(
         }
 
         const uid = request.auth.uid;
-        const { hardwareId, encryptedPayload, frameCount, timestamp } = request.data;
+        const { hardwareId, encryptedPayload, frameCount, timestamp, payloads } = request.data;
 
         // 2. Validation des paramètres
-        if (!hardwareId || !encryptedPayload) {
-            throw new HttpsError('invalid-argument', 'Paramètres manquants : hardwareId ou encryptedPayload.');
+        if (!hardwareId || (!encryptedPayload && !payloads)) {
+            throw new HttpsError('invalid-argument', 'Paramètres manquants : hardwareId ou encryptedPayload/payloads.');
         }
 
         try {
-            // 3. Stockage dans Firestore (architecture Zero-Knowledge)
-            // Le cloud ne déchiffre RIEN. Il stocke juste le blob AES-256.
+            // Rétrocompatibilité : transformer un payload unique en tableau
+            let framesToStore = [];
+            if (payloads && Array.isArray(payloads)) {
+                framesToStore = payloads;
+            } else if (encryptedPayload) {
+                framesToStore = [{
+                    encryptedPayload: encryptedPayload,
+                    timestamp: timestamp || 0,
+                    frameCount: frameCount || 0
+                }];
+            }
+
+            // 3. Stockage dans Firestore (architecture Zero-Knowledge - Batching)
+            // Le cloud ne déchiffre RIEN. Il stocke juste le tableau de blobs AES-256.
             const docRef = admin.firestore().collection(`blackbox_telemetry/${uid}/frames`).doc();
             
             await docRef.set({
                 hardwareId: hardwareId,
-                payload_b64: encryptedPayload, // Chaîne Base64 des octets chiffrés
-                frameCount: frameCount || 0,
-                deviceTimestamp: timestamp || 0,
+                payloads: framesToStore,
                 serverTimestamp: admin.firestore.FieldValue.serverTimestamp(),
                 status: "LOCKED" // Indique que la donnée est brute et non déchiffrée
             });
 
-            console.log(`[Blackbox] Télémétrie chiffrée stockée pour UID: ${uid} (Doc: ${docRef.id})`);
+            console.log(`[Blackbox] Batch de ${framesToStore.length} trames stocké pour UID: ${uid} (Doc: ${docRef.id})`);
             return { success: true, docId: docRef.id };
             
         } catch (error) {
