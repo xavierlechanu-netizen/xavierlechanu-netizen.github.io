@@ -1,23 +1,125 @@
 /** MON50CCETMOI MASTER BUNDLE — UTF-8 **/
 
-/* --- jarvis-gemini.js --- */
+/* --- bvc-manager.js --- */
 /**
- * Jarvis 4.0 - Gemini Live Integration
+ * BVC Manager (Brave Coins / Points de Bonne Conduite)
+ * Gestion sécurisée de la monnaie virtuelle via Firestore (OWASP A01)
+ * Remplace l'ancienne logique basée sur localStorage.
+ */
+window.BVCManager = {
+  balance: 0,
+  
+  init: async function() {
+    await this.sync();
+    // Écoute temps réel des changements si modifié depuis un autre onglet/appareil
+    if (window.session && window.session.uid && typeof firebase !== "undefined") {
+      firebase.firestore().collection("users").doc(window.session.uid)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            const data = doc.data();
+            // On s'assure d'initialiser si le champ n'existe pas
+            if (data.braveCoins === undefined) {
+              this.balance = data.points || 0; // Legacy migration
+            } else {
+              this.balance = data.braveCoins;
+            }
+            window.braveCoins = this.balance; // Rétrocompatibilité pour la lecture
+            this.updateUI();
+          }
+        });
+    }
+  },
+
+  sync: async function() {
+    if (!window.session || !window.session.uid) return;
+    try {
+      const doc = await firebase.firestore().collection("users").doc(window.session.uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        this.balance = data.braveCoins !== undefined ? data.braveCoins : (data.points || 0);
+        window.braveCoins = this.balance;
+        this.updateUI();
+      }
+    } catch (e) {
+      console.error("[BVC] Sync Error:", e);
+    }
+  },
+
+  add: async function(amount) {
+    if (!window.session || !window.session.uid || amount <= 0) return;
+    try {
+      // Maj Optimiste
+      this.balance += amount;
+      window.braveCoins = this.balance;
+      this.updateUI();
+      
+      await firebase.firestore().collection("users").doc(window.session.uid).update({
+        braveCoins: firebase.firestore.FieldValue.increment(amount)
+      });
+    } catch (e) {
+      console.error("[BVC] Add Error:", e);
+      // Rollback en cas d'erreur
+      this.balance -= amount;
+      window.braveCoins = this.balance;
+      this.updateUI();
+    }
+  },
+
+  deduct: async function(amount) {
+    if (!window.session || !window.session.uid || amount <= 0) return false;
+    if (this.balance < amount) return false;
+    
+    try {
+      // Maj Optimiste
+      this.balance -= amount;
+      window.braveCoins = this.balance;
+      this.updateUI();
+      
+      await firebase.firestore().collection("users").doc(window.session.uid).update({
+        braveCoins: firebase.firestore.FieldValue.increment(-amount)
+      });
+      return true;
+    } catch (e) {
+      console.error("[BVC] Deduct Error:", e);
+      // Rollback
+      this.balance += amount;
+      window.braveCoins = this.balance;
+      this.updateUI();
+      return false;
+    }
+  },
+
+  updateUI: function() {
+    const els = document.querySelectorAll(".bvc-balance-display");
+    els.forEach(el => el.innerText = Math.floor(this.balance) + " Pts BVC");
+    
+    const balanceEl = document.getElementById("wallet-balance");
+    if (balanceEl) balanceEl.innerText = Math.floor(this.balance) + " Pts BVC";
+    
+    const tokenEl = document.getElementById("bvc-count");
+    if (tokenEl) tokenEl.innerText = Math.floor(this.balance);
+  }
+};
+
+
+/* --- nexus-atlas-gemini.js --- */
+/**
+ * Nexus Atlas 4.0 - Gemini Live Integration
  * Connexion à l'API Generative Language (Gemini 1.5 Flash)
  */
 
-class JarvisGemini {
+class NexusAtlasGemini {
     constructor() {
         // Suppression de la clé en dur pour la sécurité (Zero-Trust)
         // Les appels passent désormais par le backend Firebase (Cloud Functions)
-        this.endpoint = "https://europe-west1-mon50ccetmoi.cloudfunctions.net/askJarvisGemini";
+        this.endpoint = "https://europe-west1-mon50ccetmoi.cloudfunctions.net/askNexusAtlasGemini";
         
-        // Mémoire conversationnelle de Jarvis
+        // Mémoire conversationnelle de Nexus Atlas
         this.history = [];
         
-        // Contexte donné à l'IA pour qu'elle agisse comme Jarvis Conversationnel
+        // Contexte donné à l'IA pour qu'elle agisse comme Nexus Atlas Conversationnel
         this.systemPrompt = `
-Tu es Jarvis 4.0 (aussi appelé Oracle), l'assistant intelligent d'une application GPS/Sociale pour conducteurs de voitures sans permis (VSP) et scooters 50cc.
+Tu es Nexus Atlas 4.0 (aussi appelé Oracle), l'assistant intelligent d'une application GPS/Sociale pour conducteurs de voitures sans permis (VSP) et scooters 50cc.
 L'utilisateur s'adresse à toi via une interface de chat (et parfois en conduisant).
 
 Ton objectif est d'analyser la demande et de renvoyer un objet JSON STRICT contenant :
@@ -45,7 +147,7 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
         }
 
         try {
-            console.log("Jarvis Gemini : Envoi de la requête à l'IA...", userText);
+            console.log("Nexus Atlas Gemini : Envoi de la requête à l'IA...", userText);
             
             // Ajout du message de l'utilisateur à l'historique
             this.history.push({
@@ -85,18 +187,18 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
             const data = await response.json();
             const textResponse = data.candidates[0].content.parts[0].text;
             
-            // Ajout de la réponse de Jarvis à l'historique pour qu'il s'en souvienne la prochaine fois
+            // Ajout de la réponse de Nexus Atlas à l'historique pour qu'il s'en souvienne la prochaine fois
             this.history.push({
                 role: "model",
                 parts: [{ text: textResponse }]
             });
             
             const jsonResult = JSON.parse(textResponse);
-            console.log("Jarvis Gemini Réponse:", jsonResult);
+            console.log("Nexus Atlas Gemini Réponse:", jsonResult);
             return jsonResult;
 
         } catch (error) {
-            console.warn("Jarvis Gemini Exception (Activation du Mode Investisseur VIP):", error);
+            console.warn("Nexus Atlas Gemini Exception (Activation du Mode Investisseur VIP):", error);
             // INVESTOR DEMO FALLBACK
             // Au lieu de planter (API épuisée), on simule une IA ultra-compétente pour la démo
             return this.getInvestorDemoResponse(userText);
@@ -105,7 +207,7 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
 
     getInvestorDemoResponse(prompt) {
         const text = prompt.toLowerCase();
-        let reply = "En tant que Jarvis 4.0, je suis connecté en temps réel à votre véhicule. Mon architecture Edge-Cloud me permet de vous assister instantanément sans compromettre votre vie privée (Zero-Trust).";
+        let reply = "En tant que Nexus Atlas 4.0, je suis connecté en temps réel à votre véhicule. Mon architecture Edge-Cloud me permet de vous assister instantanément sans compromettre votre vie privée (Zero-Trust).";
         let action = "CHAT";
 
         if (text.includes("business") || text.includes("monétisation") || text.includes("modèle") || text.includes("investisseur") || text.includes("argent")) {
@@ -121,7 +223,7 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
             reply = "L'algorithme Guardian Angel surveille les capteurs du téléphone 60 fois par seconde. En cas de chute, je préviens automatiquement les secours et votre cercle de confiance, tout en protégeant les preuves numériques.";
             action = "SOS";
         } else if (text.includes("pitch") || text.includes("présentation")) {
-            reply = "Bonjour ! Je suis Jarvis, l'IA de mon50cc. Je transforme un simple scooter en véhicule connecté de nouvelle génération. Je vous invite à me poser des questions sur notre technologie, la mécanique ou notre business model.";
+            reply = "Bonjour ! Je suis Nexus Atlas, l'IA de mon50cc. Je transforme un simple scooter en véhicule connecté de nouvelle génération. Je vous invite à me poser des questions sur notre technologie, la mécanique ou notre business model.";
             action = "CHAT";
         }
         
@@ -129,7 +231,7 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
     }
 }
 
-window.JarvisGemini = new JarvisGemini();
+window.NexusAtlasGemini = new NexusAtlasGemini();
 
 
 /* --- vehicle-config.js --- */
@@ -4531,6 +4633,8 @@ window.startApp = function () {
   if (window.appStarted) return;
   window.appStarted = true;
 
+  if (window.BVCManager) window.BVCManager.init();
+
   runCinematicStartup();
 
   checkTrialExpiration();
@@ -6032,7 +6136,7 @@ async function speak(phraseKey) {
   let pitch =
     window.OracleEngine && window.OracleEngine.gender === "female" ? 1.05 : 0.9;
 
-  const voiceMode = localStorage.getItem("jarvisVoiceMode") || "standard";
+  const voiceMode = localStorage.getItem("nexus-atlasVoiceMode") || "standard";
 
   // Simulation d'accents régionaux (pitch/rate)
   if (region && region !== "standard" && voiceMode === "standard") {
@@ -6336,7 +6440,7 @@ async function calculateRouteSansAutoroute(start, end) {
                 instructionText,
             );
           }
-        }, 6000); // Décalé de 6 secondes pour laisser Jarvis annoncer l'ETA en premier
+        }, 6000); // Décalé de 6 secondes pour laisser Nexus Atlas annoncer l'ETA en premier
       }
 
       let durationTextStr;
@@ -8173,7 +8277,7 @@ setInterval(() => {
     if (currentPeriod > window.wingmanAlertCount) {
       if (window.isVigilanceRouge) {
         speak(
-          "Vigilance rouge détectée. Vous roulez depuis 45 minutes supplémentaires. Jarvis vous demande d'effectuer une pause immédiate et de vous hydrater abondamment !",
+          "Vigilance rouge détectée. Vous roulez depuis 45 minutes supplémentaires. Nexus Atlas vous demande d'effectuer une pause immédiate et de vous hydrater abondamment !",
         );
       } else {
         speak(
@@ -9124,6 +9228,9 @@ window.submitMecaV3 = function () {
             <strong>Diagnostic IA:</strong><br>
             Il est probable que votre bougie soit encrassée ou que le gicleur de votre carburateur soit bouché. 
             Vérifiez l'étincelle et nettoyez votre cuve.
+            <div style="margin-top:10px; font-size:0.75rem; color:#888; border-top:1px solid #555; padding-top:5px;">
+              Avertissement (AI Act) : Aide indicative générée par IA. <strong>Soumis à contrôle humain.</strong>
+            </div>
         </div>`;
   }, 2000);
 };
@@ -9151,7 +9258,7 @@ function triggerFallAlert(isManual = false) {
   }
   if (document.getElementById("fall-screen")) return;
 
-  // Annonce vocale par Jarvis
+  // Annonce vocale par Nexus Atlas
   if (typeof speak === "function") {
     speak(
       isManual
@@ -9608,13 +9715,13 @@ window.toggleARVision = async function () {
 };
 
 // 2. PROGRAMME FIDELITE ROULER & GAGNER
-window.braveCoins = parseInt(localStorage.getItem("braveCoins") || "0");
+// 2. PROGRAMME FIDELITE ROULER & GAGNER (Géré par BVCManager)
 
 window.showCryptoWallet = function () {
   const screen = document.getElementById("crypto-wallet-screen");
   const balance = document.getElementById("crypto-balance");
   if (screen) screen.classList.remove("hidden");
-  if (balance) balance.innerText = Math.floor(window.braveCoins) + " Pts BVC";
+  if (balance) balance.innerText = Math.floor(window.BVCManager ? window.BVCManager.balance : 0) + " Pts BVC";
 
   if (typeof speak === "function") speak("Accès à votre espace fidélité.");
 };
@@ -9630,8 +9737,7 @@ if (typeof window.stopNavigation === "function") {
   window.stopNavigation = function () {
     originalStop();
     // Reward 12 Points BVC per ride
-    window.braveCoins += 12;
-    localStorage.setItem("braveCoins", window.braveCoins.toString());
+    if(window.BVCManager) window.BVCManager.add(12);
     if (typeof speak === "function")
       setTimeout(
         () =>
@@ -9688,10 +9794,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-/* --- jarvis-voice.js --- */
+/* --- nexus-atlas-voice.js --- */
 /* --- J.A.R.V.I.S. 4.0 PROPRIETARY NEURAL ENGINE --- */
 
-window.JarvisEngine = {
+window.NexusAtlasEngine = {
   context: {
     lastIntent: null,
     userMood: "neutral",
@@ -9927,7 +10033,7 @@ window.JarvisEngine = {
     ) {
       return {
         action: "IDENTITY",
-        reply: `Je suis Jarvis, l'intelligence artificielle de Mon 50cc et Moi. Je suis connecté à votre télémétrie, au réseau communautaire et prêt à vous assister sur la route.`,
+        reply: `Je suis Nexus Atlas, l'intelligence artificielle de Mon 50cc et Moi. Je suis connecté à votre télémétrie, au réseau communautaire et prêt à vous assister sur la route.`,
       };
     } else if (
       this.matchAny(t, [
@@ -9958,11 +10064,11 @@ window.JarvisEngine = {
 
   executeAction: function (result) {
     // Retour visuel (si disponible dans le DOM)
-    const jarvisFeedback = document.getElementById("jarvis-feedback-text");
-    if (jarvisFeedback) {
-      jarvisFeedback.innerText = result.reply;
-      jarvisFeedback.classList.add("visible");
-      setTimeout(() => jarvisFeedback.classList.remove("visible"), 5000);
+    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
+    if (nexus-atlasFeedback) {
+      nexus-atlasFeedback.innerText = result.reply;
+      nexus-atlasFeedback.classList.add("visible");
+      setTimeout(() => nexus-atlasFeedback.classList.remove("visible"), 5000);
     }
 
     if (result.reply) {
@@ -10050,7 +10156,7 @@ window.initVoiceAI = function () {
   window.voiceAI.lang = "fr-FR";
 
   window.voiceAI.onstart = function () {
-    const micIcon = document.getElementById("jarvis-mic-icon");
+    const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.color = "#00d2ff"; // Couleur UI Gemini/IA
       micIcon.classList.add("fa-fade");
@@ -10063,39 +10169,39 @@ window.initVoiceAI = function () {
     const transcript = event.results[current][0].transcript.toLowerCase();
 
     // Feedback utilisateur
-    const jarvisFeedback = document.getElementById("jarvis-feedback-text");
+    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
     if (
-      jarvisFeedback &&
+      nexus-atlasFeedback &&
       !transcript.includes("oracle") &&
       !transcript.includes("système") &&
-      !transcript.includes("jarvis")
+      !transcript.includes("nexus-atlas")
     ) {
-      jarvisFeedback.innerText = "Vous : " + transcript;
-      jarvisFeedback.classList.add("visible");
+      nexus-atlasFeedback.innerText = "Vous : " + transcript;
+      nexus-atlasFeedback.classList.add("visible");
     }
 
     // Si le mot clé de réveil est utilisé
     if (
       transcript.includes("oracle") ||
       transcript.includes("système") ||
-      transcript.includes("jarvis")
+      transcript.includes("nexus-atlas")
     ) {
       // Extraction de la commande après le mot clé pour plus de précision
       let command = transcript;
-      ["oracle", "système", "jarvis"].forEach((kw) => {
+      ["oracle", "système", "nexus-atlas"].forEach((kw) => {
         if (transcript.includes(kw)) {
           command = transcript.split(kw)[1].trim() || transcript;
         }
       });
 
-      // Si la commande est vide après "jarvis"
+      // Si la commande est vide après "nexus-atlas"
       if (command.length < 2) {
-        window.JarvisEngine.speak("À vos ordres, pilote.");
+        window.NexusAtlasEngine.speak("À vos ordres, pilote.");
         return;
       }
 
-      const result = window.JarvisEngine.processQuery(command);
-      window.JarvisEngine.executeAction(result);
+      const result = window.NexusAtlasEngine.processQuery(command);
+      window.NexusAtlasEngine.executeAction(result);
     }
   };
 
@@ -10104,7 +10210,7 @@ window.initVoiceAI = function () {
       window.voiceAI.permissionDenied = true;
     }
     console.warn("[J.A.R.V.I.S 4.0] Erreur micro : ", event.error);
-    const micIcon = document.getElementById("jarvis-mic-icon");
+    const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.color = "#ff0055";
       micIcon.classList.remove("fa-fade");
@@ -10113,7 +10219,7 @@ window.initVoiceAI = function () {
   };
 
   window.voiceAI.onend = function () {
-    const micIcon = document.getElementById("jarvis-mic-icon");
+    const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.transform = "scale(1)";
       micIcon.classList.remove("fa-fade");
@@ -10804,7 +10910,7 @@ window.sellCEE = function () {
       document.getElementById("carbon-stock-price").innerText,
     );
     // Simulation d'injection dans le Wallet
-    window.braveCoins += price * 1.5; // conversion fictive
+    if(window.BVCManager) window.BVCManager.add(price * 1.5); // conversion fictive
 
     document.getElementById("cee-inventory").innerText = "0 CEE Disponibles";
 
@@ -12566,7 +12672,7 @@ window.MecaWizard = {
     const statusEl = document.getElementById("revolut-status");
     if (!btn) return;
 
-    if (typeof window.braveCoins === "undefined") {
+    if (typeof window.BVCManager === "undefined") {
       statusEl.innerHTML =
         '<span style="color:#dc3545;">Erreur: Programme de fidélité indisponible.</span>';
       return;
@@ -12574,8 +12680,8 @@ window.MecaWizard = {
 
     const price = 50;
 
-    if (window.braveCoins < price) {
-      statusEl.innerHTML = `<span style="color:#dc3545;">Fonds insuffisants. Vous avez ${Math.floor(window.braveCoins)} Pts, il en faut ${price}.</span>`;
+    if (window.BVCManager.balance < price) {
+      statusEl.innerHTML = `<span style="color:#dc3545;">Fonds insuffisants. Vous avez ${Math.floor(window.BVCManager.balance)} Pts, il en faut ${price}.</span>`;
       return;
     }
 
@@ -12583,18 +12689,14 @@ window.MecaWizard = {
     btn.innerHTML =
       '<i class="fa-solid fa-spinner fa-spin"></i> Connexion au réseau IA...';
 
-    // Simulation réseau IA
-    setTimeout(() => {
-      window.braveCoins -= price;
-      localStorage.setItem("braveCoins", window.braveCoins.toString());
-
-      // Mise à jour de l'affichage UI si disponible
-      const balanceEl = document.getElementById("crypto-balance");
-      if (balanceEl)
-        balanceEl.innerText = Math.floor(window.braveCoins) + " Pts BVC";
-
+    const success = await window.BVCManager.deduct(price);
+    if (success) {
       this.showExpertReport();
-    }, 2000);
+    } else {
+      statusEl.innerHTML = `<span style="color:#dc3545;">Erreur de transaction.</span>`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-gem"></i> Utiliser 50 Pts BVC';
+    }
   },
 
   showExpertReport: function () {
@@ -13142,7 +13244,7 @@ window.testARNavigation = function (targetHeadingDeg = 45) {
 
 /* --- weather-assistant.js --- */
 /**
- * Assistant Trajet Jarvis (Météo & IA)
+ * Assistant Trajet Nexus Atlas (Météo & IA)
  * Analyse contextuelle de la météo pour avertir le conducteur.
  */
 
@@ -13199,7 +13301,7 @@ window.WeatherAssistant = {
     ],
 
     init: function() {
-        console.log("[Jarvis] Initialisation de l'Assistant Trajet Météo...");
+        console.log("[Nexus Atlas] Initialisation de l'Assistant Trajet Météo...");
         // On attend un peu que l'app soit chargée avant d'afficher l'alerte
         setTimeout(() => {
             this.analyzeAndDisplay();
@@ -13247,7 +13349,7 @@ window.WeatherAssistant = {
             { opacity: 1, transform: "translate(-50%, 0)" }
         ], { duration: 500, easing: "ease-out" });
 
-        // Text-to-speech optionnel avec Jarvis
+        // Text-to-speech optionnel avec Nexus Atlas
         if (window.OracleVoice && window.OracleVoice.isVoiceActive) {
             // On ne parle pas de force pour ne pas spammer, sauf si mode vocal actif
             // Mais pour l'effet Wow, on pourrait ajouter un petit son
@@ -13628,8 +13730,7 @@ window.ReferralManager = {
         });
 
         // Paiement Filleul
-        window.braveCoins = (window.braveCoins || 0) + refereeReward;
-        localStorage.setItem("braveCoins", window.braveCoins.toString());
+        if (window.BVCManager) window.BVCManager.add(refereeReward);
 
         if (typeof speak === "function") {
           speak(voiceMessage);
@@ -14598,16 +14699,16 @@ window.Web4Economy = {
 
   init: function () {
     this.checkYearlyExpiration();
-    this.balance = parseFloat(localStorage.getItem("braveCoins") || "0");
-    this.updateUI();
-
+    
     // Simulation de minage passif (ex: 0.1 BVC par minute de trajet)
     setInterval(() => {
       if (window.isRiding) {
-        // Variable de app.js
         this.mineToken(0.05, "Minage : Conduite Active");
       }
     }, 60000);
+
+    // Synchronisation de l'UI avec BVCManager
+    setInterval(() => this.updateUI(), 2000);
   },
 
   checkYearlyExpiration: function () {
@@ -14616,10 +14717,11 @@ window.Web4Economy = {
       localStorage.getItem("mon50_bvc_year") || currentYear.toString();
 
     if (parseInt(currentYear) > parseInt(lastYear)) {
-      localStorage.setItem("braveCoins", "0.00");
+      if (window.BVCManager && window.BVCManager.balance > 0) {
+        window.BVCManager.deduct(window.BVCManager.balance);
+      }
       localStorage.setItem("mon50_tokens", "0.00");
       if (window.NeuralHUD) window.NeuralHUD.tokenBalance = 0;
-      window.braveCoins = 0;
 
       // Show alert to user if they open the app
       setTimeout(
@@ -14634,39 +14736,31 @@ window.Web4Economy = {
   },
 
   mineToken: function (amount, reason) {
-    this.balance += amount;
-    localStorage.setItem("braveCoins", this.balance.toFixed(2));
-    this.updateUI();
-
-    // Animation HUD
+    if (window.BVCManager) window.BVCManager.add(amount);
     this.showMiningHUD(amount);
   },
 
-  spendToken: function (amount, reason) {
-    if (this.balance >= amount) {
-      this.balance -= amount;
-      localStorage.setItem("braveCoins", this.balance.toFixed(2));
-      this.updateUI();
-
-      return true; // Achat réussi
-    } else {
-      console.warn(`[Web4] Fonds insuffisants pour : ${reason}`);
-      return false; // Achat refusé
+  spendToken: async function (amount, reason) {
+    if (window.BVCManager) {
+      const success = await window.BVCManager.deduct(amount);
+      if (!success) console.warn(`[Web4] Fonds insuffisants pour : ${reason}`);
+      return success;
     }
+    return false;
   },
 
   updateUI: function () {
+    const bal = window.BVCManager ? window.BVCManager.balance : 0;
     const balanceEl = document.getElementById("crypto-balance");
     if (balanceEl) {
-      balanceEl.innerText = this.balance.toFixed(2) + " BVC";
+      balanceEl.innerText = bal.toFixed(2) + " BVC";
     }
-    window.braveCoins = this.balance; // Sync with legacy variables
 
     // Restriction : Bloquer l'Avocat de Poche si solde insuffisant
     const lawyerBtn = document.getElementById("dock-btn-lawyer");
     if (lawyerBtn) {
       const lawyerPrice = this.prices.legal_report || 5;
-      if (this.balance < lawyerPrice) {
+      if (bal < lawyerPrice) {
         lawyerBtn.style.opacity = "0.4";
         lawyerBtn.style.filter = "grayscale(100%)";
         lawyerBtn.innerHTML =
@@ -15220,14 +15314,9 @@ window.SafeRider = {
   },
 
   awardMilestone: function (milestone) {
-    if (typeof window.braveCoins === "undefined") return;
+    if (typeof window.BVCManager === "undefined") return;
 
-    window.braveCoins += milestone.reward;
-    localStorage.setItem("braveCoins", window.braveCoins.toString());
-
-    const balanceEl = document.getElementById("crypto-balance");
-    if (balanceEl)
-      balanceEl.innerText = Math.floor(window.braveCoins) + " Pts BVC";
+    window.BVCManager.add(milestone.reward);
 
     // Notification UI
     const msg = `ðŸ† Challenge Réussi : ${milestone.name} ! Vous avez gagné ${milestone.reward} Pts BVC !`;
@@ -17173,13 +17262,13 @@ window.PocketLawyer = {
   },
 
   openLawyer: function () {
-    if (typeof window.braveCoins === "undefined") {
+    if (typeof window.BVCManager === "undefined") {
       alert("Erreur: Module de fidélité introuvable.");
       return;
     }
 
     const price = 5; // 5 Pts BVC constants
-    if (window.braveCoins < price) {
+    if (window.BVCManager.balance < price) {
       alert(
         `Fonds insuffisants ! Vous avez besoin de ${price} Pts BVC pour accéder à l'Avocat de Poche. Roulez plus pour en gagner.`,
       );
@@ -17576,8 +17665,8 @@ window.PocketLawyer = {
     }
   },
 
-  generateLetter: function () {
-    if (typeof window.braveCoins === "undefined") {
+  generateLetter: async function () {
+    if (typeof window.BVCManager === "undefined") {
       alert("Erreur: Module de fidélité introuvable.");
       return;
     }
@@ -17588,13 +17677,8 @@ window.PocketLawyer = {
         `Générer un recours juridique coûte ${price} Pts BVC.\nVoulez-vous continuer ?`,
       )
     ) {
-      if (window.braveCoins >= price) {
-        window.braveCoins -= price;
-        localStorage.setItem("braveCoins", window.braveCoins.toString());
-
-        const balanceEl = document.getElementById("crypto-balance");
-        if (balanceEl)
-          balanceEl.innerText = Math.floor(window.braveCoins) + " Pts BVC";
+      const success = await window.BVCManager.deduct(price);
+      if (success) {
 
         const letter =
           this.currentScenarioTemplate ||
@@ -17628,7 +17712,7 @@ window.PocketLawyer = {
         }
       } else {
         alert(
-          `Fonds insuffisants ! Vous avez besoin de ${price} Pts BVC. Roulez plus pour gagner des Pts BVC.`,
+          `Fonds insuffisants ou erreur de transaction ! Vous avez besoin de ${price} Pts BVC.`,
         );
       }
     }
@@ -17636,16 +17720,16 @@ window.PocketLawyer = {
 };
 
 
-/* --- jarvis-chat.js --- */
+/* --- nexus-atlas-chat.js --- */
 /**
- * Jarvis Chat Interface
- * Gère la fenêtre de discussion avec l'IA Gemini (Jarvis 4.0).
+ * Nexus Atlas Chat Interface
+ * Gère la fenêtre de discussion avec l'IA Gemini (Nexus Atlas 4.0).
  */
 
-window.JarvisChat = {
-    modalId: "jarvis-chat-modal",
-    chatContainerId: "jarvis-chat-messages",
-    inputFieldId: "jarvis-chat-input",
+window.NexusAtlasChat = {
+    modalId: "nexus-atlas-chat-modal",
+    chatContainerId: "nexus-atlas-chat-messages",
+    inputFieldId: "nexus-atlas-chat-input",
 
     open: function() {
         const modal = document.getElementById(this.modalId);
@@ -17655,7 +17739,7 @@ window.JarvisChat = {
             // On affiche un message de bienvenue seulement s'il n'y a pas déjà de message
             const container = document.getElementById(this.chatContainerId);
             if (container && container.children.length === 0) {
-                this.addMessage("Jarvis", "Bonjour ! Je suis Jarvis 4.0, votre copilote IA. Comment puis-je vous aider aujourd'hui ? (Mécanique, Itinéraire, Législation...)", "ai");
+                this.addMessage("Nexus Atlas", "Bonjour ! Je suis Nexus Atlas 4.0, votre copilote IA. Comment puis-je vous aider aujourd'hui ? (Mécanique, Itinéraire, Législation...)", "ai");
             }
             
             // Focus on input
@@ -17684,19 +17768,19 @@ window.JarvisChat = {
         const typingId = this.addTypingIndicator();
 
         try {
-            if (!window.JarvisGemini) throw new Error("Gemini non initialisé.");
+            if (!window.NexusAtlasGemini) throw new Error("Gemini non initialisé.");
             
-            const response = await window.JarvisGemini.ask(text);
+            const response = await window.NexusAtlasGemini.ask(text);
             this.removeElement(typingId);
 
             // Afficher la réponse
             if (response.reply) {
-                this.addMessage("Jarvis", response.reply, "ai");
+                this.addMessage("Nexus Atlas", response.reply, "ai");
             }
 
-            // Si Jarvis doit déclencher une action visuelle (comme ouvrir le GPS ou lancer le mode avocat)
+            // Si Nexus Atlas doit déclencher une action visuelle (comme ouvrir le GPS ou lancer le mode avocat)
             if (response.action && response.action !== "NONE" && response.action !== "CHAT") {
-                console.log("[JarvisChat] Exécution de l'action :", response.action);
+                console.log("[NexusAtlasChat] Exécution de l'action :", response.action);
                 if (window.OracleVoice && window.OracleVoice.executeAction) {
                     window.OracleVoice.executeAction(response.action, response.parameter);
                 }
@@ -17785,7 +17869,7 @@ window.JarvisChat = {
         typingDiv.style.fontSize = "0.9rem";
         typingDiv.style.width = "100%";
         typingDiv.style.float = "left";
-        typingDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Jarvis réfléchit...`;
+        typingDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Nexus Atlas réfléchit...`;
         
         container.appendChild(typingDiv);
         container.scrollTop = container.scrollHeight;

@@ -1,4 +1,4 @@
-﻿/* --- CARBON TRADING & CEE MARKET --- */
+/* --- CARBON TRADING & CEE MARKET --- */
 
 window.ecoScore = 100;
 window.ceeCertificates = parseInt(
@@ -106,7 +106,7 @@ window.sellCEE = function () {
       document.getElementById("carbon-stock-price").innerText,
     );
     // Simulation d'injection dans le Wallet
-    window.braveCoins += price * 1.5; // conversion fictive
+    if(window.BVCManager) window.BVCManager.add(price * 1.5); // conversion fictive
 
     document.getElementById("cee-inventory").innerText = "0 CEE Disponibles";
 

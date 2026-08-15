@@ -565,10 +565,10 @@ exports.sendWelcomeEmail = onDocumentCreated(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. askJarvisGemini (Relais sécurisé pour l'IA)
+// 8. askNexusAtlasGemini (Relais sécurisé pour l'IA)
 //    Reçoit l'historique de conversation, interroge l'API Gemini et renvoie la réponse.
 // ─────────────────────────────────────────────────────────────────────────────
-exports.askJarvisGemini = onRequest(
+exports.askNexusAtlasGemini = onRequest(
     { secrets: [GEMINI_API_KEY], region: "europe-west1" },
     async (req, res) => {
         setCorsHeaders(res);
@@ -613,14 +613,14 @@ exports.askJarvisGemini = onRequest(
 
             if (!response.ok) {
                 const err = await response.json();
-                console.error("[Jarvis Gemini] Erreur API externe :", err);
+                console.error("[Nexus Atlas Gemini] Erreur API externe :", err);
                 return res.status(response.status).json({ error: err.error?.message || "Erreur API Gemini" });
             }
 
             const data = await response.json();
             return res.status(200).json(data);
         } catch (err) {
-            console.error("[Jarvis Gemini] Exception serveur :", err);
+            console.error("[Nexus Atlas Gemini] Exception serveur :", err);
             return res.status(500).json({ error: "Erreur interne", message: err.message });
         }
     }

@@ -1,6 +1,6 @@
 /**
  * Insurance Scanner (Document AI)
- * Simule l'upload d'un contrat PDF et l'analyse par Jarvis Gemini
+ * Simule l'upload d'un contrat PDF et l'analyse par Nexus Atlas Gemini
  */
 
 window.InsuranceScanner = {
@@ -45,8 +45,8 @@ window.InsuranceScanner = {
             Texte : "${mockContractText}"`;
 
             // Appel à l'IA
-            if (!window.JarvisGemini) throw new Error("JarvisGemini non chargé");
-            const response = await window.JarvisGemini.ask(prompt);
+            if (!window.NexusAtlasGemini) throw new Error("NexusAtlasGemini non chargé");
+            const response = await window.NexusAtlasGemini.ask(prompt);
 
             // Formatage de la réponse (remplacer les sauts de ligne par des <br>)
             const formattedReply = response.reply.replace(/\n/g, "<br>");

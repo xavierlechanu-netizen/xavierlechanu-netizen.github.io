@@ -54,14 +54,9 @@ window.SafeRider = {
   },
 
   awardMilestone: function (milestone) {
-    if (typeof window.braveCoins === "undefined") return;
+    if (typeof window.BVCManager === "undefined") return;
 
-    window.braveCoins += milestone.reward;
-    localStorage.setItem("braveCoins", window.braveCoins.toString());
-
-    const balanceEl = document.getElementById("crypto-balance");
-    if (balanceEl)
-      balanceEl.innerText = Math.floor(window.braveCoins) + " Pts BVC";
+    window.BVCManager.add(milestone.reward);
 
     // Notification UI
     const msg = `ðŸ† Challenge Réussi : ${milestone.name} ! Vous avez gagné ${milestone.reward} Pts BVC !`;

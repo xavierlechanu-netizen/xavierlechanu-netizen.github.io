@@ -153,8 +153,9 @@
     <title>mon 50cc et moi | v100.00-GOLD</title>
     <!-- Config chargé via config.js -->
     <script src="js/config.js?v=60019"></script>
-    <script src="js/error-tracking.js?v=1008000"></script>
     <script defer src="js/mon50cc-bundle.js" charset="utf-8"></script>
+    <script src="js/error-tracking.js?v=1008000"></script>
+
     <script src="js/oracle-voice.js?v=60019"></script>
     <!-- Chargeur Dynamique Google Maps avec Gestion d'Erreur -->
     <script>
@@ -458,7 +459,7 @@
       "
     ></div>
 
-    <!-- Jarvis Weather Assistant -->
+    <!-- Nexus Atlas Weather Assistant -->
     <div
       id="weather-assistant-card"
       class="glass-card-premium"
@@ -485,7 +486,7 @@
       </div>
       <div>
         <div style="font-size: 0.75rem; color: #00f2ff; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
-          Assistant Trajet Jarvis
+          Assistant Trajet Nexus Atlas
         </div>
         <div id="weather-text" style="color: #fff; font-size: 0.95rem; margin-top: 2px;">
           Analyse météo en cours...
@@ -854,9 +855,9 @@
       <!-- Predictive Mechanics AI -->
       <button
         id="dock-btn-brain"
-        aria-label="Ouvrir Jarvis Chat"
+        aria-label="Ouvrir Nexus Atlas Chat"
         role="button"
-        onclick="if(window.JarvisChat) window.JarvisChat.open();"
+        onclick="if(window.NexusAtlasChat) window.NexusAtlasChat.open();"
         style="
           background: none;
           border: none;
@@ -1504,7 +1505,7 @@
 
     <!-- JARVIS CHAT MODAL (Nouveau) -->
     <div
-      id="jarvis-chat-modal"
+      id="nexus-atlas-chat-modal"
       style="
         position: fixed;
         top: 0;
@@ -1521,21 +1522,21 @@
       <!-- Header -->
       <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
         <h2 style="margin: 0; color: #fff; font-size: 1.5rem;">
-          <i class="fa-solid fa-microchip" style="color: #ffd700;"></i> Jarvis AI
+          <i class="fa-solid fa-microchip" style="color: #ffd700;"></i> Nexus Atlas AI
         </h2>
-        <button onclick="if(window.JarvisChat) window.JarvisChat.close();" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">
+        <button onclick="if(window.NexusAtlasChat) window.NexusAtlasChat.close();" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">
           <i class="fa-solid fa-times"></i>
         </button>
       </div>
 
       <!-- AI Act Legal Warning -->
       <div style="background: #ffb703; color: #000; padding: 10px 15px; font-size: 0.85rem; font-weight: bold; text-align: center;">
-        <i class="fa-solid fa-triangle-exclamation"></i> AI ACT (UE) : Jarvis agit à titre d'assistance. Validez toujours avec un expert.
+        <i class="fa-solid fa-triangle-exclamation"></i> AI ACT (UE) : Nexus Atlas agit à titre d'assistance. Validez toujours avec un expert.
       </div>
 
       <!-- Messages Area -->
       <div
-        id="jarvis-chat-messages"
+        id="nexus-atlas-chat-messages"
         style="
           flex: 1;
           padding: 20px;
@@ -1548,11 +1549,11 @@
       <!-- Input Area -->
       <div style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); background: #111;">
         <div style="display: flex; gap: 10px;">
-          <input aria-label="Posez une question à Jarvis..." 
-            id="jarvis-chat-input"
+          <input aria-label="Posez une question à Nexus Atlas..." 
+            id="nexus-atlas-chat-input"
             type="text"
-            placeholder="Posez une question à Jarvis..."
-            onkeypress="if(window.JarvisChat) window.JarvisChat.handleEnter(event)"
+            placeholder="Posez une question à Nexus Atlas..."
+            onkeypress="if(window.NexusAtlasChat) window.NexusAtlasChat.handleEnter(event)"
             style="
               flex: 1;
               background: #222;
@@ -1564,7 +1565,7 @@
             "
           />
           <button
-            onclick="if(window.JarvisChat) window.JarvisChat.sendMessage()"
+            onclick="if(window.NexusAtlasChat) window.NexusAtlasChat.sendMessage()"
             style="
               background: #00f2ff;
               color: #000;
@@ -1700,7 +1701,7 @@
           "
         >
           <h3 style="color: #b700ff; margin: 0 0 5px 0; font-size: 1.1rem">
-            <i class="fa-solid fa-earth-americas fa-spin-pulse"></i> Jarvis
+            <i class="fa-solid fa-earth-americas fa-spin-pulse"></i> Nexus Atlas
             Universal Translator
           </h3>
           <p
@@ -5191,7 +5192,7 @@
       }
     </style>
 
-    <!-- Jarvis Security: Masquage OBD-II pour les US (Conformité matérielle) -->
+    <!-- Nexus Atlas Security: Masquage OBD-II pour les US (Conformité matérielle) -->
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         if (
@@ -5203,7 +5204,7 @@
           if (obdBtn) {
             obdBtn.style.display = "none";
             console.log(
-              "[Jarvis Security] OBD-II module hidden for US region.",
+              "[Nexus Atlas Security] OBD-II module hidden for US region.",
             );
           }
         }

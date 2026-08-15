@@ -1,4 +1,4 @@
-﻿/**
+/**
  * MECA-WIZARD v2.0 - DeepTech AI Mechanic
  * Analyse Acoustique réelle via Web Audio API & Intégration Revolut Checkout
  */
@@ -310,7 +310,7 @@ window.MecaWizard = {
     const statusEl = document.getElementById("revolut-status");
     if (!btn) return;
 
-    if (typeof window.braveCoins === "undefined") {
+    if (typeof window.BVCManager === "undefined") {
       statusEl.innerHTML =
         '<span style="color:#dc3545;">Erreur: Programme de fidélité indisponible.</span>';
       return;
@@ -318,8 +318,8 @@ window.MecaWizard = {
 
     const price = 50;
 
-    if (window.braveCoins < price) {
-      statusEl.innerHTML = `<span style="color:#dc3545;">Fonds insuffisants. Vous avez ${Math.floor(window.braveCoins)} Pts, il en faut ${price}.</span>`;
+    if (window.BVCManager.balance < price) {
+      statusEl.innerHTML = `<span style="color:#dc3545;">Fonds insuffisants. Vous avez ${Math.floor(window.BVCManager.balance)} Pts, il en faut ${price}.</span>`;
       return;
     }
 
@@ -327,18 +327,14 @@ window.MecaWizard = {
     btn.innerHTML =
       '<i class="fa-solid fa-spinner fa-spin"></i> Connexion au réseau IA...';
 
-    // Simulation réseau IA
-    setTimeout(() => {
-      window.braveCoins -= price;
-      localStorage.setItem("braveCoins", window.braveCoins.toString());
-
-      // Mise à jour de l'affichage UI si disponible
-      const balanceEl = document.getElementById("crypto-balance");
-      if (balanceEl)
-        balanceEl.innerText = Math.floor(window.braveCoins) + " Pts BVC";
-
+    const success = await window.BVCManager.deduct(price);
+    if (success) {
       this.showExpertReport();
-    }, 2000);
+    } else {
+      statusEl.innerHTML = `<span style="color:#dc3545;">Erreur de transaction.</span>`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-gem"></i> Utiliser 50 Pts BVC';
+    }
   },
 
   showExpertReport: function () {

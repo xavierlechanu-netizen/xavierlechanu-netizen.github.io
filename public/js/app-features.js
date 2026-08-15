@@ -973,7 +973,7 @@ setInterval(() => {
     if (currentPeriod > window.wingmanAlertCount) {
       if (window.isVigilanceRouge) {
         speak(
-          "Vigilance rouge détectée. Vous roulez depuis 45 minutes supplémentaires. Jarvis vous demande d'effectuer une pause immédiate et de vous hydrater abondamment !",
+          "Vigilance rouge détectée. Vous roulez depuis 45 minutes supplémentaires. Nexus Atlas vous demande d'effectuer une pause immédiate et de vous hydrater abondamment !",
         );
       } else {
         speak(

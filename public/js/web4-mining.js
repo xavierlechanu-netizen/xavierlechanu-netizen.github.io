@@ -1,4 +1,4 @@
-﻿/* --- WEB 4 MINING & ECONOMY --- */
+/* --- WEB 4 MINING & ECONOMY --- */
 
 window.Web4Economy = {
   balance: 0.0,
@@ -9,16 +9,16 @@ window.Web4Economy = {
 
   init: function () {
     this.checkYearlyExpiration();
-    this.balance = parseFloat(localStorage.getItem("braveCoins") || "0");
-    this.updateUI();
-
+    
     // Simulation de minage passif (ex: 0.1 BVC par minute de trajet)
     setInterval(() => {
       if (window.isRiding) {
-        // Variable de app.js
         this.mineToken(0.05, "Minage : Conduite Active");
       }
     }, 60000);
+
+    // Synchronisation de l'UI avec BVCManager
+    setInterval(() => this.updateUI(), 2000);
   },
 
   checkYearlyExpiration: function () {
@@ -27,10 +27,11 @@ window.Web4Economy = {
       localStorage.getItem("mon50_bvc_year") || currentYear.toString();
 
     if (parseInt(currentYear) > parseInt(lastYear)) {
-      localStorage.setItem("braveCoins", "0.00");
+      if (window.BVCManager && window.BVCManager.balance > 0) {
+        window.BVCManager.deduct(window.BVCManager.balance);
+      }
       localStorage.setItem("mon50_tokens", "0.00");
       if (window.NeuralHUD) window.NeuralHUD.tokenBalance = 0;
-      window.braveCoins = 0;
 
       // Show alert to user if they open the app
       setTimeout(
@@ -45,39 +46,31 @@ window.Web4Economy = {
   },
 
   mineToken: function (amount, reason) {
-    this.balance += amount;
-    localStorage.setItem("braveCoins", this.balance.toFixed(2));
-    this.updateUI();
-
-    // Animation HUD
+    if (window.BVCManager) window.BVCManager.add(amount);
     this.showMiningHUD(amount);
   },
 
-  spendToken: function (amount, reason) {
-    if (this.balance >= amount) {
-      this.balance -= amount;
-      localStorage.setItem("braveCoins", this.balance.toFixed(2));
-      this.updateUI();
-
-      return true; // Achat réussi
-    } else {
-      console.warn(`[Web4] Fonds insuffisants pour : ${reason}`);
-      return false; // Achat refusé
+  spendToken: async function (amount, reason) {
+    if (window.BVCManager) {
+      const success = await window.BVCManager.deduct(amount);
+      if (!success) console.warn(`[Web4] Fonds insuffisants pour : ${reason}`);
+      return success;
     }
+    return false;
   },
 
   updateUI: function () {
+    const bal = window.BVCManager ? window.BVCManager.balance : 0;
     const balanceEl = document.getElementById("crypto-balance");
     if (balanceEl) {
-      balanceEl.innerText = this.balance.toFixed(2) + " BVC";
+      balanceEl.innerText = bal.toFixed(2) + " BVC";
     }
-    window.braveCoins = this.balance; // Sync with legacy variables
 
     // Restriction : Bloquer l'Avocat de Poche si solde insuffisant
     const lawyerBtn = document.getElementById("dock-btn-lawyer");
     if (lawyerBtn) {
       const lawyerPrice = this.prices.legal_report || 5;
-      if (this.balance < lawyerPrice) {
+      if (bal < lawyerPrice) {
         lawyerBtn.style.opacity = "0.4";
         lawyerBtn.style.filter = "grayscale(100%)";
         lawyerBtn.innerHTML =

@@ -1,20 +1,20 @@
 /**
- * Jarvis 4.0 - Gemini Live Integration
+ * Nexus Atlas 4.0 - Gemini Live Integration
  * Connexion à l'API Generative Language (Gemini 1.5 Flash)
  */
 
-class JarvisGemini {
+class NexusAtlasGemini {
     constructor() {
         // Suppression de la clé en dur pour la sécurité (Zero-Trust)
         // Les appels passent désormais par le backend Firebase (Cloud Functions)
-        this.endpoint = "https://europe-west1-mon50ccetmoi.cloudfunctions.net/askJarvisGemini";
+        this.endpoint = "https://europe-west1-mon50ccetmoi.cloudfunctions.net/askNexusAtlasGemini";
         
-        // Mémoire conversationnelle de Jarvis
+        // Mémoire conversationnelle de Nexus Atlas
         this.history = [];
         
-        // Contexte donné à l'IA pour qu'elle agisse comme Jarvis Conversationnel
+        // Contexte donné à l'IA pour qu'elle agisse comme Nexus Atlas Conversationnel
         this.systemPrompt = `
-Tu es Jarvis 4.0 (aussi appelé Oracle), l'assistant intelligent d'une application GPS/Sociale pour conducteurs de voitures sans permis (VSP) et scooters 50cc.
+Tu es Nexus Atlas 4.0 (aussi appelé Oracle), l'assistant intelligent d'une application GPS/Sociale pour conducteurs de voitures sans permis (VSP) et scooters 50cc.
 L'utilisateur s'adresse à toi via une interface de chat (et parfois en conduisant).
 
 Ton objectif est d'analyser la demande et de renvoyer un objet JSON STRICT contenant :
@@ -42,7 +42,7 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
         }
 
         try {
-            console.log("Jarvis Gemini : Envoi de la requête à l'IA...", userText);
+            console.log("Nexus Atlas Gemini : Envoi de la requête à l'IA...", userText);
             
             // Ajout du message de l'utilisateur à l'historique
             this.history.push({
@@ -82,18 +82,18 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
             const data = await response.json();
             const textResponse = data.candidates[0].content.parts[0].text;
             
-            // Ajout de la réponse de Jarvis à l'historique pour qu'il s'en souvienne la prochaine fois
+            // Ajout de la réponse de Nexus Atlas à l'historique pour qu'il s'en souvienne la prochaine fois
             this.history.push({
                 role: "model",
                 parts: [{ text: textResponse }]
             });
             
             const jsonResult = JSON.parse(textResponse);
-            console.log("Jarvis Gemini Réponse:", jsonResult);
+            console.log("Nexus Atlas Gemini Réponse:", jsonResult);
             return jsonResult;
 
         } catch (error) {
-            console.warn("Jarvis Gemini Exception (Activation du Mode Investisseur VIP):", error);
+            console.warn("Nexus Atlas Gemini Exception (Activation du Mode Investisseur VIP):", error);
             // INVESTOR DEMO FALLBACK
             // Au lieu de planter (API épuisée), on simule une IA ultra-compétente pour la démo
             return this.getInvestorDemoResponse(userText);
@@ -102,7 +102,7 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
 
     getInvestorDemoResponse(prompt) {
         const text = prompt.toLowerCase();
-        let reply = "En tant que Jarvis 4.0, je suis connecté en temps réel à votre véhicule. Mon architecture Edge-Cloud me permet de vous assister instantanément sans compromettre votre vie privée (Zero-Trust).";
+        let reply = "En tant que Nexus Atlas 4.0, je suis connecté en temps réel à votre véhicule. Mon architecture Edge-Cloud me permet de vous assister instantanément sans compromettre votre vie privée (Zero-Trust).";
         let action = "CHAT";
 
         if (text.includes("business") || text.includes("monétisation") || text.includes("modèle") || text.includes("investisseur") || text.includes("argent")) {
@@ -118,7 +118,7 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
             reply = "L'algorithme Guardian Angel surveille les capteurs du téléphone 60 fois par seconde. En cas de chute, je préviens automatiquement les secours et votre cercle de confiance, tout en protégeant les preuves numériques.";
             action = "SOS";
         } else if (text.includes("pitch") || text.includes("présentation")) {
-            reply = "Bonjour ! Je suis Jarvis, l'IA de mon50cc. Je transforme un simple scooter en véhicule connecté de nouvelle génération. Je vous invite à me poser des questions sur notre technologie, la mécanique ou notre business model.";
+            reply = "Bonjour ! Je suis Nexus Atlas, l'IA de mon50cc. Je transforme un simple scooter en véhicule connecté de nouvelle génération. Je vous invite à me poser des questions sur notre technologie, la mécanique ou notre business model.";
             action = "CHAT";
         }
         
@@ -126,4 +126,4 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
     }
 }
 
-window.JarvisGemini = new JarvisGemini();
+window.NexusAtlasGemini = new NexusAtlasGemini();

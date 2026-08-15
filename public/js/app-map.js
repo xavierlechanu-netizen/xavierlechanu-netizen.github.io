@@ -138,7 +138,7 @@ async function calculateRouteSansAutoroute(start, end) {
                 instructionText,
             );
           }
-        }, 6000); // Décalé de 6 secondes pour laisser Jarvis annoncer l'ETA en premier
+        }, 6000); // Décalé de 6 secondes pour laisser Nexus Atlas annoncer l'ETA en premier
       }
 
       let durationTextStr;

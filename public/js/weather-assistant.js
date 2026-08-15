@@ -1,5 +1,5 @@
 /**
- * Assistant Trajet Jarvis (Météo & IA)
+ * Assistant Trajet Nexus Atlas (Météo & IA)
  * Analyse contextuelle de la météo pour avertir le conducteur.
  */
 
@@ -56,7 +56,7 @@ window.WeatherAssistant = {
     ],
 
     init: function() {
-        console.log("[Jarvis] Initialisation de l'Assistant Trajet Météo...");
+        console.log("[Nexus Atlas] Initialisation de l'Assistant Trajet Météo...");
         // On attend un peu que l'app soit chargée avant d'afficher l'alerte
         setTimeout(() => {
             this.analyzeAndDisplay();
@@ -104,7 +104,7 @@ window.WeatherAssistant = {
             { opacity: 1, transform: "translate(-50%, 0)" }
         ], { duration: 500, easing: "ease-out" });
 
-        // Text-to-speech optionnel avec Jarvis
+        // Text-to-speech optionnel avec Nexus Atlas
         if (window.OracleVoice && window.OracleVoice.isVoiceActive) {
             // On ne parle pas de force pour ne pas spammer, sauf si mode vocal actif
             // Mais pour l'effet Wow, on pourrait ajouter un petit son

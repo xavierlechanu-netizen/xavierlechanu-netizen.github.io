@@ -1,4 +1,4 @@
-﻿/* --- SILICON VALLEY BILLION DOLLAR FEATURES --- */
+/* --- SILICON VALLEY BILLION DOLLAR FEATURES --- */
 
 // 1. AR VISION (Augmented Reality Camera Background)
 window.isARActive = false;
@@ -98,13 +98,13 @@ window.toggleARVision = async function () {
 };
 
 // 2. PROGRAMME FIDELITE ROULER & GAGNER
-window.braveCoins = parseInt(localStorage.getItem("braveCoins") || "0");
+// 2. PROGRAMME FIDELITE ROULER & GAGNER (Géré par BVCManager)
 
 window.showCryptoWallet = function () {
   const screen = document.getElementById("crypto-wallet-screen");
   const balance = document.getElementById("crypto-balance");
   if (screen) screen.classList.remove("hidden");
-  if (balance) balance.innerText = Math.floor(window.braveCoins) + " Pts BVC";
+  if (balance) balance.innerText = Math.floor(window.BVCManager ? window.BVCManager.balance : 0) + " Pts BVC";
 
   if (typeof speak === "function") speak("Accès à votre espace fidélité.");
 };
@@ -120,8 +120,7 @@ if (typeof window.stopNavigation === "function") {
   window.stopNavigation = function () {
     originalStop();
     // Reward 12 Points BVC per ride
-    window.braveCoins += 12;
-    localStorage.setItem("braveCoins", window.braveCoins.toString());
+    if(window.BVCManager) window.BVCManager.add(12);
     if (typeof speak === "function")
       setTimeout(
         () =>

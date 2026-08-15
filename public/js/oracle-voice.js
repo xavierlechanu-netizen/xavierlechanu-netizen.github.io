@@ -229,9 +229,9 @@ class OracleVoice {
     }
 
     // ── NOUVEAU : TENTATIVE VIA L'INTELLIGENCE ARTIFICIELLE GEMINI ──
-    if (window.JarvisGemini && !window.isLiteMode) {
+    if (window.NexusAtlasGemini && !window.isLiteMode) {
         try {
-            const aiResponse = await window.JarvisGemini.ask(commandText);
+            const aiResponse = await window.NexusAtlasGemini.ask(commandText);
             
             // L'IA a répondu avec succès
             if (aiResponse.reply) speak(aiResponse.reply);

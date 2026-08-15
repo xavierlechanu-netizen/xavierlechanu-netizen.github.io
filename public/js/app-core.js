@@ -513,6 +513,8 @@ window.startApp = function () {
   if (window.appStarted) return;
   window.appStarted = true;
 
+  if (window.BVCManager) window.BVCManager.init();
+
   runCinematicStartup();
 
   checkTrialExpiration();
@@ -2014,7 +2016,7 @@ async function speak(phraseKey) {
   let pitch =
     window.OracleEngine && window.OracleEngine.gender === "female" ? 1.05 : 0.9;
 
-  const voiceMode = localStorage.getItem("jarvisVoiceMode") || "standard";
+  const voiceMode = localStorage.getItem("nexus-atlasVoiceMode") || "standard";
 
   // Simulation d'accents régionaux (pitch/rate)
   if (region && region !== "standard" && voiceMode === "standard") {

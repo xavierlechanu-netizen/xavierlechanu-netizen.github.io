@@ -686,6 +686,9 @@ window.submitMecaV3 = function () {
             <strong>Diagnostic IA:</strong><br>
             Il est probable que votre bougie soit encrassée ou que le gicleur de votre carburateur soit bouché. 
             Vérifiez l'étincelle et nettoyez votre cuve.
+            <div style="margin-top:10px; font-size:0.75rem; color:#888; border-top:1px solid #555; padding-top:5px;">
+              Avertissement (AI Act) : Aide indicative générée par IA. <strong>Soumis à contrôle humain.</strong>
+            </div>
         </div>`;
   }, 2000);
 };
@@ -713,7 +716,7 @@ function triggerFallAlert(isManual = false) {
   }
   if (document.getElementById("fall-screen")) return;
 
-  // Annonce vocale par Jarvis
+  // Annonce vocale par Nexus Atlas
   if (typeof speak === "function") {
     speak(
       isManual

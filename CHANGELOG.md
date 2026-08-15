@@ -251,7 +251,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ### Ajouté
 - **Oracle Voice** : assistant vocal IA pour la navigation
-- **Jarvis Voice** : synthèse vocale multilingue
+- **Nexus Atlas Voice** : synthèse vocale multilingue
 - **Neural HUD** : affichage tête haute avec données de conduite
 - **Habits** : apprentissage des habitudes de conduite
 - **Predictive Meca** : maintenance prédictive du véhicule

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ⚖️ POCKET LAWYER - MODULE DE DÉFENSE JURIDIQUE
  * Analyse du stationnement (Code de la Route FR : R417-10 et R417-11)
  */
@@ -68,13 +68,13 @@ window.PocketLawyer = {
   },
 
   openLawyer: function () {
-    if (typeof window.braveCoins === "undefined") {
+    if (typeof window.BVCManager === "undefined") {
       alert("Erreur: Module de fidélité introuvable.");
       return;
     }
 
     const price = 5; // 5 Pts BVC constants
-    if (window.braveCoins < price) {
+    if (window.BVCManager.balance < price) {
       alert(
         `Fonds insuffisants ! Vous avez besoin de ${price} Pts BVC pour accéder à l'Avocat de Poche. Roulez plus pour en gagner.`,
       );
@@ -471,8 +471,8 @@ window.PocketLawyer = {
     }
   },
 
-  generateLetter: function () {
-    if (typeof window.braveCoins === "undefined") {
+  generateLetter: async function () {
+    if (typeof window.BVCManager === "undefined") {
       alert("Erreur: Module de fidélité introuvable.");
       return;
     }
@@ -483,13 +483,8 @@ window.PocketLawyer = {
         `Générer un recours juridique coûte ${price} Pts BVC.\nVoulez-vous continuer ?`,
       )
     ) {
-      if (window.braveCoins >= price) {
-        window.braveCoins -= price;
-        localStorage.setItem("braveCoins", window.braveCoins.toString());
-
-        const balanceEl = document.getElementById("crypto-balance");
-        if (balanceEl)
-          balanceEl.innerText = Math.floor(window.braveCoins) + " Pts BVC";
+      const success = await window.BVCManager.deduct(price);
+      if (success) {
 
         const letter =
           this.currentScenarioTemplate ||
@@ -523,7 +518,7 @@ window.PocketLawyer = {
         }
       } else {
         alert(
-          `Fonds insuffisants ! Vous avez besoin de ${price} Pts BVC. Roulez plus pour gagner des Pts BVC.`,
+          `Fonds insuffisants ou erreur de transaction ! Vous avez besoin de ${price} Pts BVC.`,
         );
       }
     }

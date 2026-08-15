@@ -91,7 +91,7 @@
                 assert(calculateReportPrice("HACK_ATTEMPT") === 4999, "Entrée invalide = retombe sur le tarif de base (pas de prix gratuit)");
             });
 
-            describe("🎙️ Jarvis - Détection Contournement Centre-Ville", () => {
+            describe("🎙️ Nexus Atlas - Détection Contournement Centre-Ville", () => {
                 const parseCommand = (cmd) => {
                     const match = cmd.match(/(sans|évite|éviter|contourne|contourner|ne pas passer).*(centre|ville)/i);
                     return !!match;

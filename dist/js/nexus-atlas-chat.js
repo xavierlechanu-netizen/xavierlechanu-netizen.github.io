@@ -1,12 +1,12 @@
 /**
- * Jarvis Chat Interface
- * Gère la fenêtre de discussion avec l'IA Gemini (Jarvis 4.0).
+ * Nexus Atlas Chat Interface
+ * Gère la fenêtre de discussion avec l'IA Gemini (Nexus Atlas 4.0).
  */
 
-window.JarvisChat = {
-    modalId: "jarvis-chat-modal",
-    chatContainerId: "jarvis-chat-messages",
-    inputFieldId: "jarvis-chat-input",
+window.NexusAtlasChat = {
+    modalId: "nexus-atlas-chat-modal",
+    chatContainerId: "nexus-atlas-chat-messages",
+    inputFieldId: "nexus-atlas-chat-input",
 
     open: function() {
         const modal = document.getElementById(this.modalId);
@@ -16,7 +16,7 @@ window.JarvisChat = {
             // On affiche un message de bienvenue seulement s'il n'y a pas déjà de message
             const container = document.getElementById(this.chatContainerId);
             if (container && container.children.length === 0) {
-                this.addMessage("Jarvis", "Bonjour ! Je suis Jarvis 4.0, votre copilote IA. Comment puis-je vous aider aujourd'hui ? (Mécanique, Itinéraire, Législation...)", "ai");
+                this.addMessage("Nexus Atlas", "Bonjour ! Je suis Nexus Atlas 4.0, votre copilote IA. Comment puis-je vous aider aujourd'hui ? (Mécanique, Itinéraire, Législation...)", "ai");
             }
             
             // Focus on input
@@ -45,19 +45,19 @@ window.JarvisChat = {
         const typingId = this.addTypingIndicator();
 
         try {
-            if (!window.JarvisGemini) throw new Error("Gemini non initialisé.");
+            if (!window.NexusAtlasGemini) throw new Error("Gemini non initialisé.");
             
-            const response = await window.JarvisGemini.ask(text);
+            const response = await window.NexusAtlasGemini.ask(text);
             this.removeElement(typingId);
 
             // Afficher la réponse
             if (response.reply) {
-                this.addMessage("Jarvis", response.reply, "ai");
+                this.addMessage("Nexus Atlas", response.reply, "ai");
             }
 
-            // Si Jarvis doit déclencher une action visuelle (comme ouvrir le GPS ou lancer le mode avocat)
+            // Si Nexus Atlas doit déclencher une action visuelle (comme ouvrir le GPS ou lancer le mode avocat)
             if (response.action && response.action !== "NONE" && response.action !== "CHAT") {
-                console.log("[JarvisChat] Exécution de l'action :", response.action);
+                console.log("[NexusAtlasChat] Exécution de l'action :", response.action);
                 if (window.OracleVoice && window.OracleVoice.executeAction) {
                     window.OracleVoice.executeAction(response.action, response.parameter);
                 }
@@ -146,7 +146,7 @@ window.JarvisChat = {
         typingDiv.style.fontSize = "0.9rem";
         typingDiv.style.width = "100%";
         typingDiv.style.float = "left";
-        typingDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Jarvis réfléchit...`;
+        typingDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Nexus Atlas réfléchit...`;
         
         container.appendChild(typingDiv);
         container.scrollTop = container.scrollHeight;

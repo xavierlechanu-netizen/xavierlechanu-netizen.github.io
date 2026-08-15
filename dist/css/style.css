@@ -2,9 +2,10 @@
     --neon-blue: #00f2ff;
     --neon-gold: #ffb700;
     --neon-red: #ff0055;
-    --glass-bg: rgba(0, 5, 10, 0.7);
-    --glass-border: rgba(0, 242, 255, 0.3);
-    --glow-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+    --glass-bg: rgba(5, 15, 25, 0.65);
+    --glass-border: rgba(0, 242, 255, 0.4);
+    --glass-glow: inset 0 0 15px rgba(0, 242, 255, 0.15);
+    --glow-shadow: 0 0 25px rgba(0, 242, 255, 0.6);
     --accent: var(--neon-gold);
     --danger: var(--neon-red);
     --warning: #cca000;
@@ -376,10 +377,10 @@ body, html {
 /* Glassmorphism utility */
 .glassmorphism {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(25px) saturate(200%);
+    -webkit-backdrop-filter: blur(25px) saturate(200%);
     border: 1px solid var(--glass-border);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.02);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), var(--glass-glow);
 }
 
 /* Neural Core - The heart of the revolutionary HUD */

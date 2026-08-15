@@ -1,4 +1,4 @@
-﻿/**
+/**
  * REFERRAL SYSTEM (Parrainage Gamifié & InsurTech)
  * Paliers de kilométrage et revenus passifs sur conduite sécurisée.
  */
@@ -122,8 +122,7 @@ window.ReferralManager = {
         });
 
         // Paiement Filleul
-        window.braveCoins = (window.braveCoins || 0) + refereeReward;
-        localStorage.setItem("braveCoins", window.braveCoins.toString());
+        if (window.BVCManager) window.BVCManager.add(refereeReward);
 
         if (typeof speak === "function") {
           speak(voiceMessage);

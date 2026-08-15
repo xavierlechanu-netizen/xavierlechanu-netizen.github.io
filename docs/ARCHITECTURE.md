@@ -103,7 +103,7 @@
 | Module | Taille | Responsabilité |
 |---|---|---|
 | `oracle-voice.js` | 10,9 Ko | Assistant vocal principal |
-| `jarvis-voice.js` | 5,4 Ko | Synthèse vocale multilingue |
+| `nexus-atlas-voice.js` | 5,4 Ko | Synthèse vocale multilingue |
 | `neural-hud.js` | 20,4 Ko | HUD holographique temps réel |
 | `neural-sync.js` | 1,8 Ko | Synchronisation inter-modules IA |
 | `self-evolution.js` | 4,9 Ko | Auto-apprentissage IA |

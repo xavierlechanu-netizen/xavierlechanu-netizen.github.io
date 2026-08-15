@@ -1,6 +1,6 @@
 /* --- J.A.R.V.I.S. 4.0 PROPRIETARY NEURAL ENGINE --- */
 
-window.JarvisEngine = {
+window.NexusAtlasEngine = {
   context: {
     lastIntent: null,
     userMood: "neutral",
@@ -236,7 +236,7 @@ window.JarvisEngine = {
     ) {
       return {
         action: "IDENTITY",
-        reply: `Je suis Jarvis, l'intelligence artificielle de Mon 50cc et Moi. Je suis connecté à votre télémétrie, au réseau communautaire et prêt à vous assister sur la route.`,
+        reply: `Je suis Nexus Atlas, l'intelligence artificielle de Mon 50cc et Moi. Je suis connecté à votre télémétrie, au réseau communautaire et prêt à vous assister sur la route.`,
       };
     } else if (
       this.matchAny(t, [
@@ -267,11 +267,11 @@ window.JarvisEngine = {
 
   executeAction: function (result) {
     // Retour visuel (si disponible dans le DOM)
-    const jarvisFeedback = document.getElementById("jarvis-feedback-text");
-    if (jarvisFeedback) {
-      jarvisFeedback.innerText = result.reply;
-      jarvisFeedback.classList.add("visible");
-      setTimeout(() => jarvisFeedback.classList.remove("visible"), 5000);
+    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
+    if (nexus-atlasFeedback) {
+      nexus-atlasFeedback.innerText = result.reply;
+      nexus-atlasFeedback.classList.add("visible");
+      setTimeout(() => nexus-atlasFeedback.classList.remove("visible"), 5000);
     }
 
     if (result.reply) {
@@ -359,7 +359,7 @@ window.initVoiceAI = function () {
   window.voiceAI.lang = "fr-FR";
 
   window.voiceAI.onstart = function () {
-    const micIcon = document.getElementById("jarvis-mic-icon");
+    const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.color = "#00d2ff"; // Couleur UI Gemini/IA
       micIcon.classList.add("fa-fade");
@@ -372,39 +372,39 @@ window.initVoiceAI = function () {
     const transcript = event.results[current][0].transcript.toLowerCase();
 
     // Feedback utilisateur
-    const jarvisFeedback = document.getElementById("jarvis-feedback-text");
+    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
     if (
-      jarvisFeedback &&
+      nexus-atlasFeedback &&
       !transcript.includes("oracle") &&
       !transcript.includes("système") &&
-      !transcript.includes("jarvis")
+      !transcript.includes("nexus-atlas")
     ) {
-      jarvisFeedback.innerText = "Vous : " + transcript;
-      jarvisFeedback.classList.add("visible");
+      nexus-atlasFeedback.innerText = "Vous : " + transcript;
+      nexus-atlasFeedback.classList.add("visible");
     }
 
     // Si le mot clé de réveil est utilisé
     if (
       transcript.includes("oracle") ||
       transcript.includes("système") ||
-      transcript.includes("jarvis")
+      transcript.includes("nexus-atlas")
     ) {
       // Extraction de la commande après le mot clé pour plus de précision
       let command = transcript;
-      ["oracle", "système", "jarvis"].forEach((kw) => {
+      ["oracle", "système", "nexus-atlas"].forEach((kw) => {
         if (transcript.includes(kw)) {
           command = transcript.split(kw)[1].trim() || transcript;
         }
       });
 
-      // Si la commande est vide après "jarvis"
+      // Si la commande est vide après "nexus-atlas"
       if (command.length < 2) {
-        window.JarvisEngine.speak("À vos ordres, pilote.");
+        window.NexusAtlasEngine.speak("À vos ordres, pilote.");
         return;
       }
 
-      const result = window.JarvisEngine.processQuery(command);
-      window.JarvisEngine.executeAction(result);
+      const result = window.NexusAtlasEngine.processQuery(command);
+      window.NexusAtlasEngine.executeAction(result);
     }
   };
 
@@ -413,7 +413,7 @@ window.initVoiceAI = function () {
       window.voiceAI.permissionDenied = true;
     }
     console.warn("[J.A.R.V.I.S 4.0] Erreur micro : ", event.error);
-    const micIcon = document.getElementById("jarvis-mic-icon");
+    const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.color = "#ff0055";
       micIcon.classList.remove("fa-fade");
@@ -422,7 +422,7 @@ window.initVoiceAI = function () {
   };
 
   window.voiceAI.onend = function () {
-    const micIcon = document.getElementById("jarvis-mic-icon");
+    const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.transform = "scale(1)";
       micIcon.classList.remove("fa-fade");
