@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 🗺ï¸ MODE CONVOI
  * Système de balades en groupe avec partage de position en temps réel via Firebase Firestore.
  * Sécurité : request.auth.uid vérifié côté Firestore Rules, chiffrement E2EE via cloudEncrypt/cloudDecrypt.
@@ -34,7 +34,7 @@ window.ConvoyManager = {
       alert("Connexion Firestore requise.");
       return;
     }
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Vous devez être connecté pour créer un convoi.");
       return;
     }
@@ -76,7 +76,7 @@ window.ConvoyManager = {
       alert("Connexion Firestore requise.");
       return;
     }
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Vous devez être connecté.");
       return;
     }

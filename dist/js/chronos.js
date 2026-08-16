@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CHRONOS GUARD v1.0
  * Door-to-Door Punctuality AI.
  * Calculates commute time including "Gearing up" buffer.
@@ -10,9 +10,9 @@ window.Chronos = {
   nextEvent: null,
 
   syncCalendar: async function () {
-    if (window.session && window.session.isGuest) {
+    if (!window.session) {
       alert(
-        "🔒 La synchronisation Nexus Calendar est réservée aux membres officiels. Rejoignez la communauté pour automatiser vos trajets !",
+        "🔒 La synchronisation Nexus Calendar nécessite d'être connecté.",
       );
       return;
     }

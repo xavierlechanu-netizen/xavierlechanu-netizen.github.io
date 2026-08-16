@@ -1,4 +1,4 @@
-﻿// F11 : MÃƒ‰CANO Ãƒ€ LA DEMANDE (Garages Partenaires Certifiés)
+// F11 : MÃƒ‰CANO Ãƒ€ LA DEMANDE (Garages Partenaires Certifiés)
 // Modèle : Frais d'entrée unique 49,90â‚¬ pour le garage
 // L'accès pilote est entièrement GRATUIT
 // ============================================================
@@ -500,10 +500,9 @@ window.hideVault = function () {
 })();
 
 window.showPredictiveIA = function () {
-  if (window.session && window.session.isGuest) {
-    alert(
-      "L'IA Predictive et les avantages courtier sont reserves aux membres ! Creez un compte pour y acceder.",
-    );
+  if (!window.session) {
+    if (typeof speak === "function") speak("Veuillez vous connecter");
+    alert("Veuillez vous connecter");
     return;
   }
   showPage("ia_predictive");

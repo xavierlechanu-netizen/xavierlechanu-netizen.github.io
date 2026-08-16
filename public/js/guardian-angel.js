@@ -30,10 +30,8 @@ window.GuardianAngel = {
   },
 
   toggle: async function () {
-    if (window.session && window.session.isGuest) {
-      alert(
-        "L'Ange Gardien est réservé aux membres inscrits. Sécurisez vos rides maintenant ! 🛡ï¸",
-      );
+    if (!window.session) {
+      alert("Veuillez vous connecter pour utiliser Guardian Angel.");
       return;
     }
 

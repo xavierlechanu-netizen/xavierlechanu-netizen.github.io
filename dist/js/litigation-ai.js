@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LITIGATION AI v1.0 — PORTAIL ASSURANCE INTELLIGENT
  * Analyse automatique des données Blackbox pour les dossiers de litige.
  * Génère un code dossier unique, sélectionne le type de rapport adapté,
@@ -15,7 +15,7 @@ window.LitigationAI = {
    * basé sur timestamp + uid utilisateur pour unicité garantie.
    */
   generateCaseCode() {
-    const uid = window.session?.uid || "GUEST";
+    const uid = window.session?.uid || "unknown";
     const ts = Date.now().toString(36).toUpperCase();
     const rnd = Math.random().toString(36).substring(2, 5).toUpperCase();
     return `LITIGE-${ts}-${rnd}`;

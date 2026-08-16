@@ -1,4 +1,4 @@
-# Directives de Sécurité (Jarvis) - Projet mon50ccetmoi
+# Directives de Sécurité (Nexus Atlas) - Projet mon50ccetmoi
 
 Lors de la rédaction, de la modification ou de l'audit de code pour ce projet, l'agent doit **strictement** appliquer les principes de sécurité de l'OWASP Top 10 (édition 2021) que l'utilisateur a définis.
 
@@ -40,7 +40,7 @@ Lors de la rédaction, de la modification ou de l'audit de code pour ce projet, 
 - **Écosystème Certifié** : Privilégier les composants (clients, serveurs RV, capteurs biométriques) validés par les laboratoires accrédités FIDO.
 
 ## Principes de Conformité Légale Mondiale (Privacy & RGPD) à appliquer :
-Lors du développement de fonctionnalités gérant des données utilisateurs, l'agent (Jarvis) doit appliquer la politique de **Conformité Globale** (basée sur les documents `conformite_globale_mon50ccetmoi.md`, `aipd.md`, `registre_traitements.md`) :
+Lors du développement de fonctionnalités gérant des données utilisateurs, l'agent (Nexus Atlas) doit appliquer la politique de **Conformité Globale** (basée sur les documents `conformite_globale_mon50ccetmoi.md`, `aipd.md`, `registre_traitements.md`) :
 - **Privacy by Design (Baseline Européenne)** : Le standard RGPD s'applique mondialement. Les données sensibles (Rythme cardiaque, Biométrie FIDO2) doivent toujours être traitées en **100% local (Edge Computing)** et chiffrées avec AES-256. Ne jamais téléverser de données de santé sur les serveurs.
 - **États-Unis (CCPA / CPRA)** : L'application logicielle est distribuée aux États-Unis. Il est impératif de respecter le principe absolu *"Do Not Sell My Personal Information"*. **Cependant, les modules matériels (Boîte noire / OBD-II) ne sont pas distribués aux US**. Toute fonctionnalité liée à la télémétrie de la boîte noire doit être considérée comme indisponible pour les résidents américains.
 - **Chine (PIPL / DSL)** : Appliquer une minimisation extrême des données. Les données de trajets et sinistres sont catégorisées "Civiles" (aucune menace pour la sécurité nationale).

@@ -3711,7 +3711,7 @@ window.publishHazardCloud = async function (hazard) {
 // --- PARTAGE DE POSITION (COMMUNAUTÉ LIVE) ---
 
 window.publishUserLocation = async function (lat, lng, status = "Riding") {
-  if (!db || !window.session || window.session.isGuest) return;
+  if (!db || !window.session) return;
   try {
     const payload = {
       lat,
@@ -3819,7 +3819,7 @@ window.reportStationAbuse = async function (
   stationInfo,
   photoData = null,
 ) {
-  if (!db || !window.session || window.session.isGuest) {
+  if (!db || !window.session) {
     alert("Vous devez être membre certifié pour signaler un abus.");
     return;
   }
@@ -3953,7 +3953,7 @@ window.getBlacklist = async function () {
 // --- SYSTÈME ÉVALUATION GARAGES (COMMUNAUTÉ) ---
 
 window.evaluateGarage = async function (placeId, name, score) {
-  if (!db || !window.session || window.session.isGuest) {
+  if (!db || !window.session) {
     alert("Vous devez être membre pour évaluer un garage.");
     return;
   }
@@ -4111,7 +4111,7 @@ async function applyAbuseSanction(userId) {
   });
 }
 window.isUserBanned = function () {
-  if (!window.session || window.session.isGuest) return false;
+  if (!window.session) return false;
   const bannedUntil = window.session.bannedUntil || 0;
   return Date.now() < bannedUntil;
 };
@@ -4380,7 +4380,7 @@ let isTelemetryActive = false;
 // --- INITIALIZATION ---
 
 function checkTrialExpiration() {
-  if (!window.session || window.session.isGuest) return;
+  if (!window.session) return;
 
   // On récupère les infos calculées par auth.js
   if (window.session && window.session.isTrialExpired) {
@@ -4820,7 +4820,7 @@ async function checkLegalConsent() {
   if (hasLocationConsent()) {
     // Déclenchement du message de bienvenue pour les utilisateurs récurrents
     const name =
-      window.session && !window.session.isGuest ? window.session.username : "";
+      window.session ? window.session.username : "";
     const welcomeMsg = name
       ? `Content de vous revoir, ${name}. Systèmes opérationnels.`
       : "Systèmes opérationnels. Bonne route sur mon 50cc et moi.";
@@ -4916,7 +4916,7 @@ async function checkLegalConsent() {
 
     // Déclenchement du message de bienvenue (Audio débloqué par le clic)
     const name =
-      window.session && !window.session.isGuest ? window.session.username : "";
+      window.session ? window.session.username : "";
     const welcomeMsg = name
       ? `Content de vous revoir, ${name}. Systèmes opérationnels.`
       : "Systèmes opérationnels. Bonne route sur mon 50cc et moi.";
@@ -5327,7 +5327,7 @@ function updatePosition(position) {
   }
 
   // --- GUEST MODE LOCKS (Initial logic check) ---
-  if (window.session && window.session.isGuest) {
+  if (!window.session) {
     document.getElementById("menu-insurance")?.classList.add("locked-feature");
     document.getElementById("menu-mechanic")?.classList.add("locked-feature");
     document.getElementById("menu-garage")?.classList.add("locked-feature");
@@ -6430,7 +6430,7 @@ async function calculateRouteSansAutoroute(start, end) {
           }
         }
 
-        // JARVIS : Annonce vocale de l'instruction de guidage
+        // NEXUS ATLAS : Annonce vocale de l'instruction de guidage
         setTimeout(() => {
           if (typeof speak === "function") {
             speak(
@@ -6959,7 +6959,7 @@ async function fetchFuelPricesUsingGovAPI(lat, lng, config, btn, oldHtml) {
             : "";
 
         // Bouton de signalement pour les membres
-        const isGuest = !window.session || window.session.isGuest;
+        const isGuest = !window.session;
         const reportBtn = isGuest
           ? ""
           : `
@@ -7045,7 +7045,7 @@ async function fetchGaragesUsingPlacesAPI(lat, lng, config, btn, oldHtml) {
         });
 
         // Étoiles de notation
-        const isGuest = !window.session || window.session.isGuest;
+        const isGuest = !window.session;
         const safePlaceName = (place.name || "")
           .replace(/\\/g, "\\\\")
           .replace(/'/g, "\\'")
@@ -7765,7 +7765,7 @@ function checkFerryProximity(lat, lng) {
 }
 
 window.addCategorizedMaint = function (category) {
-  if (window.session && window.session.isGuest) {
+  if (!window.session) {
     alert("🔒 Le Carnet Certifié est réservé aux membres.");
     return;
   }
@@ -7936,7 +7936,7 @@ window.payGarageEntryFee = async function () {
           amount_cents: 5000,
           currency: "EUR",
           case_id: caseId,
-          user_id: window.session?.uid || "guest",
+          user_id: window.session?.uid || "unknown",
           report_type: "GARAGE_FEE",
         }),
       });
@@ -8123,7 +8123,7 @@ window.submitArbitre = function () {
 };
 
 function generateRideCard() {
-  if (window.session.isGuest) {
+  if (!window.session) {
     alert(
       "🔒 La Carte de Score est réservée aux membres. Inscrivez-vous pour partager vos exploits !",
     );
@@ -8820,8 +8820,9 @@ window.showPage = function (page) {
             <button class="btn-insurance" onclick="submitMecaV3()" style="margin-top:15px; width:100%;">Scanner mon 50cc</button>
             <div id="meca-response" style="margin-top:20px; font-size:0.9rem; line-height:1.4;"></div>`;
   } else if (page === "arbitre") {
-    if (window.session && window.session.isGuest) {
-      alert("Accès réservé aux membres inscrits ! ðŸ›µ");
+    if (!window.session) {
+      if (typeof speak === "function") speak("Veuillez vous connecter");
+      alert("Veuillez vous connecter");
       return;
     }
     if (typeof content !== "undefined")
@@ -9795,7 +9796,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 /* --- nexus-atlas-voice.js --- */
-/* --- J.A.R.V.I.S. 4.0 PROPRIETARY NEURAL ENGINE --- */
+/* --- Nexus Atlas 4.0 PROPRIETARY NEURAL ENGINE --- */
 
 window.NexusAtlasEngine = {
   context: {
@@ -10134,7 +10135,7 @@ window.NexusAtlasEngine = {
         break;
       case "DRUGS_WARNING":
         console.warn(
-          "[J.A.R.V.I.S 4.0] Prévention stupéfiants déclenchée.",
+          "[Nexus Atlas 4.0] Prévention stupéfiants déclenchée.",
         );
         break;
     }
@@ -10209,7 +10210,7 @@ window.initVoiceAI = function () {
     if (event.error === 'not-allowed' || event.error === 'service-not-allowed' || event.error === 'audio-capture') {
       window.voiceAI.permissionDenied = true;
     }
-    console.warn("[J.A.R.V.I.S 4.0] Erreur micro : ", event.error);
+    console.warn("[Nexus Atlas 4.0] Erreur micro : ", event.error);
     const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.color = "#ff0055";
@@ -11284,7 +11285,7 @@ window.LitigationAI = {
    * basé sur timestamp + uid utilisateur pour unicité garantie.
    */
   generateCaseCode() {
-    const uid = window.session?.uid || "GUEST";
+    const uid = window.session?.uid || "unknown";
     const ts = Date.now().toString(36).toUpperCase();
     const rnd = Math.random().toString(36).substring(2, 5).toUpperCase();
     return `LITIGE-${ts}-${rnd}`;
@@ -11902,7 +11903,7 @@ window.InsurancePortal = {
         amount_cents: CONFIG?.REVOLUT?.AMOUNT_CENTS || 4999,
         currency: CONFIG?.REVOLUT?.CURRENCY || "EUR",
         case_id: caseId,
-        user_id: window.session?.uid || "guest",
+        user_id: window.session?.uid || "unknown",
         report_type: reportType,
       }),
     });
@@ -12380,10 +12381,8 @@ window.MecaWizard = {
 
   // 2. Analyse Acoustique (Microphone Réel)
   startAcousticAnalysis: async function () {
-    if (window.session && window.session.isGuest) {
-      alert(
-        "🔒 L'IA Acoustique est une exclusivité Membre. Inscrivez-vous pour diagnostiquer votre moteur !",
-      );
+    if (!window.session) {
+      alert("Veuillez vous connecter pour utiliser Meca Wizard.");
       return;
     }
 
@@ -15394,7 +15393,7 @@ window.ConvoyManager = {
       alert("Connexion Firestore requise.");
       return;
     }
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Vous devez être connecté pour créer un convoi.");
       return;
     }
@@ -15436,7 +15435,7 @@ window.ConvoyManager = {
       alert("Connexion Firestore requise.");
       return;
     }
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Vous devez être connecté.");
       return;
     }
@@ -15943,7 +15942,7 @@ window.ExchangeMarket = {
       alert("Connexion Firestore requise.");
       return;
     }
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Vous devez être connecté pour publier une annonce.");
       return;
     }
@@ -16039,7 +16038,7 @@ window.ExchangeMarket = {
    * Réservation / Achat direct d'une annonce en Pts BVC ou demande de réservation.
    */
   reserveListing: async function (listingId, price, priceType) {
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Veuillez vous connecter pour effectuer un échange.");
       return;
     }
@@ -16148,7 +16147,7 @@ window.ExchangeMarket = {
    * Contacte le vendeur via la messagerie Firestore.
    */
   contactSeller: async function (listingId, sellerName, customMsg) {
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Connectez-vous d'abord pour envoyer un message.");
       return;
     }

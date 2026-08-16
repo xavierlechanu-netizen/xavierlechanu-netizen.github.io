@@ -260,7 +260,7 @@ let isTelemetryActive = false;
 // --- INITIALIZATION ---
 
 function checkTrialExpiration() {
-  if (!window.session || window.session.isGuest) return;
+  if (!window.session) return;
 
   // On récupère les infos calculées par auth.js
   if (window.session && window.session.isTrialExpired) {
@@ -700,7 +700,7 @@ async function checkLegalConsent() {
   if (hasLocationConsent()) {
     // Déclenchement du message de bienvenue pour les utilisateurs récurrents
     const name =
-      window.session && !window.session.isGuest ? window.session.username : "";
+      window.session ? window.session.username : "";
     const welcomeMsg = name
       ? `Content de vous revoir, ${name}. Systèmes opérationnels.`
       : "Systèmes opérationnels. Bonne route sur mon 50cc et moi.";
@@ -796,7 +796,7 @@ async function checkLegalConsent() {
 
     // Déclenchement du message de bienvenue (Audio débloqué par le clic)
     const name =
-      window.session && !window.session.isGuest ? window.session.username : "";
+      window.session ? window.session.username : "";
     const welcomeMsg = name
       ? `Content de vous revoir, ${name}. Systèmes opérationnels.`
       : "Systèmes opérationnels. Bonne route sur mon 50cc et moi.";
@@ -1207,7 +1207,7 @@ function updatePosition(position) {
   }
 
   // --- GUEST MODE LOCKS (Initial logic check) ---
-  if (window.session && window.session.isGuest) {
+  if (!window.session) {
     document.getElementById("menu-insurance")?.classList.add("locked-feature");
     document.getElementById("menu-mechanic")?.classList.add("locked-feature");
     document.getElementById("menu-garage")?.classList.add("locked-feature");

@@ -1,11 +1,11 @@
-﻿/**
+/**
  * DIGITAL COMPLIANCE CERTIFICATE v1.0
  * Official report generator for ANTS and Insurers.
  */
 
 window.Certificate = {
   generate: function () {
-    if (window.session.isGuest) {
+    if (!window.session) {
       alert("🔒 Le Certificat Officiel est réservé aux membres inscrits.");
       return;
     }
@@ -252,7 +252,7 @@ window.Certificate = {
           amount_cents: amountCents,
           currency: "EUR",
           case_id: certId,
-          user_id: window.session?.uid || "guest",
+          user_id: window.session?.uid || "unknown",
           report_type: "BATTERY_CERT_" + tier.toUpperCase(),
         }),
       });

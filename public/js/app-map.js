@@ -128,7 +128,7 @@ async function calculateRouteSansAutoroute(start, end) {
           }
         }
 
-        // JARVIS : Annonce vocale de l'instruction de guidage
+        // NEXUS ATLAS : Annonce vocale de l'instruction de guidage
         setTimeout(() => {
           if (typeof speak === "function") {
             speak(
@@ -657,7 +657,7 @@ async function fetchFuelPricesUsingGovAPI(lat, lng, config, btn, oldHtml) {
             : "";
 
         // Bouton de signalement pour les membres
-        const isGuest = !window.session || window.session.isGuest;
+        const isGuest = !window.session;
         const reportBtn = isGuest
           ? ""
           : `
@@ -743,7 +743,7 @@ async function fetchGaragesUsingPlacesAPI(lat, lng, config, btn, oldHtml) {
         });
 
         // Étoiles de notation
-        const isGuest = !window.session || window.session.isGuest;
+        const isGuest = !window.session;
         const safePlaceName = (place.name || "")
           .replace(/\\/g, "\\\\")
           .replace(/'/g, "\\'")

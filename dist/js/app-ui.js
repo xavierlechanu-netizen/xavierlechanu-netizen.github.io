@@ -278,8 +278,9 @@ window.showPage = function (page) {
             <button class="btn-insurance" onclick="submitMecaV3()" style="margin-top:15px; width:100%;">Scanner mon 50cc</button>
             <div id="meca-response" style="margin-top:20px; font-size:0.9rem; line-height:1.4;"></div>`;
   } else if (page === "arbitre") {
-    if (window.session && window.session.isGuest) {
-      alert("Accès réservé aux membres inscrits ! ðŸ›µ");
+    if (!window.session) {
+      if (typeof speak === "function") speak("Veuillez vous connecter");
+      alert("Veuillez vous connecter");
       return;
     }
     if (typeof content !== "undefined")

@@ -461,7 +461,7 @@ function checkFerryProximity(lat, lng) {
 }
 
 window.addCategorizedMaint = function (category) {
-  if (window.session && window.session.isGuest) {
+  if (!window.session) {
     alert("🔒 Le Carnet Certifié est réservé aux membres.");
     return;
   }
@@ -632,7 +632,7 @@ window.payGarageEntryFee = async function () {
           amount_cents: 5000,
           currency: "EUR",
           case_id: caseId,
-          user_id: window.session?.uid || "guest",
+          user_id: window.session?.uid || "unknown",
           report_type: "GARAGE_FEE",
         }),
       });
@@ -819,7 +819,7 @@ window.submitArbitre = function () {
 };
 
 function generateRideCard() {
-  if (window.session.isGuest) {
+  if (!window.session) {
     alert(
       "🔒 La Carte de Score est réservée aux membres. Inscrivez-vous pour partager vos exploits !",
     );

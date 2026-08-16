@@ -18,10 +18,8 @@ window.MecaWizard = {
 
   // 2. Analyse Acoustique (Microphone Réel)
   startAcousticAnalysis: async function () {
-    if (window.session && window.session.isGuest) {
-      alert(
-        "🔒 L'IA Acoustique est une exclusivité Membre. Inscrivez-vous pour diagnostiquer votre moteur !",
-      );
+    if (!window.session) {
+      alert("Veuillez vous connecter pour utiliser Meca Wizard.");
       return;
     }
 

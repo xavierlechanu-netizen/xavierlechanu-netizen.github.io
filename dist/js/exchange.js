@@ -216,7 +216,7 @@ window.ExchangeMarket = {
       alert("Connexion Firestore requise.");
       return;
     }
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Vous devez être connecté pour publier une annonce.");
       return;
     }
@@ -312,7 +312,7 @@ window.ExchangeMarket = {
    * Réservation / Achat direct d'une annonce en Pts BVC ou demande de réservation.
    */
   reserveListing: async function (listingId, price, priceType) {
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Veuillez vous connecter pour effectuer un échange.");
       return;
     }
@@ -421,7 +421,7 @@ window.ExchangeMarket = {
    * Contacte le vendeur via la messagerie Firestore.
    */
   contactSeller: async function (listingId, sellerName, customMsg) {
-    if (!window.session || window.session.isGuest) {
+    if (!window.session) {
       alert("Connectez-vous d'abord pour envoyer un message.");
       return;
     }

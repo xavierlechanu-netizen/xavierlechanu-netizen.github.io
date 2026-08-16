@@ -1,4 +1,4 @@
-﻿/* --- PREMIUM UX CORE LOGIC --- */
+/* --- PREMIUM UX CORE LOGIC --- */
 
 // 1. Gamification XP System
 window.updateXP = function (distanceAdded) {
@@ -44,7 +44,7 @@ window.updateWeatherUI = function (isRaining) {
 
 // 4. Cloud Sync Stub (Firebase Integration)
 window.syncUserToCloud = function () {
-  if (typeof db !== "undefined" && window.session && !window.session.isGuest) {
+  if (typeof db !== "undefined" && window.session) {
     try {
       db.collection("users")
         .doc(window.session.uid)

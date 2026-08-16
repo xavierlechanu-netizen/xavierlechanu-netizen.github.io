@@ -1,4 +1,4 @@
-/* --- J.A.R.V.I.S. 4.0 PROPRIETARY NEURAL ENGINE --- */
+/* --- Nexus Atlas 4.0 PROPRIETARY NEURAL ENGINE --- */
 
 window.NexusAtlasEngine = {
   context: {
@@ -337,7 +337,7 @@ window.NexusAtlasEngine = {
         break;
       case "DRUGS_WARNING":
         console.warn(
-          "[J.A.R.V.I.S 4.0] Prévention stupéfiants déclenchée.",
+          "[Nexus Atlas 4.0] Prévention stupéfiants déclenchée.",
         );
         break;
     }
@@ -412,7 +412,7 @@ window.initVoiceAI = function () {
     if (event.error === 'not-allowed' || event.error === 'service-not-allowed' || event.error === 'audio-capture') {
       window.voiceAI.permissionDenied = true;
     }
-    console.warn("[J.A.R.V.I.S 4.0] Erreur micro : ", event.error);
+    console.warn("[Nexus Atlas 4.0] Erreur micro : ", event.error);
     const micIcon = document.getElementById("nexus-atlas-mic-icon");
     if (micIcon) {
       micIcon.style.color = "#ff0055";

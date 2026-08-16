@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DATABASE MANAGER - mon50ccetmoi
  * Gestion de la synchronisation en temps réel via Firebase Firestore.
  */
@@ -121,7 +121,7 @@ window.publishHazardCloud = async function (hazard) {
 // --- PARTAGE DE POSITION (COMMUNAUTÉ LIVE) ---
 
 window.publishUserLocation = async function (lat, lng, status = "Riding") {
-  if (!db || !window.session || window.session.isGuest) return;
+  if (!db || !window.session) return;
   try {
     const payload = {
       lat,
@@ -229,7 +229,7 @@ window.reportStationAbuse = async function (
   stationInfo,
   photoData = null,
 ) {
-  if (!db || !window.session || window.session.isGuest) {
+  if (!db || !window.session) {
     alert("Vous devez être membre certifié pour signaler un abus.");
     return;
   }
@@ -363,7 +363,7 @@ window.getBlacklist = async function () {
 // --- SYSTÈME ÉVALUATION GARAGES (COMMUNAUTÉ) ---
 
 window.evaluateGarage = async function (placeId, name, score) {
-  if (!db || !window.session || window.session.isGuest) {
+  if (!db || !window.session) {
     alert("Vous devez être membre pour évaluer un garage.");
     return;
   }
@@ -521,7 +521,7 @@ async function applyAbuseSanction(userId) {
   });
 }
 window.isUserBanned = function () {
-  if (!window.session || window.session.isGuest) return false;
+  if (!window.session) return false;
   const bannedUntil = window.session.bannedUntil || 0;
   return Date.now() < bannedUntil;
 };

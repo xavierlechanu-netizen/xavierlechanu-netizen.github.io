@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ANTS DIGITAL WALLET v2.0 - SECURE QUANTUM EDITION
  * Encrypted storage for official titles and safety passport.
  * Powered by Sentinel Security Shield.
@@ -15,7 +15,7 @@ window.Wallet = {
       Math.random().toString(36).substring(2);
     if (!localStorage.getItem("ants_device_id"))
       localStorage.setItem("ants_device_id", deviceId);
-    return "QUANTUM_" + deviceId + "_" + (window.session.uid || "GUEST");
+    return "QUANTUM_" + deviceId + "_" + (window.session?.uid || "UNKNOWN");
   },
 
   init: function () {
@@ -54,14 +54,8 @@ window.Wallet = {
   },
 
   saveDoc: function (type, data) {
-    if (window.session.isGuest) {
-      if (typeof speak === "function")
-        speak(
-          "Accès refusé. Le Coffre-Fort certifié est réservé aux membres.",
-        );
-      alert(
-        "🔒 Le Coffre-Fort certifié est réservé aux membres inscrits.",
-      );
+    if (!window.session) {
+      alert("🔒 Connexion requise pour créer un Wallet.");
       return;
     }
 

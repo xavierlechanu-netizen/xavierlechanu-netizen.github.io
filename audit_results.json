@@ -868,11 +868,11 @@
     "message": "Variable globale \"window.startPremiumNavigation\" définie dans 4 fichiers: app-map.js, beyond-maps.js, premium.js, vehicle-config.js"
   },
   {
-    "file": "app-map.js & jarvis-voice.js & oracle-voice.js",
+    "file": "app-map.js & nexus atlas-voice.js & oracle-voice.js",
     "line": 0,
     "severity": "MEDIUM",
     "category": "COLLISION",
-    "message": "Variable globale \"window.searchDestination\" définie dans 3 fichiers: app-map.js, jarvis-voice.js, oracle-voice.js"
+    "message": "Variable globale \"window.searchDestination\" définie dans 3 fichiers: app-map.js, nexus atlas-voice.js, oracle-voice.js"
   },
   {
     "file": "app-map.js & neural-hud.js & oracle-voice.js",
@@ -896,11 +896,11 @@
     "message": "Variable globale \"window.logout\" définie dans 2 fichiers: app-ui.js, auth.js"
   },
   {
-    "file": "beyond-maps.js & jarvis-voice.js",
+    "file": "beyond-maps.js & nexus atlas-voice.js",
     "line": 0,
     "severity": "MEDIUM",
     "category": "COLLISION",
-    "message": "Variable globale \"window.toggleSensationMode\" définie dans 2 fichiers: beyond-maps.js, jarvis-voice.js"
+    "message": "Variable globale \"window.toggleSensationMode\" définie dans 2 fichiers: beyond-maps.js, nexus atlas-voice.js"
   },
   {
     "file": "blackbox.js & guardian-angel.js",
@@ -910,11 +910,11 @@
     "message": "Variable globale \"window.triggerEmergencySOS\" définie dans 2 fichiers: blackbox.js, guardian-angel.js"
   },
   {
-    "file": "community-gas.js & jarvis-voice.js",
+    "file": "community-gas.js & nexus atlas-voice.js",
     "line": 0,
     "severity": "MEDIUM",
     "category": "COLLISION",
-    "message": "Variable globale \"window.CommunityGas\" définie dans 2 fichiers: community-gas.js, jarvis-voice.js"
+    "message": "Variable globale \"window.CommunityGas\" définie dans 2 fichiers: community-gas.js, nexus atlas-voice.js"
   },
   {
     "file": "community-gas.js & pocket-lawyer.js",
@@ -952,18 +952,18 @@
     "message": "Variable globale \"window.LitigationAI\" définie dans 2 fichiers: insurance-portal.js, litigation-ai.js"
   },
   {
-    "file": "jarvis-voice.js & social-map.js",
+    "file": "nexus atlas-voice.js & social-map.js",
     "line": 0,
     "severity": "MEDIUM",
     "category": "COLLISION",
-    "message": "Variable globale \"window.toggleSocialRadar\" définie dans 2 fichiers: jarvis-voice.js, social-map.js"
+    "message": "Variable globale \"window.toggleSocialRadar\" définie dans 2 fichiers: nexus atlas-voice.js, social-map.js"
   },
   {
-    "file": "jarvis-voice.js & rgpd-cnil.js",
+    "file": "nexus atlas-voice.js & rgpd-cnil.js",
     "line": 0,
     "severity": "MEDIUM",
     "category": "COLLISION",
-    "message": "Variable globale \"window.initVoiceAI\" définie dans 2 fichiers: jarvis-voice.js, rgpd-cnil.js"
+    "message": "Variable globale \"window.initVoiceAI\" définie dans 2 fichiers: nexus atlas-voice.js, rgpd-cnil.js"
   },
   {
     "file": "meca-wizard.js & pocket-lawyer.js & referral.js & safe-rider.js & silicon-valley.js & web4-mining.js",
@@ -1180,7 +1180,7 @@
     "line": 3245,
     "severity": "CRITICAL",
     "category": "BROKEN_REF",
-    "message": "Script manquant: js/jarvis-voice.js"
+    "message": "Script manquant: js/nexus atlas-voice.js"
   },
   {
     "file": "app.html",

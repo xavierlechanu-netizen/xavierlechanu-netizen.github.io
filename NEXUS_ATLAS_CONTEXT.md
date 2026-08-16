@@ -1,6 +1,6 @@
-# 🧠 JARVIS CONTEXT - mon50ccetmoi
+# 🧠 NEXUS ATLAS CONTEXT - mon50ccetmoi
 
-**ATTENTION À TOUTE IA (JARVIS OU AUTRE) LISANT CE FICHIER :**  
+**ATTENTION À TOUTE IA (NEXUS ATLAS OU AUTRE) LISANT CE FICHIER :**  
 Ce document contient l'architecture, les règles de sécurité et le contexte vital du projet `mon50ccetmoi`. Il a été conçu pour te "blinder" et t'empêcher de faire des erreurs de structure ou de sécurité. LIS-LE ATTENTIVEMENT AVANT TOUTE MODIFICATION.
 
 ---

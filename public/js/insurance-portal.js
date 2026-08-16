@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PORTAIL ASSURANCE mon50ccetmoi
  * Paiements via Revolut Merchant API (SDK RevolutCheckout embarqué)
  * Flow : client ←’ Firebase Function (création ordre) ←’ Revolut ←’ webhook ←’ Firestore
@@ -161,7 +161,7 @@ window.InsurancePortal = {
         amount_cents: CONFIG?.REVOLUT?.AMOUNT_CENTS || 4999,
         currency: CONFIG?.REVOLUT?.CURRENCY || "EUR",
         case_id: caseId,
-        user_id: window.session?.uid || "guest",
+        user_id: window.session?.uid || "unknown",
         report_type: reportType,
       }),
     });
