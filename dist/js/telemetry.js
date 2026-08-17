@@ -1,5 +1,5 @@
 ﻿/**
- * ADMINISTRATIVE TELEMETRY CONSOLE v100.00-GOLD
+ * ADMINISTRATIVE TELEMETRY CONSOLE v106.00.00
  * Real-time field diagnostics for mon50ccetmoi production release.
  */
 
@@ -36,7 +36,7 @@ window.Telemetry = {
     hud.className = "telemetry-glass";
     hud.innerHTML = `
             <div class="telemetry-header">
-                <span>SYSTEM_TELEMETRY v100.00-GOLD</span>
+                <span>SYSTEM_TELEMETRY v106.00.00</span>
                 <button onclick="window.Telemetry.toggle()">[X]</button>
             </div>
             <div id="telemetry-stats" class="telemetry-stats">

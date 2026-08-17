@@ -5706,7 +5706,7 @@ function vibrate(ms) {
   }
 }
 
-// --- REGIONAL & VOICE ENGINE (ORACLE v100.00-GOLD) ---
+// --- REGIONAL & VOICE ENGINE (ORACLE v106.00.00) ---
 window.OracleEngine = {
   gender: localStorage.getItem("oracle_gender") || "female",
   currentRegion: "standard",
@@ -8951,7 +8951,7 @@ window.showPage = function (page) {
                 <div class="glassmorphism" style="padding:20px; border:1px solid var(--accent); margin-bottom:30px; text-align:left;">
                     <p style="font-size:0.9rem; font-weight:bold; text-align:center;">SIGNATURE CORPORATE</p>
                     <p style="font-size:0.75rem; color:#ddd; margin-top:10px;">Cette application est la propriété exclusive de<br><strong style="color:var(--accent);">CHEZBIGBOO</strong>.</p>
-                    <p style="font-size:0.65rem; color:#888; margin-top:15px;">Protégé par les lois internationales sur la propriété intellectuelle. Télémétrie certifiée conforme aux standards ANTS v100.00-GOLD.</p>
+                    <p style="font-size:0.65rem; color:#888; margin-top:15px;">Protégé par les lois internationales sur la propriété intellectuelle. Télémétrie certifiée conforme aux standards ANTS v106.00.00.</p>
                 </div>
                 
                 <button onclick="document.getElementById('screen-overlay').classList.add('hidden')" class="btn-cancel" style="background:#333; color:white;">FERMER</button>
@@ -9050,7 +9050,7 @@ window.showPage = function (page) {
                 <p><strong>Données GPS :</strong> Vos coordonnées sont traitées localement pour la navigation et la détection de chute.</p>
                 <p><strong>Partage :</strong> Les signalements de dangers sont partagés de manière anonyme avec la communauté.</p>
                 <p><strong>Stockage :</strong> Vos préférences sont enregistrées dans votre navigateur (LocalStorage).</p>
-                <p><strong>Version :</strong> v100.00-GOLD-PRO Build 2026</p>
+                <p><strong>Version :</strong> v106.00.00-PRO Build 2026</p>
                 <p><strong>Signature :</strong> mon50ccetmoi Engineering US</p>
             </div>`;
   } else if (page === "pro-tips") {
@@ -9459,7 +9459,7 @@ window.logout = function () {
 window.updateTicker = function () {
   const t = document.getElementById("ticker-text");
   if (t)
-    t.innerHTML = `Bienvenue sur mon50ccetmoi v100.00-GOLD SILVER EDITION ! Prudence sur la route. 🛵💨`;
+    t.innerHTML = `Bienvenue sur mon50ccetmoi v106.00.00 SILVER EDITION ! Prudence sur la route. 🛵💨`;
 };
 updateTicker();
 setInterval(updateTicker, 60000);
@@ -10065,11 +10065,11 @@ window.NexusAtlasEngine = {
 
   executeAction: function (result) {
     // Retour visuel (si disponible dans le DOM)
-    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
-    if (nexus-atlasFeedback) {
-      nexus-atlasFeedback.innerText = result.reply;
-      nexus-atlasFeedback.classList.add("visible");
-      setTimeout(() => nexus-atlasFeedback.classList.remove("visible"), 5000);
+    const nexusAtlasFeedback = document.getElementById("nexus-atlas-feedback-text");
+    if (nexusAtlasFeedback) {
+      nexusAtlasFeedback.innerText = result.reply;
+      nexusAtlasFeedback.classList.add("visible");
+      setTimeout(() => nexusAtlasFeedback.classList.remove("visible"), 5000);
     }
 
     if (result.reply) {
@@ -10170,15 +10170,15 @@ window.initVoiceAI = function () {
     const transcript = event.results[current][0].transcript.toLowerCase();
 
     // Feedback utilisateur
-    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
+    const nexusAtlasFeedback = document.getElementById("nexus-atlas-feedback-text");
     if (
-      nexus-atlasFeedback &&
+      nexusAtlasFeedback &&
       !transcript.includes("oracle") &&
       !transcript.includes("système") &&
       !transcript.includes("nexus-atlas")
     ) {
-      nexus-atlasFeedback.innerText = "Vous : " + transcript;
-      nexus-atlasFeedback.classList.add("visible");
+      nexusAtlasFeedback.innerText = "Vous : " + transcript;
+      nexusAtlasFeedback.classList.add("visible");
     }
 
     // Si le mot clé de réveil est utilisé
@@ -11067,7 +11067,7 @@ window.acceptGlobalPrivacy = function () {
     ccpa_do_not_sell: ccpaChecked,
     pipl_crossborder: piplChecked,
     timestamp: new Date().toISOString(),
-    version: "v100.00-GOLD",
+    version: "v106.00.00",
   };
 
   localStorage.setItem("global_privacy_consent", "true");
@@ -11108,7 +11108,7 @@ window.refuseGlobalPrivacy = function () {
     pipl_crossborder: false,
     refused: true,
     timestamp: new Date().toISOString(),
-    version: "v100.00-GOLD",
+    version: "v106.00.00",
   };
 
   localStorage.setItem("global_privacy_consent", "refused");
@@ -12751,7 +12751,7 @@ window.MecaWizard = {
 /* --- obd-bluetooth.js --- */
 /**
  * mon 50cc et moi - Module OBD-II Bluetooth
- * v100.00-GOLD
+ * v106.00.00
  * Utilise l'API Web Bluetooth pour se connecter aux boîtiers ELM327
  */
 
@@ -17297,7 +17297,7 @@ window.PocketLawyer = {
             <i class="fa-solid fa-scale-balanced fa-beat-fade" style="font-size: 3rem; color: #cca300; filter: drop-shadow(0 0 10px #cca300); margin-bottom: 5px;"></i>
             <h1 style="font-size: 1.5rem; margin: 0; text-transform: uppercase; color: #cca300;">Avocat de Poche</h1>
             <div style="background: rgba(0,210,255,0.1); border: 1px solid #00d2ff; color: #00d2ff; font-size: 0.7rem; padding: 3px 10px; border-radius: 10px; margin-top: 5px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; display: inline-block;"><i class="fa-solid fa-microchip"></i> Propulsé par Nexus Atlas</div>
-            <p style="color: #777; font-size: 0.8rem; margin-bottom: 15px; text-align: center; max-width: 80%; line-height: 1.2;">Avertissement (AI Act) : Aide indicative générée par IA. Ne remplace pas un conseil juridique. <strong>Soumis à contrôle humain.</strong></p>
+            <p style="color: #777; font-size: 0.8rem; margin-bottom: 15px; text-align: center; width: 90%; max-width: 400px; white-space: normal; word-wrap: break-word; line-height: 1.3;">Avertissement (AI Act) : Aide indicative générée par IA. Ne remplace pas un conseil juridique. <strong>Soumis à contrôle humain.</strong></p>
             
             <div id="lawyer-chat-box" style="flex: 1; width: 90%; max-width: 500px; background: rgba(0,0,0,0.5); border-radius: 15px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; scroll-behavior: smooth;">
                 <div style="background: rgba(204,163,0,0.2); padding: 10px 15px; border-radius: 15px; align-self: flex-start; max-width: 85%; border-left: 3px solid #cca300; line-height: 1.4;">
@@ -17880,4 +17880,267 @@ window.NexusAtlasChat = {
         if (el) el.remove();
     }
 };
+
+
+/* --- blackbox-ble.js --- */
+/**
+ * ============================================================================
+ * blackbox-ble.js — Client Web Bluetooth API pour la Boîte Noire 50cc
+ * ============================================================================
+ * Connecte l'application web (PWA) au hardware ESP32-C3 via BLE.
+ * 
+ * UUIDs (Doivent correspondre à ble_comm.h du firmware) :
+ *   - Service Télémétrie : 0x0001
+ *   - Service Diagnostic : 0x0002
+ * 
+ * @note L'API Web Bluetooth nécessite HTTPS et un geste utilisateur (clic).
+ * ============================================================================
+ */
+
+class BlackBoxBLE {
+  constructor() {
+    this.device = null;
+    this.server = null;
+    this.telemetryService = null;
+    this.diagnosticService = null;
+
+    // UUIDs de base (GATT 16-bit convertis par WebBLE en UUIDs standard si ce ne sont pas des standards SIG)
+    // Ici on utilise le base UUID complet défini dans le firmware
+    this.baseUuidPrefix = "50cc0000-";
+    this.baseUuidSuffix = "-4d6f-6e35-306363657431";
+
+    this.SVC_TELEMETRY = this.buildUuid("0001");
+    this.SVC_DIAGNOSTIC = this.buildUuid("0002");
+    
+    // Télémétrie CHRs
+    this.CHR_FRAME_COUNT = this.buildUuid("0101");
+    this.CHR_FRAME_DATA  = this.buildUuid("0102");
+    this.CHR_EXPORT_CMD  = this.buildUuid("0103");
+
+    // Diagnostic CHRs
+    this.CHR_BATTERY      = this.buildUuid("0201");
+    this.CHR_TAMPER_STATE = this.buildUuid("0202");
+    
+    this.isConnected = false;
+    this.onConnectionChange = null; // Callback UI
+    this.onTelemetryData = null;    // Callback Data
+    this.onDiagnosticUpdate = null; // Callback UI
+    
+    // Batching logic
+    this.telemetryBuffer = [];
+    this.MAX_BATCH_SIZE = 50;
+    this.batchTimeout = null;
+    this.BATCH_TIMEOUT_MS = 5000;
+  }
+
+  buildUuid(shortHex) {
+    return `${this.baseUuidPrefix}${shortHex}${this.baseUuidSuffix}`;
+  }
+
+  /**
+   * Ouvre la popup native du navigateur pour scanner et connecter l'appareil.
+   */
+  async connect() {
+    if (!navigator.bluetooth) {
+      alert("Erreur : L'API Web Bluetooth n'est pas supportée par votre navigateur (essayez Chrome ou Edge sur PC/Android).");
+      return false;
+    }
+
+    try {
+      console.log("[BLE] Demande d'appareil Bluetooth...");
+      this.device = await navigator.bluetooth.requestDevice({
+        filters: [{ namePrefix: 'BB50-' }],
+        optionalServices: [this.SVC_TELEMETRY, this.SVC_DIAGNOSTIC]
+      });
+
+      console.log(`[BLE] Appareil sélectionné : ${this.device.name}`);
+      this.device.addEventListener('gattserverdisconnected', this.handleDisconnection.bind(this));
+
+      console.log("[BLE] Connexion au serveur GATT...");
+      this.server = await this.device.gatt.connect();
+      this.isConnected = true;
+      if (this.onConnectionChange) this.onConnectionChange(true);
+
+      await this.initializeServices();
+      return true;
+
+    } catch (error) {
+      console.error("[BLE] Erreur de connexion :", error);
+      alert("Échec de la connexion Bluetooth : " + error.message);
+      this.disconnect();
+      return false;
+    }
+  }
+
+  /**
+   * Initialise les services et caractéristiques après la connexion.
+   */
+  async initializeServices() {
+    if (!this.server) return;
+
+    try {
+      console.log("[BLE] Récupération du service Diagnostic...");
+      this.diagnosticService = await this.server.getPrimaryService(this.SVC_DIAGNOSTIC);
+      
+      console.log("[BLE] Récupération du service Télémétrie...");
+      this.telemetryService = await this.server.getPrimaryService(this.SVC_TELEMETRY);
+
+      // S'abonner aux notifications de trames
+      const frameChar = await this.telemetryService.getCharacteristic(this.CHR_FRAME_DATA);
+      await frameChar.startNotifications();
+      frameChar.addEventListener('characteristicvaluechanged', this.handleFrameNotification.bind(this));
+
+      console.log("[BLE] Services initialisés et abonnements actifs.");
+      
+      // Première lecture des diagnostics
+      await this.readDiagnostics();
+
+    } catch (error) {
+      console.error("[BLE] Erreur d'initialisation des services :", error);
+    }
+  }
+
+  /**
+   * Lecture de la batterie et de l'état anti-effraction
+   */
+  async readDiagnostics() {
+    if (!this.diagnosticService) return;
+
+    try {
+      const batChar = await this.diagnosticService.getCharacteristic(this.CHR_BATTERY);
+      const batVal = await batChar.readValue();
+      const battery_mv = batVal.getUint16(0, true);
+
+      const tamperChar = await this.diagnosticService.getCharacteristic(this.CHR_TAMPER_STATE);
+      const tamperVal = await tamperChar.readValue();
+      const tamper_state = tamperVal.getUint8(0);
+
+      console.log(`[BLE] Diagnostic -> Batterie: ${battery_mv}mV, Tamper: ${tamper_state}`);
+      
+      if (this.onDiagnosticUpdate) {
+        this.onDiagnosticUpdate({ battery_mv, tamper_state });
+      }
+    } catch (error) {
+      console.error("[BLE] Erreur de lecture diagnostic :", error);
+    }
+  }
+
+  /**
+   * Envoie la commande pour télécharger les trames.
+   */
+  async exportTelemetry(startIndex = 0, count = 0) {
+    if (!this.telemetryService) {
+      alert("Boîte Noire non connectée.");
+      return;
+    }
+
+    try {
+      const cmdChar = await this.telemetryService.getCharacteristic(this.CHR_EXPORT_CMD);
+      
+      // Structure: [start_index (4B)] [count (4B)] (Little Endian)
+      const buffer = new ArrayBuffer(8);
+      const view = new DataView(buffer);
+      view.setUint32(0, startIndex, true);
+      view.setUint32(4, count, true);
+
+      console.log(`[BLE] Envoi commande export: start=${startIndex}, count=${count}`);
+      await cmdChar.writeValue(buffer);
+      
+    } catch (error) {
+      console.error("[BLE] Erreur commande export :", error);
+    }
+  }
+
+  /**
+   * Réception des trames en direct.
+   */
+  async handleFrameNotification(event) {
+    const value = event.target.value;
+    
+    // Si la trame fait au moins 16 octets (l'en-tête + début payload)
+    if (value.byteLength >= 16) {
+        const timestamp = value.getUint32(0, true);
+        const lat = value.getInt32(4, true) / 1e7;
+        const lon = value.getInt32(8, true) / 1e7;
+        const speed = value.getUint16(12, true) / 10;
+        
+        console.log(`[BLE] Trame hybride reçue: TS=${timestamp}, Lat=${lat}, Lon=${lon}, Vitesse=${speed} km/h`);
+        
+        // 1. Extraire uniquement la preuve chiffrée (à partir de l'octet 16)
+        const encryptedLength = value.byteLength - 16;
+        if (encryptedLength <= 0) return; // Ignore les trames invalides
+
+        const encryptedBytes = new Uint8Array(value.buffer, value.byteOffset + 16, encryptedLength);
+        let binary = '';
+        encryptedBytes.forEach(b => binary += String.fromCharCode(b));
+        const b64Payload = window.btoa(binary);
+
+        // 2. Batching des trames (au lieu d'un appel réseau par trame)
+        this.telemetryBuffer.push({
+            encryptedPayload: b64Payload,
+            timestamp: timestamp
+        });
+
+        if (this.telemetryBuffer.length >= this.MAX_BATCH_SIZE) {
+            this.flushTelemetryBuffer();
+        } else if (!this.batchTimeout) {
+            this.batchTimeout = setTimeout(() => this.flushTelemetryBuffer(), this.BATCH_TIMEOUT_MS);
+        }
+
+        if (this.onTelemetryData) {
+            this.onTelemetryData({ timestamp, lat, lon, speed, raw: value });
+        }
+    }
+  }
+
+  /**
+   * Envoie le buffer de trames au Cloud (Batch) et le vide.
+   */
+  async flushTelemetryBuffer() {
+      if (this.batchTimeout) {
+          clearTimeout(this.batchTimeout);
+          this.batchTimeout = null;
+      }
+
+      if (this.telemetryBuffer.length === 0) return;
+
+      const payloadsToUpload = [...this.telemetryBuffer];
+      this.telemetryBuffer = []; // Clear buffer immediately to catch new frames
+
+      if (typeof firebase !== 'undefined' && firebase.functions) {
+          try {
+              const uploadTelemetry = firebase.functions("europe-west1").httpsCallable('uploadBlackboxTelemetry');
+              await uploadTelemetry({
+                  hardwareId: this.device ? this.device.name : 'UNKNOWN_HW',
+                  payloads: payloadsToUpload
+              });
+              console.log(`[BLE] Batch de ${payloadsToUpload.length} trames stocké en Zero-Knowledge sur Firebase.`);
+          } catch (error) {
+              console.error(`[BLE] Erreur Firebase upload batch:`, error);
+              // Optionnel: On pourrait ré-insérer les trames échouées dans le buffer ici.
+          }
+      }
+  }
+
+  /**
+   * Déconnexion propre.
+   */
+  disconnect() {
+    this.flushTelemetryBuffer();
+    if (this.device && this.device.gatt.connected) {
+      this.device.gatt.disconnect();
+    }
+  }
+
+  handleDisconnection() {
+    console.log("[BLE] Appareil déconnecté.");
+    this.isConnected = false;
+    this.device = null;
+    this.server = null;
+    if (this.onConnectionChange) this.onConnectionChange(false);
+  }
+}
+
+// Instance globale
+window.BlackBox = new BlackBoxBLE();
 

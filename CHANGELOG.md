@@ -6,6 +6,15 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ---
 
+## [106.00.00] - 2026-08-17 - 🐛 Résolution de Bugs et Améliorations UI
+
+### Corrigé
+- **Avocat de Poche (UI)** : Correction d'un bug d'affichage (texte tronqué) sur l'avertissement de l'IA.
+- **JavaScript (Bundle)** : Correction d'une erreur de syntaxe fatale (nom de variable invalide `nexus-atlasFeedback`) dans `nexus-atlas-voice.js` qui corrompait le fichier minifié.
+- **Boîte Noire (Bluetooth)** : Correction de l'erreur réseau 404 sur `blackbox-ble.js` qui n'était pas copié dans le dossier public.
+
+---
+
 ## [101.00.05] - 2026-08-09 - 🛡️ Dépôt eSoleau INPI
 
 ### Ajouté

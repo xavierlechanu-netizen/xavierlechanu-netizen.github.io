@@ -1586,7 +1586,7 @@ function vibrate(ms) {
   }
 }
 
-// --- REGIONAL & VOICE ENGINE (ORACLE v100.00-GOLD) ---
+// --- REGIONAL & VOICE ENGINE (ORACLE v106.00.00) ---
 window.OracleEngine = {
   gender: localStorage.getItem("oracle_gender") || "female",
   currentRegion: "standard",

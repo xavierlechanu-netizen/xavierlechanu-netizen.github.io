@@ -1,18 +1,18 @@
-const CACHE_NAME = 'mon50cc-cache-v1050000';
+const CACHE_NAME = 'mon50cc-cache-v1060000';
 const urlsToCache = [
   '/',
-  '/index.html?v=1050000',
-  '/app.html?v=1050000',
+  '/index.html?v=1060000',
+  '/app.html?v=1060000',
   '/offline.html',
-  '/css/premium.css?v=1050000',
-  '/css/style.min.css?v=1050000',
-  '/js/config.js?v=1050000',
-  '/js/infallible.js?v=1050000',
-  '/js/error-tracking.js?v=1050000',
-  '/js/oracle-voice.js?v=1050000',
-  '/js/crypto-native.js?v=1050000',
-  '/js/auth.js?v=1050000',
-  '/js/database.js?v=1050000',
+  '/css/premium.css?v=1060000',
+  '/css/style.min.css?v=1060000',
+  '/js/config.js?v=1060000',
+  '/js/infallible.js?v=1060000',
+  '/js/error-tracking.js?v=1060000',
+  '/js/oracle-voice.js?v=1060000',
+  '/js/crypto-native.js?v=1060000',
+  '/js/auth.js?v=1060000',
+  '/js/database.js?v=1060000',
   '/js/mon50cc-bundle.js'
 ];
 

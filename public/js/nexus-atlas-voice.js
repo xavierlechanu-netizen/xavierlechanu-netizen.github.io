@@ -267,11 +267,11 @@ window.NexusAtlasEngine = {
 
   executeAction: function (result) {
     // Retour visuel (si disponible dans le DOM)
-    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
-    if (nexus-atlasFeedback) {
-      nexus-atlasFeedback.innerText = result.reply;
-      nexus-atlasFeedback.classList.add("visible");
-      setTimeout(() => nexus-atlasFeedback.classList.remove("visible"), 5000);
+    const nexusAtlasFeedback = document.getElementById("nexus-atlas-feedback-text");
+    if (nexusAtlasFeedback) {
+      nexusAtlasFeedback.innerText = result.reply;
+      nexusAtlasFeedback.classList.add("visible");
+      setTimeout(() => nexusAtlasFeedback.classList.remove("visible"), 5000);
     }
 
     if (result.reply) {
@@ -372,15 +372,15 @@ window.initVoiceAI = function () {
     const transcript = event.results[current][0].transcript.toLowerCase();
 
     // Feedback utilisateur
-    const nexus-atlasFeedback = document.getElementById("nexus-atlas-feedback-text");
+    const nexusAtlasFeedback = document.getElementById("nexus-atlas-feedback-text");
     if (
-      nexus-atlasFeedback &&
+      nexusAtlasFeedback &&
       !transcript.includes("oracle") &&
       !transcript.includes("système") &&
       !transcript.includes("nexus-atlas")
     ) {
-      nexus-atlasFeedback.innerText = "Vous : " + transcript;
-      nexus-atlasFeedback.classList.add("visible");
+      nexusAtlasFeedback.innerText = "Vous : " + transcript;
+      nexusAtlasFeedback.classList.add("visible");
     }
 
     // Si le mot clé de réveil est utilisé

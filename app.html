@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr-FR" dir="ltr">
   <head>
     <meta charset="UTF-8" />
@@ -150,7 +150,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js" charset="utf-8"></script>
 
     <link rel="manifest" href="manifest.json" />
-    <title>mon 50cc et moi | v100.00-GOLD</title>
+    <title>mon 50cc et moi | v106.00.00</title>
     <!-- Config chargé via config.js -->
     <script src="js/config.js?v=60019"></script>
     <script src="js/bvc-manager.js?v=1"></script>
@@ -637,7 +637,7 @@
         ></i>
       </button>
 
-      <!-- AR Vision (v100.00-GOLD) -->
+      <!-- AR Vision (v106.00.00) -->
       <button
         id="dock-btn-ar"
         aria-label="Activer la vision en Réalité Augmentée"
@@ -3557,7 +3557,7 @@
               typeof window.mon50Analytics.logEvent === "function"
             ) {
               window.mon50Analytics.logEvent("app_open", {
-                version: "100.80.00",
+                version: "106.00.00",
               });
             }
             console.log("mon50cc : Firebase Analytics initialisé.");
@@ -3603,7 +3603,7 @@
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("sw.js?v=1008003").then(
+          navigator.serviceWorker.register("sw.js?v=1060000").then(
             (registration) => {
               console.log(
                 "ServiceWorker registration successful with scope: ",
@@ -4536,7 +4536,7 @@
           "
         >
           <div>
-            <label style="color: #aaa; font-size: 0.8rem"
+            <label for="man-mileage" style="color: #aaa; font-size: 0.8rem"
               >Kilométrage du véhicule (km)</label
             >
             <input aria-label="Ex: 12450" 
@@ -4556,7 +4556,7 @@
             />
           </div>
           <div>
-            <label style="color: #aaa; font-size: 0.8rem"
+            <label for="man-cycles" style="color: #aaa; font-size: 0.8rem"
               >Nombre de cycles estimé</label
             >
             <input aria-label="Ex: 345" 
@@ -4576,7 +4576,7 @@
             />
           </div>
           <div>
-            <label style="color: #aaa; font-size: 0.8rem"
+            <label for="man-age" style="color: #aaa; font-size: 0.8rem"
               >ge de la batterie (en mois)</label
             >
             <input aria-label="Ex: 27" 
@@ -4596,7 +4596,7 @@
             />
           </div>
           <div>
-            <label style="color: #aaa; font-size: 0.8rem"
+            <label for="man-style" style="color: #aaa; font-size: 0.8rem"
               >Type de conduite principal</label
             >
             <select
@@ -5050,7 +5050,7 @@
 
       <!-- Selection du véhicule -->
       <div style="margin: 20px auto; width: 90%; max-width: 400px">
-        <label
+        <label for="scooter-motor"
           style="
             color: #aaa;
             font-size: 0.9rem;
