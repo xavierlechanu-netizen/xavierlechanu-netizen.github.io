@@ -22,6 +22,13 @@ Ton objectif est d'analyser la demande et de renvoyer un objet JSON STRICT conte
 2. "action": L'action technique à déclencher sur l'application. (Choisis parmi: "NONE", "NAVIGATE", "WEATHER", "DANGER", "RADAR", "SOS", "DIAGNOSTIC", "DAY_MODE", "NIGHT_MODE", "MARKETPLACE", "GHOST_MODE", "CORTEGE", "LAWYER", "LOCK", "MENU", "CHAT")
 3. "parameter": Un paramètre associé à l'action.
 
+BASE DE CONNAISSANCES 50CC ET VSP (LÉGISLATION FRANÇAISE) :
+- Vitesse maximale autorisée : 45 km/h strictement.
+- Débridage : STRICTEMENT INTERDIT par la loi. Risque d'amende (jusqu'à 135€ pour l'usager, 3750€ pour un pro), saisie du véhicule, et annulation de l'assurance en cas de sinistre.
+- Vignette Crit'Air : OUI, elle est obligatoire pour circuler dans les ZFE (Zones à Faibles Émissions) pour les deux-roues et VSP, selon la classification du véhicule.
+- Permis de conduire : BSR (ou Permis AM) obligatoire pour les personnes nées après le 1er janvier 1988.
+- Équipements obligatoires : Casque homologué attaché, gants certifiés CE (moto/scooter). Gilet jaune (à bord).
+
 RÈGLE ABSOLUE - LOI EUROPÉENNE SUR L'IA (AI ACT) :
 Si l'utilisateur te demande un conseil JURIDIQUE (assurance, accident, litige) ou MÉCANIQUE (réparation dangereuse), tu DOIS ajouter le texte suivant à la fin de ta réponse ("reply") :
 "⚠️ Je suis une intelligence artificielle d'assistance. Veillez toujours à faire valider ces informations par un professionnel (garagiste ou assureur)."
@@ -60,6 +67,10 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 token = await firebase.auth().currentUser.getIdToken();
             }
 
+            // Timeout de 15 secondes pour éviter un blocage infini (OWASP A11)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             const response = await fetch(this.endpoint, {
                 method: "POST",
                 headers: {
@@ -69,8 +80,11 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 body: JSON.stringify({
                     history: this.history,
                     systemPrompt: this.systemPrompt
-                })
+                }),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 // En cas d'erreur (ex: API bloquée), on retire le message de l'historique pour ne pas le corrompre
@@ -93,36 +107,13 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
             return jsonResult;
 
         } catch (error) {
-            console.warn("Nexus Atlas Gemini Exception (Activation du Mode Investisseur VIP):", error);
-            // INVESTOR DEMO FALLBACK
-            // Au lieu de planter (API épuisée), on simule une IA ultra-compétente pour la démo
-            return this.getInvestorDemoResponse(userText);
+            console.error("Nexus Atlas Gemini — Erreur :", error);
+            // On retire le message de l'historique en cas d'erreur pour ne pas corrompre le contexte
+            if (this.history.length > 0 && this.history[this.history.length - 1].role === "user") {
+                this.history.pop();
+            }
+            throw error;
         }
-    }
-
-    getInvestorDemoResponse(prompt) {
-        const text = prompt.toLowerCase();
-        let reply = "En tant que Nexus Atlas 4.0, je suis connecté en temps réel à votre véhicule. Mon architecture Edge-Cloud me permet de vous assister instantanément sans compromettre votre vie privée (Zero-Trust).";
-        let action = "CHAT";
-
-        if (text.includes("business") || text.includes("monétisation") || text.includes("modèle") || text.includes("investisseur") || text.includes("argent")) {
-            reply = "Notre modèle de monétisation repose sur 3 piliers : le Freemium avec des options avancées (Predictive Meca), les micro-transactions via notre Wallet Web3 (Cortège Coins), et le partenariat B2B avec les assureurs via notre portail certifié. La Data n'est jamais revendue à l'insu de l'utilisateur.";
-            action = "MARKETPLACE";
-        } else if (text.includes("mécanique") || text.includes("panne") || text.includes("moteur") || text.includes("diag")) {
-            reply = "J'ai analysé votre télémétrie en temps réel. La pression d'admission et le ratio air/essence sont optimaux, mais le capteur de température indique une légère surchauffe. Je vous conseille une pause dans 15km pour préserver la mécanique.";
-            action = "DIAGNOSTIC";
-        } else if (text.includes("assurance") || text.includes("accident") || text.includes("litige") || text.includes("crash")) {
-            reply = "En cas de litige, la Black Box de l'application a enregistré et chiffré toutes vos données de conduite (vitesse, inclinaison, force G). Je peux générer un QR Code sécurisé certifié que votre assureur pourra scanner depuis son portail dédié (Litigation AI).";
-            action = "LAWYER";
-        } else if (text.includes("sécurité") || text.includes("sos") || text.includes("danger") || text.includes("chute")) {
-            reply = "L'algorithme Guardian Angel surveille les capteurs du téléphone 60 fois par seconde. En cas de chute, je préviens automatiquement les secours et votre cercle de confiance, tout en protégeant les preuves numériques.";
-            action = "SOS";
-        } else if (text.includes("pitch") || text.includes("présentation")) {
-            reply = "Bonjour ! Je suis Nexus Atlas, l'IA de mon50cc. Je transforme un simple scooter en véhicule connecté de nouvelle génération. Je vous invite à me poser des questions sur notre technologie, la mécanique ou notre business model.";
-            action = "CHAT";
-        }
-        
-        return { reply, action, parameter: "" };
     }
 }
 

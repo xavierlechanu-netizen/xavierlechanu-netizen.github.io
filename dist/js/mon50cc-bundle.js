@@ -127,6 +127,13 @@ Ton objectif est d'analyser la demande et de renvoyer un objet JSON STRICT conte
 2. "action": L'action technique à déclencher sur l'application. (Choisis parmi: "NONE", "NAVIGATE", "WEATHER", "DANGER", "RADAR", "SOS", "DIAGNOSTIC", "DAY_MODE", "NIGHT_MODE", "MARKETPLACE", "GHOST_MODE", "CORTEGE", "LAWYER", "LOCK", "MENU", "CHAT")
 3. "parameter": Un paramètre associé à l'action.
 
+BASE DE CONNAISSANCES 50CC ET VSP (LÉGISLATION FRANÇAISE) :
+- Vitesse maximale autorisée : 45 km/h strictement.
+- Débridage : STRICTEMENT INTERDIT par la loi. Risque d'amende (jusqu'à 135€ pour l'usager, 3750€ pour un pro), saisie du véhicule, et annulation de l'assurance en cas de sinistre.
+- Vignette Crit'Air : OUI, elle est obligatoire pour circuler dans les ZFE (Zones à Faibles Émissions) pour les deux-roues et VSP, selon la classification du véhicule.
+- Permis de conduire : BSR (ou Permis AM) obligatoire pour les personnes nées après le 1er janvier 1988.
+- Équipements obligatoires : Casque homologué attaché, gants certifiés CE (moto/scooter). Gilet jaune (à bord).
+
 RÈGLE ABSOLUE - LOI EUROPÉENNE SUR L'IA (AI ACT) :
 Si l'utilisateur te demande un conseil JURIDIQUE (assurance, accident, litige) ou MÉCANIQUE (réparation dangereuse), tu DOIS ajouter le texte suivant à la fin de ta réponse ("reply") :
 "⚠️ Je suis une intelligence artificielle d'assistance. Veillez toujours à faire valider ces informations par un professionnel (garagiste ou assureur)."
@@ -165,6 +172,10 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 token = await firebase.auth().currentUser.getIdToken();
             }
 
+            // Timeout de 15 secondes pour éviter un blocage infini (OWASP A11)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
             const response = await fetch(this.endpoint, {
                 method: "POST",
                 headers: {
@@ -174,8 +185,11 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 body: JSON.stringify({
                     history: this.history,
                     systemPrompt: this.systemPrompt
-                })
+                }),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 // En cas d'erreur (ex: API bloquée), on retire le message de l'historique pour ne pas le corrompre
@@ -198,36 +212,13 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
             return jsonResult;
 
         } catch (error) {
-            console.warn("Nexus Atlas Gemini Exception (Activation du Mode Investisseur VIP):", error);
-            // INVESTOR DEMO FALLBACK
-            // Au lieu de planter (API épuisée), on simule une IA ultra-compétente pour la démo
-            return this.getInvestorDemoResponse(userText);
+            console.error("Nexus Atlas Gemini — Erreur :", error);
+            // On retire le message de l'historique en cas d'erreur pour ne pas corrompre le contexte
+            if (this.history.length > 0 && this.history[this.history.length - 1].role === "user") {
+                this.history.pop();
+            }
+            throw error;
         }
-    }
-
-    getInvestorDemoResponse(prompt) {
-        const text = prompt.toLowerCase();
-        let reply = "En tant que Nexus Atlas 4.0, je suis connecté en temps réel à votre véhicule. Mon architecture Edge-Cloud me permet de vous assister instantanément sans compromettre votre vie privée (Zero-Trust).";
-        let action = "CHAT";
-
-        if (text.includes("business") || text.includes("monétisation") || text.includes("modèle") || text.includes("investisseur") || text.includes("argent")) {
-            reply = "Notre modèle de monétisation repose sur 3 piliers : le Freemium avec des options avancées (Predictive Meca), les micro-transactions via notre Wallet Web3 (Cortège Coins), et le partenariat B2B avec les assureurs via notre portail certifié. La Data n'est jamais revendue à l'insu de l'utilisateur.";
-            action = "MARKETPLACE";
-        } else if (text.includes("mécanique") || text.includes("panne") || text.includes("moteur") || text.includes("diag")) {
-            reply = "J'ai analysé votre télémétrie en temps réel. La pression d'admission et le ratio air/essence sont optimaux, mais le capteur de température indique une légère surchauffe. Je vous conseille une pause dans 15km pour préserver la mécanique.";
-            action = "DIAGNOSTIC";
-        } else if (text.includes("assurance") || text.includes("accident") || text.includes("litige") || text.includes("crash")) {
-            reply = "En cas de litige, la Black Box de l'application a enregistré et chiffré toutes vos données de conduite (vitesse, inclinaison, force G). Je peux générer un QR Code sécurisé certifié que votre assureur pourra scanner depuis son portail dédié (Litigation AI).";
-            action = "LAWYER";
-        } else if (text.includes("sécurité") || text.includes("sos") || text.includes("danger") || text.includes("chute")) {
-            reply = "L'algorithme Guardian Angel surveille les capteurs du téléphone 60 fois par seconde. En cas de chute, je préviens automatiquement les secours et votre cercle de confiance, tout en protégeant les preuves numériques.";
-            action = "SOS";
-        } else if (text.includes("pitch") || text.includes("présentation")) {
-            reply = "Bonjour ! Je suis Nexus Atlas, l'IA de mon50cc. Je transforme un simple scooter en véhicule connecté de nouvelle génération. Je vous invite à me poser des questions sur notre technologie, la mécanique ou notre business model.";
-            action = "CHAT";
-        }
-        
-        return { reply, action, parameter: "" };
     }
 }
 
@@ -3595,29 +3586,8 @@ if (typeof firebase !== "undefined" && firebase.auth()) {
 
 let db;
 
-// --- FALLBACK SÉCURISÉ ---
-// Si auth.js n'est pas chargé (ex: assureur.html), on fournit un fallback
-// qui utilise localStorage en clair. Quand auth.js est chargé, ses versions
-// chiffrées (window.secureSetItem/secureGetItem) prennent le dessus.
-if (typeof secureSetItem === "undefined" && !window.secureSetItem) {
-  window.secureSetItem = function (key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {
-      console.warn("secureSetItem fallback error:", e);
-    }
-  };
-}
-if (typeof secureGetItem === "undefined" && !window.secureGetItem) {
-  window.secureGetItem = function (key) {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      return null;
-    }
-  };
-}
-// Alias global pour les appels sans préfixe window.
+// NOTE : secureSetItem / secureGetItem sont définis dans config.js (chargé avant ce script).
+// Alias local pour rétrocompatibilité.
 var secureSetItem = window.secureSetItem;
 var secureGetItem = window.secureGetItem;
 
@@ -5673,7 +5643,7 @@ function showHazardConfirmation(index, type) {
         <p>Toujours là : <strong>${type}</strong> ?</p>
         <div style="display:flex; gap:10px;">
             <button onclick="confirmHazard(${index}, true)">✅ Oui</button>
-            <button onclick="confirmHazard(${index}, false)">âŒ Non</button>
+            <button onclick="confirmHazard(${index}, false)">&#10060; Non</button>
         </div>
     `;
   document.body.appendChild(toast);
@@ -7302,25 +7272,7 @@ setInterval(() => {
 
 
 /* --- app-features.js --- */
-// Fallback if loaded before auth.js/database.js
-if (typeof window.secureGetItem === "undefined") {
-  window.secureGetItem = function (key) {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      return null;
-    }
-  };
-  window.secureSetItem = function (key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {}
-  };
-}
-if (typeof secureGetItem === "undefined") {
-  var secureGetItem = window.secureGetItem;
-  var secureSetItem = window.secureSetItem;
-}
+// NOTE : secureSetItem / secureGetItem sont définis dans config.js (chargé avant ce script).
 
 // --- 7. SERVICES (Météo, Boussole, Garage) ---
 window.fetchWeather = async function (lat, lon) {
@@ -7360,12 +7312,12 @@ window.fetchWeather = async function (lat, lon) {
       } else if (code >= 80) {
         alertMsg = "Averses détectées : Route potentiellement glissante.";
         icon = '<i class="fa-solid fa-cloud-showers-heavy"></i>';
-      } else if (code >= 61) {
-        alertMsg = "Pluie signalée par satellite. Équipez-vous.";
-        icon = '<i class="fa-solid fa-cloud-rain"></i>';
       } else if (code >= 71) {
         alertMsg = "Alerte Neige : Conditions de circulation difficiles.";
         icon = '<i class="fa-solid fa-snowflake"></i>';
+      } else if (code >= 61) {
+        alertMsg = "Pluie signalée par satellite. Équipez-vous.";
+        icon = '<i class="fa-solid fa-cloud-rain"></i>';
       }
     }
 
@@ -8589,13 +8541,13 @@ function runCinematicStartup() {
     }, 15);
   }, 500);
 
-  // Update check list
+  // Update check list (insertAdjacentHTML au lieu de innerHTML += pour la performance / OWASP A03)
   setTimeout(() => {
-    if (checkList) checkList.innerHTML += "<div>> ENGINE_CHECK: OK</div>";
+    if (checkList) checkList.insertAdjacentHTML("beforeend", "<div>> ENGINE_CHECK: OK</div>");
   }, 1200);
   setTimeout(() => {
     if (checkList)
-      checkList.innerHTML += "<div>> NETWORK_ESTABLISHED: 5G_ULTRA</div>";
+      checkList.insertAdjacentHTML("beforeend", "<div>> NETWORK_ESTABLISHED: 5G_ULTRA</div>");
   }, 2000);
 }
 
@@ -17440,7 +17392,7 @@ window.PocketLawyer = {
     }
   },
 
-  sendMessage: function (text = null) {
+  sendMessage: async function (text = null) {
     const input = document.getElementById("lawyer-input");
     if (!input && !text) return;
     const message = text || (input ? input.value.trim() : "");
@@ -17468,11 +17420,15 @@ window.PocketLawyer = {
     chatBox.appendChild(typingMsg);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    setTimeout(() => {
+    try {
+      const reply = await this.processChatQuery(message);
       if (chatBox.contains(typingMsg)) chatBox.removeChild(typingMsg);
-      const reply = this.processChatQuery(message);
       this.addBotMessage(reply);
-    }, 1000);
+    } catch(e) {
+      if (chatBox.contains(typingMsg)) chatBox.removeChild(typingMsg);
+      this.addBotMessage("Désolé, une erreur s'est produite lors de la recherche.");
+      console.error(e);
+    }
   },
 
   addBotMessage: function (htmlContent) {
@@ -17492,38 +17448,27 @@ window.PocketLawyer = {
     }
   },
 
-  processChatQuery: function (text) {
+  processChatQuery: async function (text) {
     const t = text.toLowerCase();
 
-    // ═══════════════════════════════════════════════════════
-    // 🌍 MOTEUR JURIDIQUE MONDIAL (LegalDatabase)
-    // Cherche d'abord dans la base mondiale officielle
-    // ═══════════════════════════════════════════════════════
+    // ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ 
+    // 🌍  MOTEUR JURIDIQUE MONDIAL (LegalDatabase)
+    // ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ 
     if (
       window.LegalDatabase &&
       typeof window.LegalDatabase.search === "function"
     ) {
       const results = window.LegalDatabase.search(text);
       if (results.length > 0) {
-        // Prendre le résultat le plus pertinent
         const r = results[0];
         let html = `<strong>${r.title}</strong><br>${r.content}`;
         html += `<br><em style="color:#888; font-size:0.8em;">Source : ${r.source}</em>`;
 
-        // Si plusieurs résultats, indiquer les autres disponibles
         if (results.length > 1) {
           html += `<br><br><span style="color:#cca300; font-size:0.85em;">📚 ${results.length - 1} autre(s) résultat(s) trouvé(s). Précisez votre question pour affiner.</span>`;
         }
 
-        // Suggestion automatique du Code Litige pour les cas pertinents
-        if (
-          t.includes("accident") ||
-          t.includes("litige") ||
-          t.includes("assurance") ||
-          t.includes("accrochage") ||
-          t.includes("constat") ||
-          t.includes("sinistre")
-        ) {
+        if (t.includes("accident") || t.includes("litige") || t.includes("assurance") || t.includes("accrochage") || t.includes("constat") || t.includes("sinistre")) {
           html += `<br><br><div style="background:rgba(255, 51, 51, 0.1); border:1px solid #ff3333; border-radius:10px; padding:10px; margin-top:10px;">
                         <p style="margin:0 0 10px 0; color:#ffcccc; font-size:0.9rem;"><strong>Dossier d'Expertise (Boîte Noire)</strong><br>Avez-vous besoin de générer un Code Litige pour votre assureur ?</p>
                         <button onclick="if(window.DisputeAutomation) window.DisputeAutomation.initiateDispute(); else alert('Module introuvable.');" style="background:#ff3333; color:#fff; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:bold; width:100%;"><i class="fa-solid fa-gavel"></i> Générer mon Code Litige</button>
@@ -17534,45 +17479,23 @@ window.PocketLawyer = {
       }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // 🌍 LISTE DES PAYS DISPONIBLES (si question générale)
-    // ═══════════════════════════════════════════════════════
-    if (
-      t.includes("pays") ||
-      t.includes("monde") ||
-      t.includes("mondial") ||
-      t.includes("international") ||
-      (t.includes("quel") && t.includes("droit"))
-    ) {
+    if (t.includes("pays") || t.includes("monde") || t.includes("mondial") || t.includes("international") || (t.includes("quel") && t.includes("droit"))) {
       if (window.LegalDatabase) {
         let countryList = "";
         for (const [key, country] of Object.entries(window.LegalDatabase)) {
-          if (
-            typeof country === "object" &&
-            country._flag &&
-            key !== "search"
-          ) {
+          if (typeof country === "object" && country._flag && key !== "search") {
             countryList += `• ${country._flag} ${country._name}<br>`;
           }
         }
-        return `<strong>🌍 Base Juridique Mondiale</strong><br>Je couvre actuellement le droit de :<br>${countryList}<br>Précisez un <strong>pays</strong> et un <strong>thème</strong> (casque, permis, données, assurance...) pour obtenir les textes officiels.`;
+        return `<strong>🌍  Base Juridique Mondiale</strong><br>Je couvre actuellement le droit de :<br>${countryList}<br>Précisez un <strong>pays</strong> et un <strong>thème</strong> (casque, permis, données, assurance...) pour obtenir les textes officiels.`;
       }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // 🇫🇷 FALLBACK : JURISPRUDENCE FRANÇAISE (Code de la route)
-    // ═══════════════════════════════════════════════════════
+    // 🇫🇷 FALLBACK : JURISPRUDENCE FRANÇAISE (Règles statiques)
     if (t.includes("débrid") || t.includes("debride")) {
       return "<strong>Débridage (Art. L317-5)</strong><br>C'est un délit. Vous risquez jusqu'à <strong>135€ d'amende</strong> pour le propriétaire, mais surtout, <strong>votre assurance s'annule</strong> en cas d'accident corporel. Les assureurs se retournent contre vous pour payer les dommages aux victimes.";
     }
-    if (
-      t.includes("stup") ||
-      t.includes("drogue") ||
-      t.includes("fumé") ||
-      t.includes("positif") ||
-      t.includes("cannabis") ||
-      t.includes("thc")
-    ) {
+    if (t.includes("stup") || t.includes("drogue") || t.includes("fumé") || t.includes("positif") || t.includes("cannabis") || t.includes("thc")) {
       return "<strong>Conduite sous stupéfiants (Délit)</strong><br>Même avec un BSR, vous risquez jusqu'à <strong>4500€ d'amende</strong>, 2 ans de prison, et l'immobilisation du scooter. Il n'y a pas de perte de points sur un BSR. S'il s'agit d'une première infraction, le juge peut faire preuve de clémence si vous montrez des preuves médicales de votre volonté de vous soigner.";
     }
     if (t.includes("alcool")) {
@@ -17586,17 +17509,42 @@ window.PocketLawyer = {
     }
 
     const safeText = window.escapeHTML ? window.escapeHTML(text) : text;
-    let baseMsg = `Ma base de jurisprudence couvre <strong>16 pays</strong> avec des sources officielles. Pour la France, les textes de référence sont sur <strong>Légifrance</strong>.<br><br>
-        <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher "${safeText}" sur Légifrance</a>`;
+    let baseMsg = `Je consulte la base de jurisprudence (Légifrance via PISTE)...<br><br>`;
+    
+    // Appel à la Cloud Function searchLegifrancePiste
+    try {
+      if (typeof window.session !== "undefined" && window.session.token) {
+        const response = await fetch("https://europe-west1-mon50ccetmoi.cloudfunctions.net/searchLegifrancePiste", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${window.session.token}`
+            },
+            body: JSON.stringify({ query: text })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                const res = data.results[0];
+                baseMsg = `<strong>${res.title}</strong><br>${res.content}<br><br><em style="color:#888; font-size:0.8em;">Source : ${res.source}</em>`;
+            } else {
+                baseMsg = `Aucun texte de loi précis trouvé sur Légifrance pour "${safeText}".<br><br>
+                <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur le site Légifrance</a>`;
+            }
+        } else {
+            baseMsg = `Service Légifrance indisponible. <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur Légifrance</a>`;
+        }
+      } else {
+          baseMsg = `Vous devez être connecté pour interroger la base Légifrance PISTE en direct. <br><br>
+          <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur Légifrance</a>`;
+      }
+    } catch (e) {
+        console.error(e);
+        baseMsg = `Erreur de connexion à la base de données gouvernementale. <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur Légifrance</a>`;
+    }
 
-    if (
-      t.includes("accident") ||
-      t.includes("litige") ||
-      t.includes("assurance") ||
-      t.includes("accrochage") ||
-      t.includes("constat") ||
-      t.includes("sinistre")
-    ) {
+    if (t.includes("accident") || t.includes("litige") || t.includes("assurance") || t.includes("accrochage") || t.includes("constat") || t.includes("sinistre")) {
       baseMsg += `<br><br><div style="background:rgba(255, 51, 51, 0.1); border:1px solid #ff3333; border-radius:10px; padding:10px; margin-top:10px;">
                 <p style="margin:0 0 10px 0; color:#ffcccc; font-size:0.9rem;"><strong>Dossier d'Expertise (Boîte Noire)</strong><br>Avez-vous besoin de générer un Code Litige pour votre assureur ?</p>
                 <button onclick="if(window.DisputeAutomation) window.DisputeAutomation.initiateDispute(); else alert('Module introuvable.');" style="background:#ff3333; color:#fff; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:bold; width:100%;"><i class="fa-solid fa-gavel"></i> Générer mon Code Litige</button>

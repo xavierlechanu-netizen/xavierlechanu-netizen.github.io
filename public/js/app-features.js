@@ -1,22 +1,4 @@
-// Fallback if loaded before auth.js/database.js
-if (typeof window.secureGetItem === "undefined") {
-  window.secureGetItem = function (key) {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      return null;
-    }
-  };
-  window.secureSetItem = function (key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {}
-  };
-}
-if (typeof secureGetItem === "undefined") {
-  var secureGetItem = window.secureGetItem;
-  var secureSetItem = window.secureSetItem;
-}
+// NOTE : secureSetItem / secureGetItem sont définis dans config.js (chargé avant ce script).
 
 // --- 7. SERVICES (Météo, Boussole, Garage) ---
 window.fetchWeather = async function (lat, lon) {
@@ -56,12 +38,12 @@ window.fetchWeather = async function (lat, lon) {
       } else if (code >= 80) {
         alertMsg = "Averses détectées : Route potentiellement glissante.";
         icon = '<i class="fa-solid fa-cloud-showers-heavy"></i>';
-      } else if (code >= 61) {
-        alertMsg = "Pluie signalée par satellite. Équipez-vous.";
-        icon = '<i class="fa-solid fa-cloud-rain"></i>';
       } else if (code >= 71) {
         alertMsg = "Alerte Neige : Conditions de circulation difficiles.";
         icon = '<i class="fa-solid fa-snowflake"></i>';
+      } else if (code >= 61) {
+        alertMsg = "Pluie signalée par satellite. Équipez-vous.";
+        icon = '<i class="fa-solid fa-cloud-rain"></i>';
       }
     }
 

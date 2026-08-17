@@ -1553,7 +1553,7 @@ function showHazardConfirmation(index, type) {
         <p>Toujours là : <strong>${type}</strong> ?</p>
         <div style="display:flex; gap:10px;">
             <button onclick="confirmHazard(${index}, true)">✅ Oui</button>
-            <button onclick="confirmHazard(${index}, false)">âŒ Non</button>
+            <button onclick="confirmHazard(${index}, false)">&#10060; Non</button>
         </div>
     `;
   document.body.appendChild(toast);

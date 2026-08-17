@@ -247,7 +247,7 @@ window.PocketLawyer = {
     }
   },
 
-  sendMessage: function (text = null) {
+  sendMessage: async function (text = null) {
     const input = document.getElementById("lawyer-input");
     if (!input && !text) return;
     const message = text || (input ? input.value.trim() : "");
@@ -275,11 +275,15 @@ window.PocketLawyer = {
     chatBox.appendChild(typingMsg);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    setTimeout(() => {
+    try {
+      const reply = await this.processChatQuery(message);
       if (chatBox.contains(typingMsg)) chatBox.removeChild(typingMsg);
-      const reply = this.processChatQuery(message);
       this.addBotMessage(reply);
-    }, 1000);
+    } catch(e) {
+      if (chatBox.contains(typingMsg)) chatBox.removeChild(typingMsg);
+      this.addBotMessage("Désolé, une erreur s'est produite lors de la recherche.");
+      console.error(e);
+    }
   },
 
   addBotMessage: function (htmlContent) {
@@ -299,38 +303,27 @@ window.PocketLawyer = {
     }
   },
 
-  processChatQuery: function (text) {
+  processChatQuery: async function (text) {
     const t = text.toLowerCase();
 
-    // ═══════════════════════════════════════════════════════
-    // 🌍 MOTEUR JURIDIQUE MONDIAL (LegalDatabase)
-    // Cherche d'abord dans la base mondiale officielle
-    // ═══════════════════════════════════════════════════════
+    // ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ 
+    // 🌍  MOTEUR JURIDIQUE MONDIAL (LegalDatabase)
+    // ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ ═ 
     if (
       window.LegalDatabase &&
       typeof window.LegalDatabase.search === "function"
     ) {
       const results = window.LegalDatabase.search(text);
       if (results.length > 0) {
-        // Prendre le résultat le plus pertinent
         const r = results[0];
         let html = `<strong>${r.title}</strong><br>${r.content}`;
         html += `<br><em style="color:#888; font-size:0.8em;">Source : ${r.source}</em>`;
 
-        // Si plusieurs résultats, indiquer les autres disponibles
         if (results.length > 1) {
           html += `<br><br><span style="color:#cca300; font-size:0.85em;">📚 ${results.length - 1} autre(s) résultat(s) trouvé(s). Précisez votre question pour affiner.</span>`;
         }
 
-        // Suggestion automatique du Code Litige pour les cas pertinents
-        if (
-          t.includes("accident") ||
-          t.includes("litige") ||
-          t.includes("assurance") ||
-          t.includes("accrochage") ||
-          t.includes("constat") ||
-          t.includes("sinistre")
-        ) {
+        if (t.includes("accident") || t.includes("litige") || t.includes("assurance") || t.includes("accrochage") || t.includes("constat") || t.includes("sinistre")) {
           html += `<br><br><div style="background:rgba(255, 51, 51, 0.1); border:1px solid #ff3333; border-radius:10px; padding:10px; margin-top:10px;">
                         <p style="margin:0 0 10px 0; color:#ffcccc; font-size:0.9rem;"><strong>Dossier d'Expertise (Boîte Noire)</strong><br>Avez-vous besoin de générer un Code Litige pour votre assureur ?</p>
                         <button onclick="if(window.DisputeAutomation) window.DisputeAutomation.initiateDispute(); else alert('Module introuvable.');" style="background:#ff3333; color:#fff; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:bold; width:100%;"><i class="fa-solid fa-gavel"></i> Générer mon Code Litige</button>
@@ -341,45 +334,23 @@ window.PocketLawyer = {
       }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // 🌍 LISTE DES PAYS DISPONIBLES (si question générale)
-    // ═══════════════════════════════════════════════════════
-    if (
-      t.includes("pays") ||
-      t.includes("monde") ||
-      t.includes("mondial") ||
-      t.includes("international") ||
-      (t.includes("quel") && t.includes("droit"))
-    ) {
+    if (t.includes("pays") || t.includes("monde") || t.includes("mondial") || t.includes("international") || (t.includes("quel") && t.includes("droit"))) {
       if (window.LegalDatabase) {
         let countryList = "";
         for (const [key, country] of Object.entries(window.LegalDatabase)) {
-          if (
-            typeof country === "object" &&
-            country._flag &&
-            key !== "search"
-          ) {
+          if (typeof country === "object" && country._flag && key !== "search") {
             countryList += `• ${country._flag} ${country._name}<br>`;
           }
         }
-        return `<strong>🌍 Base Juridique Mondiale</strong><br>Je couvre actuellement le droit de :<br>${countryList}<br>Précisez un <strong>pays</strong> et un <strong>thème</strong> (casque, permis, données, assurance...) pour obtenir les textes officiels.`;
+        return `<strong>🌍  Base Juridique Mondiale</strong><br>Je couvre actuellement le droit de :<br>${countryList}<br>Précisez un <strong>pays</strong> et un <strong>thème</strong> (casque, permis, données, assurance...) pour obtenir les textes officiels.`;
       }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // 🇫🇷 FALLBACK : JURISPRUDENCE FRANÇAISE (Code de la route)
-    // ═══════════════════════════════════════════════════════
+    // 🇫🇷 FALLBACK : JURISPRUDENCE FRANÇAISE (Règles statiques)
     if (t.includes("débrid") || t.includes("debride")) {
       return "<strong>Débridage (Art. L317-5)</strong><br>C'est un délit. Vous risquez jusqu'à <strong>135€ d'amende</strong> pour le propriétaire, mais surtout, <strong>votre assurance s'annule</strong> en cas d'accident corporel. Les assureurs se retournent contre vous pour payer les dommages aux victimes.";
     }
-    if (
-      t.includes("stup") ||
-      t.includes("drogue") ||
-      t.includes("fumé") ||
-      t.includes("positif") ||
-      t.includes("cannabis") ||
-      t.includes("thc")
-    ) {
+    if (t.includes("stup") || t.includes("drogue") || t.includes("fumé") || t.includes("positif") || t.includes("cannabis") || t.includes("thc")) {
       return "<strong>Conduite sous stupéfiants (Délit)</strong><br>Même avec un BSR, vous risquez jusqu'à <strong>4500€ d'amende</strong>, 2 ans de prison, et l'immobilisation du scooter. Il n'y a pas de perte de points sur un BSR. S'il s'agit d'une première infraction, le juge peut faire preuve de clémence si vous montrez des preuves médicales de votre volonté de vous soigner.";
     }
     if (t.includes("alcool")) {
@@ -393,17 +364,42 @@ window.PocketLawyer = {
     }
 
     const safeText = window.escapeHTML ? window.escapeHTML(text) : text;
-    let baseMsg = `Ma base de jurisprudence couvre <strong>16 pays</strong> avec des sources officielles. Pour la France, les textes de référence sont sur <strong>Légifrance</strong>.<br><br>
-        <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher "${safeText}" sur Légifrance</a>`;
+    let baseMsg = `Je consulte la base de jurisprudence (Légifrance via PISTE)...<br><br>`;
+    
+    // Appel à la Cloud Function searchLegifrancePiste
+    try {
+      if (typeof window.session !== "undefined" && window.session.token) {
+        const response = await fetch("https://europe-west1-mon50ccetmoi.cloudfunctions.net/searchLegifrancePiste", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${window.session.token}`
+            },
+            body: JSON.stringify({ query: text })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.results && data.results.length > 0) {
+                const res = data.results[0];
+                baseMsg = `<strong>${res.title}</strong><br>${res.content}<br><br><em style="color:#888; font-size:0.8em;">Source : ${res.source}</em>`;
+            } else {
+                baseMsg = `Aucun texte de loi précis trouvé sur Légifrance pour "${safeText}".<br><br>
+                <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur le site Légifrance</a>`;
+            }
+        } else {
+            baseMsg = `Service Légifrance indisponible. <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur Légifrance</a>`;
+        }
+      } else {
+          baseMsg = `Vous devez être connecté pour interroger la base Légifrance PISTE en direct. <br><br>
+          <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur Légifrance</a>`;
+      }
+    } catch (e) {
+        console.error(e);
+        baseMsg = `Erreur de connexion à la base de données gouvernementale. <a href="https://www.legifrance.gouv.fr/search/all?tab_selection=all&searchField=ALL&query=${encodeURIComponent(text)}" target="_blank" style="display:inline-block; padding:10px 15px; background:rgba(0, 51, 153, 0.3); border:1px solid #0055ff; color:#88bbff; border-radius:15px; text-decoration:none; margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> Chercher sur Légifrance</a>`;
+    }
 
-    if (
-      t.includes("accident") ||
-      t.includes("litige") ||
-      t.includes("assurance") ||
-      t.includes("accrochage") ||
-      t.includes("constat") ||
-      t.includes("sinistre")
-    ) {
+    if (t.includes("accident") || t.includes("litige") || t.includes("assurance") || t.includes("accrochage") || t.includes("constat") || t.includes("sinistre")) {
       baseMsg += `<br><br><div style="background:rgba(255, 51, 51, 0.1); border:1px solid #ff3333; border-radius:10px; padding:10px; margin-top:10px;">
                 <p style="margin:0 0 10px 0; color:#ffcccc; font-size:0.9rem;"><strong>Dossier d'Expertise (Boîte Noire)</strong><br>Avez-vous besoin de générer un Code Litige pour votre assureur ?</p>
                 <button onclick="if(window.DisputeAutomation) window.DisputeAutomation.initiateDispute(); else alert('Module introuvable.');" style="background:#ff3333; color:#fff; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:bold; width:100%;"><i class="fa-solid fa-gavel"></i> Générer mon Code Litige</button>

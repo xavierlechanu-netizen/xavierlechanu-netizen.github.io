@@ -19,6 +19,7 @@ const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https")
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const { Client } = require("@notionhq/client");
+const crypto = require("crypto");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -30,6 +31,9 @@ const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 const NOTION_API_KEY = defineSecret("NOTION_API_KEY");
 const NOTION_DATABASE_ID = defineSecret("NOTION_DATABASE_ID");
 const METEO_FRANCE_API_KEY = defineSecret("METEO_FRANCE_API_KEY");
+const PISTE_CLIENT_ID = defineSecret("PISTE_CLIENT_ID");
+const PISTE_CLIENT_SECRET = defineSecret("PISTE_CLIENT_SECRET");
+const PISTE_API_KEY = defineSecret("PISTE_API_KEY");
 
 // ─── Constantes API Revolut ─────────────────────────────────────────────────
 // PRODUCTION : merchant.revolut.com (anciennement sandbox-merchant.revolut.com)
@@ -200,7 +204,6 @@ exports.revolutWebhook = onRequest(
         const signature = req.headers["revolut-signature"];
         const webhookSecret = REVOLUT_WEBHOOK_SECRET.value();
         if (webhookSecret && signature) {
-            const crypto = require("crypto");
             const expectedSig = crypto
                 .createHmac("sha256", webhookSecret)
                 .update(JSON.stringify(req.body))
@@ -584,6 +587,26 @@ exports.askNexusAtlasGemini = onRequest(
         const authUser = await verifyAuthToken(req);
         if (!authUser) {
             return res.status(401).json({ error: "Authentification requise." });
+        }
+
+        // Rate Limiter : 10 requêtes/minute/utilisateur (CIS Control 4 / OWASP A11)
+        const uid = authUser.uid;
+        const now = Date.now();
+        const rateLimitRef = db.collection("rate_limits").doc(`gemini_${uid}`);
+        try {
+            const rateLimitDoc = await rateLimitRef.get();
+            const rateData = rateLimitDoc.exists ? rateLimitDoc.data() : null;
+            if (rateData && rateData.windowStart && (now - rateData.windowStart) < 60000) {
+                if (rateData.count >= 10) {
+                    console.warn(`[Rate Limit] Utilisateur ${uid} a dépassé 10 req/min pour Gemini.`);
+                    return res.status(429).json({ error: "Trop de requêtes. Veuillez patienter 1 minute." });
+                }
+                await rateLimitRef.update({ count: admin.firestore.FieldValue.increment(1) });
+            } else {
+                await rateLimitRef.set({ windowStart: now, count: 1 });
+            }
+        } catch (rlErr) {
+            console.warn("[Rate Limit] Erreur non bloquante :", rlErr.message);
         }
 
         const apiKey = GEMINI_API_KEY.value();
@@ -999,3 +1022,113 @@ exports.iotFdoRendezvous = onRequest({ region: "europe-west1" }, async (req, res
         return res.status(500).json({ error: "Internal Error" });
     }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. searchLegifrancePiste (Recherche Jurisprudence via API Gouvernementale PISTE)
+//     OAuth2 Client Credentials + Interrogation API Justice back (Légifrance)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.searchLegifrancePiste = onRequest(
+    { secrets: [PISTE_CLIENT_ID, PISTE_CLIENT_SECRET, PISTE_API_KEY], region: "europe-west1" },
+    async (req, res) => {
+        setCorsHeaders(res);
+        if (req.method === "OPTIONS") return res.status(204).send("");
+        if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
+
+        const { query } = req.body;
+        if (!query) {
+            return res.status(400).json({ error: "Le paramètre 'query' est requis." });
+        }
+
+        // Sécurité : Vérifier le token Firebase Auth
+        const authUser = await verifyAuthToken(req);
+        if (!authUser) {
+            return res.status(401).json({ error: "Authentification requise." });
+        }
+
+        const clientId = PISTE_CLIENT_ID.value();
+        const clientSecret = PISTE_CLIENT_SECRET.value();
+        const apiKey = PISTE_API_KEY.value();
+
+        if (!clientId || !clientSecret || !apiKey) {
+            return res.status(500).json({ error: "Clés PISTE non configurées côté serveur." });
+        }
+
+        try {
+            // 1. Obtenir le token OAuth2 PISTE
+            const tokenParams = new URLSearchParams();
+            tokenParams.append("grant_type", "client_credentials");
+            tokenParams.append("client_id", clientId);
+            tokenParams.append("client_secret", clientSecret);
+
+            const tokenRes = await fetch("https://oauth.piste.gouv.fr/api/oauth/token", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: tokenParams
+            });
+
+            if (!tokenRes.ok) {
+                const errToken = await tokenRes.text();
+                console.error("[PISTE] Erreur Auth OAuth2:", errToken);
+                return res.status(tokenRes.status).json({ error: "Erreur authentification PISTE." });
+            }
+
+            const tokenData = await tokenRes.json();
+            const accessToken = tokenData.access_token;
+
+            // 2. Interroger Légifrance (Justice back)
+            const legiRes = await fetch("https://api.piste.gouv.fr/dila/legifrance/lf-engine-app/search", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`,
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Api-Key": apiKey
+                },
+                body: JSON.stringify({
+                    "recherche": {
+                        "champs": [
+                            {
+                                "criteres": [
+                                    {
+                                        "valeur": query,
+                                        "typeRecherche": "EXACTE",
+                                        "criteres": []
+                                    }
+                                ],
+                                "typeChamp": "TITLE"
+                            }
+                        ],
+                        "operateur": "ET"
+                    },
+                    "fond": "CODES_TEXTES",
+                    "taillePage": 3
+                })
+            });
+
+            if (!legiRes.ok) {
+                const errLegi = await legiRes.text();
+                console.error("[PISTE] Erreur API Légifrance:", errLegi);
+                return res.status(legiRes.status).json({ error: "Erreur recherche Légifrance." });
+            }
+
+            const legiData = await legiRes.json();
+            
+            // 3. Formater les résultats
+            let formattedResults = [];
+            if (legiData.results && legiData.results.length > 0) {
+                formattedResults = legiData.results.map(item => ({
+                    title: item.title || "Article non titré",
+                    content: (item.text || "Contenu non disponible").substring(0, 800) + "...",
+                    source: "Légifrance (Gouvernement Français)",
+                    id: item.cid
+                }));
+            }
+
+            return res.status(200).json({ results: formattedResults });
+
+        } catch (err) {
+            console.error("[PISTE] Exception Serveur:", err);
+            return res.status(500).json({ error: "Erreur interne", message: err.message });
+        }
+    }
+);

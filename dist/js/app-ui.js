@@ -47,13 +47,13 @@ function runCinematicStartup() {
     }, 15);
   }, 500);
 
-  // Update check list
+  // Update check list (insertAdjacentHTML au lieu de innerHTML += pour la performance / OWASP A03)
   setTimeout(() => {
-    if (checkList) checkList.innerHTML += "<div>> ENGINE_CHECK: OK</div>";
+    if (checkList) checkList.insertAdjacentHTML("beforeend", "<div>> ENGINE_CHECK: OK</div>");
   }, 1200);
   setTimeout(() => {
     if (checkList)
-      checkList.innerHTML += "<div>> NETWORK_ESTABLISHED: 5G_ULTRA</div>";
+      checkList.insertAdjacentHTML("beforeend", "<div>> NETWORK_ESTABLISHED: 5G_ULTRA</div>");
   }, 2000);
 }
 
