@@ -23,7 +23,7 @@ service cloud.firestore {
 
     // Profils Utilisateurs : Lecture restreinte au proprio ou admin
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId) || isAdmin() || resource.data.isCertifiedGarage == true || (isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCertifiedGarage == true);
       allow create: if isSignedIn() && isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
@@ -349,6 +349,34 @@ service cloud.firestore {
     match /fdo_vouchers/{voucherId} {
       // Les vouchers sont lus/écrits par les Cloud Functions ou l'admin
       allow read, write: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // GARAGE PARTNERS (Garages certifiés partenaires)
+    // ─────────────────────────────────────────────────────────────
+    match /garage_partners/{partnerId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(partnerId);
+      allow update: if isOwner(partnerId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // MAINTENANCE LOGS (Cahier d'entretien certifié par les garages)
+    // Entrées IMMUABLES : un entretien enregistré ne peut être
+    // ni modifié ni supprimé (intégrité du cahier numérique).
+    // Seul un garage certifié (isCertifiedGarage == true) peut créer.
+    // Seul le propriétaire du véhicule peut lire ses entrées.
+    // ─────────────────────────────────────────────────────────────
+    match /maintenance_logs/{logId} {
+      allow read: if isSignedIn() && resource.data.vehicleOwnerUid == request.auth.uid;
+      allow create: if isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCertifiedGarage == true
+        && request.resource.data.garageUid == request.auth.uid
+        && request.resource.data.vehicleOwnerUid is string
+        && request.resource.data.category is string
+        && request.resource.data.description is string;
+      allow update, delete: if false;
     }
 
     // ─────────────────────────────────────────────────────────────

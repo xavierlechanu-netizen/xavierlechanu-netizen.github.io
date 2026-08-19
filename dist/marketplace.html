@@ -501,7 +501,7 @@
             <i class="fa-solid fa-truck-fast"></i> Vendu et expédié par <strong>mon50ccetmoi.com</strong>
           </div>
           <div style="background: rgba(183, 0, 255, 0.15); border: 1px solid rgba(183, 0, 255, 0.3); padding: 6px 10px; border-radius: 8px; margin-bottom: 12px; display: inline-block;">
-            <span style="color: #b700ff; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-gift"></i> Offre de Lancement : 1 an d'Abonnement Premium Offert !</span>
+            <span style="color: #b700ff; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-gift"></i> Offre de Lancement (10 premiers) : Prototype garanti à vie !</span>
           </div>
           <p style="color: #888; font-size: 0.85rem; line-height: 1.4; margin-bottom: 10px;">
             Finition ultra-premium en <strong>Aluminium Noir Mat</strong>. Format ultra-plat inviolable (85×54 mm). 
@@ -557,9 +557,14 @@
           </div>
 
           <!-- Prix -->
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;">
-            <div class="price-tag" style="color: #ffaa00; font-size: 1.5rem;">49,90 €</div>
-            <span style="color: #555; font-size: 0.8rem;">TTC · Livraison offerte 🇫🇷</span>
+          <div style="display: flex; flex-direction: column; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <div class="price-tag" style="color: #ffaa00; font-size: 1.5rem;">49,99 €</div>
+              <span style="color: #555; font-size: 0.8rem;">TTC · Livraison offerte 🇫🇷</span>
+            </div>
+            <span style="color: #00ff88; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">
+              <i class="fa-solid fa-tag"></i> Tarif standard (dès le 11ème) : 89,99 €
+            </span>
           </div>
 
           <!-- Bouton Achat -->
@@ -606,11 +611,11 @@
           <div style="font-size: 0.75rem; color: #00ff88; margin-bottom: 8px;">
             <i class="fa-solid fa-truck-fast"></i> Vendu et expédié par <strong>mon50ccetmoi.com</strong>
           </div>
-          <div style="background: rgba(183, 0, 255, 0.15); border: 1px solid rgba(183, 0, 255, 0.3); padding: 6px 10px; border-radius: 8px; margin-bottom: 12px; display: inline-block;">
-            <span style="color: #b700ff; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-gift"></i> Offre de Lancement : 1 an d'Abonnement Premium Offert (pour les 2) !</span>
+          <div style="background: rgba(255, 0, 80, 0.15); border: 1px solid rgba(255, 0, 80, 0.3); padding: 6px 10px; border-radius: 8px; margin-bottom: 12px; display: inline-block;">
+            <span style="color: #ff0050; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-circle-info"></i> Attention : L'édition Prototype n'est pas incluse dans le Pack.</span>
           </div>
           <p style="color: #888; font-size: 0.85rem; line-height: 1.4;">
-            Idéal pour protéger 2 véhicules ou offrir à un proche. 
+            Idéal pour protéger 2 véhicules ou offrir à un proche avec l'édition <strong>Standard</strong>. 
             Chaque boîtier possède son propre numéro de série unique.
           </p>
 
@@ -640,10 +645,10 @@
 
           <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;">
             <div>
-              <div class="price-tag" style="color: #ffaa00; font-size: 1.4rem;">89,90 €</div>
+              <div class="price-tag" style="color: #ffaa00; font-size: 1.4rem;">161,98 €</div>
             </div>
             <span style="color: #00ff88; font-size: 0.8rem; font-weight: 600;">
-              <i class="fa-solid fa-tag"></i> au lieu de 99,80 €
+              <i class="fa-solid fa-tag"></i> au lieu de 179,98 €
             </span>
           </div>
           <button class="buy-btn" style="
@@ -871,10 +876,10 @@
           }, 1500);
         },
         buyUnit: function() {
-          this.simulateRevolutPay(49.90, "Boîte Noire V1");
+          this.simulateRevolutPay(49.99, "Boîte Noire V1 (Offre Lancement)");
         },
         buyPack: function(qty) {
-          this.simulateRevolutPay(89.82, "Pack Duo Boîtes Noires");
+          this.simulateRevolutPay(161.98, "Pack Duo Boîtes Noires (Standard)");
         },
         subscribePremium: function() {
           this.simulateRevolutPay(4.99, "Abonnement Premium (1er mois)");

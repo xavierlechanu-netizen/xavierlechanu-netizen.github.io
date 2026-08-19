@@ -231,6 +231,16 @@ window.showPage = function (page) {
                         .join("")
                     : '<p style="color:#444; text-align:center;">Votre carnet est vide.</p>'
                 }
+            </div>
+
+            <div id="maint-firestore-section" style="margin-top:15px;">
+                <h4 style="font-size:0.85rem; color:#2ecc71; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-solid fa-cloud-arrow-down"></i> Entretiens Certifiés (Cloud)</span>
+                    <button onclick="loadFirestoreMaintenanceLogs()" class="btn-dark" style="font-size:0.6rem; padding:4px 10px; border-radius:12px;">
+                        <i class="fa-solid fa-rotate"></i> Charger
+                    </button>
+                </h4>
+                <div id="maint-firestore-list" style="max-height:200px; overflow-y:auto;"></div>
             </div>`;
     renderDynamicGarage();
   } else if (page === "group") {
@@ -608,6 +618,64 @@ window.showPage = function (page) {
                 <textarea id="pro-tip-body" placeholder="Votre explication technique..." style="width:100%; height:80px; background:#000; color:white; border:1px solid #444; border-radius:8px; padding:10px; font-size:0.8rem;"></textarea>
                 <button onclick="publishProTip()" class="btn-insurance" style="background:#2ecc71; color:white; margin-top:10px; width:100%; font-size:0.8rem;">Publier la Fiche Technique</button>
             </div>
+
+            ${isCertified ? `
+            <div class="card" style="border:1px solid #f39c12; background: rgba(243, 156, 18, 0.05); margin-top:15px;">
+                <h4 style="color:#f39c12; margin-bottom:5px;"><i class="fa-solid fa-book-medical"></i> Cahier d'Entretien — Saisie Pro</h4>
+                <p style="font-size:0.65rem; color:#aaa; margin-bottom:12px;">Recherchez un client par son pseudo ou N° de série Blackbox, puis ajoutez une entrée certifiée à son carnet d'entretien numérique.</p>
+
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="text" id="pro-maint-search" placeholder="Username ou N° BB (ex: BB50-00048)" style="flex:1; padding:10px; background:#000; color:white; border:1px solid #444; border-radius:8px; font-size:0.8rem;">
+                    <button onclick="proSearchClient()" class="btn-insurance" style="background:#f39c12; color:black; font-weight:bold; white-space:nowrap; padding:10px 15px;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Chercher
+                    </button>
+                </div>
+
+                <div id="pro-maint-client-result" style="display:none; background:rgba(46, 204, 113, 0.08); border:1px solid rgba(46, 204, 113, 0.3); border-radius:10px; padding:12px; margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div>
+                            <i class="fa-solid fa-user" style="color:#2ecc71;"></i>
+                            <strong id="pro-maint-client-name" style="color:#fff; margin-left:5px;">—</strong>
+                        </div>
+                        <span id="pro-maint-client-model" style="font-size:0.7rem; color:#aaa;">—</span>
+                    </div>
+                    <small id="pro-maint-client-uid" style="font-size:0.6rem; color:#555; display:block;">UID: —</small>
+                </div>
+
+                <div id="pro-maint-form" style="display:none;">
+                    <label style="font-size:0.75rem; color:#f39c12; font-weight:600; display:block; margin-bottom:5px;">
+                        <i class="fa-solid fa-wrench"></i> Type d'intervention
+                    </label>
+                    <select id="pro-maint-category" style="width:100%; padding:10px; margin-bottom:10px; background:#000; color:white; border:1px solid #444; border-radius:8px; font-size:0.8rem;">
+                        <option value="Huile">🛢️ Vidange / Huile</option>
+                        <option value="Courroie">⚙️ Courroie</option>
+                        <option value="Pneus">🔘 Pneus</option>
+                        <option value="Freins">🛑 Freins / Plaquettes</option>
+                        <option value="Bougie">🔥 Bougie</option>
+                        <option value="Variateur">🔧 Variateur / Galets</option>
+                        <option value="Batterie">🔋 Batterie</option>
+                        <option value="Carburateur">⛽ Carburateur</option>
+                        <option value="Autre">📋 Autre</option>
+                    </select>
+
+                    <label style="font-size:0.75rem; color:#f39c12; font-weight:600; display:block; margin-bottom:5px;">
+                        <i class="fa-solid fa-gauge-high"></i> Kilométrage au compteur
+                    </label>
+                    <input type="number" id="pro-maint-km" placeholder="Ex: 12450" style="width:100%; padding:10px; margin-bottom:10px; background:#000; color:white; border:1px solid #444; border-radius:8px; font-size:0.8rem;">
+
+                    <label style="font-size:0.75rem; color:#f39c12; font-weight:600; display:block; margin-bottom:5px;">
+                        <i class="fa-solid fa-pen-nib"></i> Description technique
+                    </label>
+                    <textarea id="pro-maint-desc" placeholder="Détail de l'intervention (ex: Vidange complète huile 2T Ipone Samourai Racing, filtre nettoyé)" style="width:100%; height:70px; background:#000; color:white; border:1px solid #444; border-radius:8px; padding:10px; font-size:0.8rem;"></textarea>
+
+                    <button onclick="proSubmitMaintenance()" class="btn-insurance" style="background:linear-gradient(135deg, #2ecc71, #27ae60); color:white; margin-top:12px; width:100%; font-size:0.9rem; font-weight:bold; padding:14px;">
+                        <i class="fa-solid fa-certificate"></i> Certifier & Enregistrer l'Entretien
+                    </button>
+                </div>
+
+                <div id="pro-maint-status" style="display:none; text-align:center; padding:10px; margin-top:10px; border-radius:8px;"></div>
+            </div>
+            ` : ''}
         `;
   } else if (page === "donate") {
     if (typeof content !== "undefined")

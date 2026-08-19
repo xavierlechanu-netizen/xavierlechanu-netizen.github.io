@@ -596,8 +596,27 @@ window.requestCertification = function () {
 };
 
 window.payGarageEntryFee = async function () {
+  let amountCents = 4999;
+  let priceStr = "49,99€";
+  
+  if (typeof speak === "function") speak("Vérification des tarifs en cours...");
+  
+  try {
+    if (window.firebase && firebase.firestore) {
+      const db = firebase.firestore();
+      const snap = await db.collection("users").where("isCertifiedGarage", "==", true).count().get();
+      const count = snap.data().count;
+      if (count < 50) {
+        amountCents = 1999;
+        priceStr = "19,99€ (Offre de lancement : 50 premiers garages)";
+      }
+    }
+  } catch (e) {
+    console.warn("[GARAGE] Could not fetch garage count, defaulting to standard pricing.", e);
+  }
+
   const ok = confirm(
-    "Confirmez-vous le paiement du droit d'entrée de 50€ TTC pour devenir Garage Certifié ?",
+    "Confirmez-vous le paiement du droit d'entrée de " + priceStr + " TTC pour devenir Garage Certifié ?"
   );
   if (ok) {
     if (typeof speak === "function")
@@ -611,7 +630,7 @@ window.payGarageEntryFee = async function () {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount_cents: 5000,
+          amount_cents: amountCents,
           currency: "EUR",
           case_id: caseId,
           user_id: window.session?.uid || "unknown",
@@ -712,6 +731,273 @@ window.applyPartnerExemption = async function () {
       secureSetItem("session", JSON.stringify(window.session));
     }
     showPage("pro-space");
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────
+// CAHIER D'ENTRETIEN — SAISIE PRO (Garages Certifiés)
+// Recherche d'un client par username ou N° de série Blackbox,
+// puis écriture d'une entrée certifiée immuable dans Firestore.
+// ─────────────────────────────────────────────────────────────────────
+
+// État temporaire pour stocker le client trouvé
+window._proMaintClient = null;
+
+window.proSearchClient = async function () {
+  // Sécurité OWASP A01 : Vérifier que l'utilisateur est un garage certifié
+  if (!window.session?.isCertifiedGarage) {
+    alert("⛔ Accès réservé aux Garages Certifiés.");
+    return;
+  }
+
+  const searchInput = document.getElementById("pro-maint-search");
+  if (!searchInput) return;
+  const query = searchInput.value.trim();
+  if (!query || query.length < 2) {
+    alert("Veuillez entrer un pseudo utilisateur ou un N° de série Blackbox (min. 2 caractères).");
+    return;
+  }
+
+  // Masquer les résultats précédents
+  const resultDiv = document.getElementById("pro-maint-client-result");
+  const formDiv = document.getElementById("pro-maint-form");
+  const statusDiv = document.getElementById("pro-maint-status");
+  if (resultDiv) resultDiv.style.display = "none";
+  if (formDiv) formDiv.style.display = "none";
+  if (statusDiv) statusDiv.style.display = "none";
+  window._proMaintClient = null;
+
+  if (!window.firebase || !firebase.firestore) {
+    alert("Firebase n'est pas disponible.");
+    return;
+  }
+
+  try {
+    const db = firebase.firestore();
+    let foundUser = null;
+
+    // 1. Recherche par username (exact match — RGPD safe, pas de listing)
+    const usernameSnap = await db.collection("users")
+      .where("username", "==", query)
+      .limit(1)
+      .get();
+
+    if (!usernameSnap.empty) {
+      const doc = usernameSnap.docs[0];
+      foundUser = { uid: doc.id, ...doc.data() };
+    }
+
+    // 2. Si pas trouvé, recherche par N° de série Blackbox
+    if (!foundUser) {
+      const bbSnap = await db.collection("users")
+        .where("blackbox_serial", "==", query.toUpperCase())
+        .limit(1)
+        .get();
+
+      if (!bbSnap.empty) {
+        const doc = bbSnap.docs[0];
+        foundUser = { uid: doc.id, ...doc.data() };
+      }
+    }
+
+    if (!foundUser) {
+      alert("❌ Aucun client trouvé pour : " + query + "\n\nVérifiez le pseudo ou le N° de série.");
+      return;
+    }
+
+    // Stocker le client trouvé
+    window._proMaintClient = {
+      uid: foundUser.uid,
+      username: foundUser.username || "Inconnu",
+      scooterModel: foundUser.scooterModel || foundUser.vehicleModel || "Non renseigné",
+    };
+
+    // Afficher le résultat (XSS safe — textContent au lieu de innerHTML)
+    const nameEl = document.getElementById("pro-maint-client-name");
+    const modelEl = document.getElementById("pro-maint-client-model");
+    const uidEl = document.getElementById("pro-maint-client-uid");
+
+    if (nameEl) nameEl.textContent = window._proMaintClient.username;
+    if (modelEl) modelEl.textContent = window._proMaintClient.scooterModel;
+    if (uidEl) uidEl.textContent = "UID: " + window._proMaintClient.uid.substring(0, 8) + "...";
+
+    if (resultDiv) resultDiv.style.display = "block";
+    if (formDiv) formDiv.style.display = "block";
+
+    if (typeof speak === "function") {
+      speak("Client trouvé : " + window._proMaintClient.username);
+    }
+  } catch (e) {
+    console.error("[PRO-MAINT] Search error:", e);
+    alert("Erreur lors de la recherche : " + e.message);
+  }
+};
+
+window.proSubmitMaintenance = async function () {
+  // Sécurité OWASP A01 : Double vérification côté client
+  if (!window.session?.isCertifiedGarage) {
+    alert("⛔ Accès réservé aux Garages Certifiés.");
+    return;
+  }
+
+  if (!window._proMaintClient || !window._proMaintClient.uid) {
+    alert("Veuillez d'abord rechercher un client.");
+    return;
+  }
+
+  const category = document.getElementById("pro-maint-category")?.value;
+  const km = parseInt(document.getElementById("pro-maint-km")?.value) || 0;
+  const description = document.getElementById("pro-maint-desc")?.value?.trim();
+
+  if (!category) {
+    alert("Veuillez sélectionner un type d'intervention.");
+    return;
+  }
+  if (!description || description.length < 5) {
+    alert("Veuillez décrire l'intervention (min. 5 caractères).");
+    return;
+  }
+
+  // Assainir la description (OWASP A03 — prévention XSS)
+  const safeDescription = description.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const statusDiv = document.getElementById("pro-maint-status");
+
+  try {
+    if (!window.firebase || !firebase.firestore) {
+      alert("Firebase n'est pas disponible.");
+      return;
+    }
+
+    // Afficher le statut de chargement
+    if (statusDiv) {
+      statusDiv.style.display = "block";
+      statusDiv.style.background = "rgba(243, 156, 18, 0.1)";
+      statusDiv.style.border = "1px solid rgba(243, 156, 18, 0.3)";
+      statusDiv.textContent = "⏳ Enregistrement en cours...";
+      statusDiv.style.color = "#f39c12";
+    }
+
+    const db = firebase.firestore();
+    await db.collection("maintenance_logs").add({
+      vehicleOwnerUid: window._proMaintClient.uid,
+      vehicleOwnerUsername: window._proMaintClient.username,
+      garageUid: window.session.uid,
+      garageName: window.session.username || "Garage Certifié",
+      category: category,
+      description: safeDescription,
+      km: km,
+      certified: true,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Succès
+    if (statusDiv) {
+      statusDiv.style.background = "rgba(46, 204, 113, 0.15)";
+      statusDiv.style.border = "1px solid rgba(46, 204, 113, 0.4)";
+      statusDiv.style.color = "#2ecc71";
+      statusDiv.textContent = "✅ Entretien [" + category + "] certifié et enregistré avec succès pour " + window._proMaintClient.username + " !";
+    }
+
+    // Reset le formulaire
+    const descEl = document.getElementById("pro-maint-desc");
+    const kmEl = document.getElementById("pro-maint-km");
+    if (descEl) descEl.value = "";
+    if (kmEl) kmEl.value = "";
+
+    if (typeof speak === "function") {
+      speak("Entretien certifié enregistré avec succès dans le cahier numérique du client.");
+    }
+
+    console.log("[PRO-MAINT] Entry created for user:", window._proMaintClient.uid, "category:", category);
+  } catch (e) {
+    console.error("[PRO-MAINT] Submit error:", e);
+    if (statusDiv) {
+      statusDiv.style.display = "block";
+      statusDiv.style.background = "rgba(231, 76, 60, 0.15)";
+      statusDiv.style.border = "1px solid rgba(231, 76, 60, 0.4)";
+      statusDiv.style.color = "#e74c3c";
+      statusDiv.textContent = "❌ Erreur : " + e.message;
+    }
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────
+// CHARGEMENT DES ENTRÉES D'ENTRETIEN CERTIFIÉES (côté client)
+// Récupère les entrées Firestore pour l'utilisateur connecté
+// et les affiche dans la section "Entretiens Certifiés (Cloud)"
+// ─────────────────────────────────────────────────────────────────────
+window.loadFirestoreMaintenanceLogs = async function () {
+  const container = document.getElementById("maint-firestore-list");
+  if (!container) return;
+
+  if (!window.session?.uid) {
+    container.textContent = "Connectez-vous pour voir vos entretiens certifiés.";
+    container.style.color = "#666";
+    container.style.fontSize = "0.75rem";
+    container.style.textAlign = "center";
+    container.style.padding = "10px";
+    return;
+  }
+
+  if (!window.firebase || !firebase.firestore) {
+    container.textContent = "Firebase non disponible.";
+    container.style.color = "#666";
+    container.style.fontSize = "0.75rem";
+    container.style.textAlign = "center";
+    return;
+  }
+
+  container.innerHTML = '<p style="color:#f39c12; text-align:center; font-size:0.75rem;"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</p>';
+
+  try {
+    const db = firebase.firestore();
+    // OWASP A11 : Limiter à 50 entrées pour éviter les requêtes infinies
+    const snap = await db.collection("maintenance_logs")
+      .where("vehicleOwnerUid", "==", window.session.uid)
+      .orderBy("createdAt", "desc")
+      .limit(50)
+      .get();
+
+    if (snap.empty) {
+      container.innerHTML = '<p style="color:#555; text-align:center; font-size:0.75rem; padding:10px;">Aucun entretien certifié par un garage pour l\'instant.</p>';
+      return;
+    }
+
+    let html = "";
+    snap.forEach((doc) => {
+      const d = doc.data();
+      const date = d.createdAt?.toDate?.()
+        ? d.createdAt.toDate().toLocaleDateString("fr-FR")
+        : "—";
+      // Assainir les champs dynamiques pour prévenir XSS (OWASP A03)
+      const safeCategory = (d.category || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const safeDesc = (d.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const safeGarage = (d.garageName || "Garage Certifié").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const kmStr = d.km ? d.km.toLocaleString("fr-FR") + " km" : "";
+
+      html += `<div style="padding:10px; background:rgba(46, 204, 113, 0.06); margin-bottom:5px; border-radius:8px; border-left:3px solid #2ecc71; font-size:0.8rem;">
+        <div style="display:flex; justify-content:space-between;">
+            <strong style="color:#fff;">${safeCategory}</strong>
+            <span style="color:#666; font-size:0.65rem;">${date}${kmStr ? " · " + kmStr : ""}</span>
+        </div>
+        <div style="font-size:0.72rem; margin-top:3px; color:#ccc;">${safeDesc}</div>
+        <div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;">
+            <i class="fa-solid fa-certificate"></i> CERTIFIÉ PAR : ${safeGarage}
+            <i class="fa-solid fa-cloud" style="margin-left:5px; color:#3498db;" title="Synchronisé via Firestore"></i>
+        </div>
+      </div>`;
+    });
+
+    container.innerHTML = html;
+  } catch (e) {
+    console.error("[MAINT-LOGS] Load error:", e);
+    // Si l'index Firestore n'existe pas encore, afficher un message clair
+    if (e.code === "failed-precondition") {
+      container.innerHTML = '<p style="color:#f39c12; text-align:center; font-size:0.7rem; padding:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Index Firestore en cours de création. Réessayez dans quelques minutes.</p>';
+    } else {
+      container.innerHTML = '<p style="color:#e74c3c; text-align:center; font-size:0.7rem; padding:10px;">Erreur de chargement.</p>';
+    }
   }
 };
 
