@@ -391,7 +391,10 @@ service cloud.firestore {
     // Seul le propriétaire du véhicule peut lire ses entrées.
     // ─────────────────────────────────────────────────────────────
     match /maintenance_logs/{logId} {
-      allow read: if isSignedIn() && resource.data.vehicleOwnerUid == request.auth.uid;
+      allow read: if isSignedIn() && (
+        resource.data.vehicleOwnerUid == request.auth.uid ||
+        resource.data.garageUid == request.auth.uid
+      );
       allow create: if isSignedIn() && (
         // Cas 1 : Créé par un garage certifié
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCertifiedGarage == true
