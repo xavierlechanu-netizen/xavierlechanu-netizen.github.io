@@ -199,11 +199,34 @@ service cloud.firestore {
       allow write: if false; // Écriture exclusivement via Firebase Admin (Cloud Function)
     }
 
-    // Propositions de litige IA (écrites par le client, lues par l'utilisateur et l'admin)
+    // Propositions de litige IA (Assureurs et Utilisateurs)
     match /litigation_proposals/{caseId} {
-      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Le propriétaire ou l'admin peut tout lire (liste + get)
+      // L'assureur peut lire un document spécifique (get) s'il connaît le caseId (Zero-Trust)
+      allow get: if isSignedIn();
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if false; // Mise à jour uniquement via Cloud Function (webhook)
+      // Autoriser l'assureur à mettre à jour uniquement le statut
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'resolvedBy', 'resolvedAt']);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // BLACK BOX SHOP (Matériel Physique)
+    // ─────────────────────────────────────────────────────────────
+    
+    // Historique des ventes
+    match /blackbox_sales/{orderId} {
+      allow create: if isSignedIn(); // Création lors de l'achat
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update, delete: if false; // Inaltérable
+    }
+
+    // Statistiques globales (pour le compteur de garantie à vie)
+    match /stats/{statId} {
+      allow read: if true; // Public pour voir le stock restant
+      allow create: if true;
+      allow update: if true; // MVP : Tolérance pour incrémenter le compteur côté client
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -362,20 +385,26 @@ service cloud.firestore {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // MAINTENANCE LOGS (Cahier d'entretien certifié par les garages)
+    // MAINTENANCE LOGS (Cahier d'entretien Cloud)
     // Entrées IMMUABLES : un entretien enregistré ne peut être
     // ni modifié ni supprimé (intégrité du cahier numérique).
-    // Seul un garage certifié (isCertifiedGarage == true) peut créer.
     // Seul le propriétaire du véhicule peut lire ses entrées.
     // ─────────────────────────────────────────────────────────────
     match /maintenance_logs/{logId} {
       allow read: if isSignedIn() && resource.data.vehicleOwnerUid == request.auth.uid;
-      allow create: if isSignedIn()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCertifiedGarage == true
-        && request.resource.data.garageUid == request.auth.uid
-        && request.resource.data.vehicleOwnerUid is string
-        && request.resource.data.category is string
-        && request.resource.data.description is string;
+      allow create: if isSignedIn() && (
+        // Cas 1 : Créé par un garage certifié
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isCertifiedGarage == true
+         && request.resource.data.garageUid == request.auth.uid
+         && request.resource.data.certified == true)
+        ||
+        // Cas 2 : Créé par le propriétaire du véhicule (non certifié)
+        (request.resource.data.vehicleOwnerUid == request.auth.uid
+         && request.resource.data.certified == false)
+      )
+      && request.resource.data.vehicleOwnerUid is string
+      && request.resource.data.category is string
+      && request.resource.data.description is string;
       allow update, delete: if false;
     }
 

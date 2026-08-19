@@ -211,38 +211,18 @@ window.showPage = function (page) {
                 <button onclick="addCategorizedMaint('Freins')" class="btn-dark" style="font-size:0.7rem; padding:10px;"><i class="fa-solid fa-hard-drive"></i> Freins</button>
             </div>
 
-            <div id="maint-history" style="font-size:0.8rem; margin-top:15px; max-height:200px; overflow-y:auto;">
-                ${
-                  history.length
-                    ? history
-                        .reverse()
-                        .map(
-                          (
-                            h,
-                          ) => `<div style="padding:10px; background:rgba(255,255,255,0.05); margin-bottom:5px; border-radius:8px; border-left:3px solid ${h.certified ? "#2ecc71" : "#444"};">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>${h.category}</strong>
-                        <span style="color:#666; font-size:0.7rem;">${h.date}</span>
-                    </div>
-                    <div style="font-size:0.75rem; margin-top:3px; color:#ccc;">${h.action}</div>
-                    ${h.certified ? `<div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;"><i class="fa-solid fa-certificate"></i> CERTIFIÃƒ‰ PAR : ${h.garage}</div>` : ""}
-                </div>`,
-                        )
-                        .join("")
-                    : '<p style="color:#444; text-align:center;">Votre carnet est vide.</p>'
-                }
-            </div>
-
             <div id="maint-firestore-section" style="margin-top:15px;">
-                <h4 style="font-size:0.85rem; color:#2ecc71; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="fa-solid fa-cloud-arrow-down"></i> Entretiens Certifiés (Cloud)</span>
+                <h4 style="font-size:0.85rem; color:#3498db; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-solid fa-cloud"></i> Mon Carnet d'Entretien (Cloud)</span>
                     <button onclick="loadFirestoreMaintenanceLogs()" class="btn-dark" style="font-size:0.6rem; padding:4px 10px; border-radius:12px;">
-                        <i class="fa-solid fa-rotate"></i> Charger
+                        <i class="fa-solid fa-rotate"></i> Actualiser
                     </button>
                 </h4>
-                <div id="maint-firestore-list" style="max-height:200px; overflow-y:auto;"></div>
+                <div id="maint-firestore-list" style="max-height:300px; overflow-y:auto; margin-top:10px;"></div>
             </div>`;
     renderDynamicGarage();
+    // Auto-charger le carnet d'entretien Cloud au chargement de la page
+    setTimeout(() => { if (typeof loadFirestoreMaintenanceLogs === 'function') loadFirestoreMaintenanceLogs(); }, 100);
   } else if (page === "group") {
     if (typeof content !== "undefined")
       content.innerHTML = `<h3>Balade en Groupe</h3>

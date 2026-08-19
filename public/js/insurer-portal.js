@@ -1,4 +1,4 @@
-﻿/* --- B2B INSURER PORTAL (WEB4) --- */
+/* --- B2B INSURER PORTAL (WEB4) --- */
 
 window.InsurerPortal = {
   currentCode: null,
@@ -63,7 +63,7 @@ window.InsurerPortal = {
     document.getElementById("insurer-pricing-box").classList.add("hidden");
   },
 
-  verifyCode: function () {
+  verifyCode: async function () {
     const input = document
       .getElementById("insurer-code-input")
       .value.trim()
@@ -73,34 +73,71 @@ window.InsurerPortal = {
       return;
     }
 
-    const parts = input.split("-");
-    if (parts.length >= 2) {
-      const tsStr = parts[1].toLowerCase();
-      const timestamp = parseInt(tsStr, 36);
-      if (!isNaN(timestamp)) {
-        const now = Date.now();
-        const diffHours = (now - timestamp) / (1000 * 60 * 60);
-        if (diffHours > 72) {
-          alert(
-            "Code Expiré. Le code litige est valable uniquement 72h. Le pilote doit générer un nouveau code depuis son application.",
-          );
+    try {
+      if (typeof db !== "undefined") {
+        const docRef = db.collection("litigation_proposals").doc(input);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+          alert("Dossier introuvable ou expiré.");
           return;
         }
-      }
-    }
 
-    // Simuler la recherche dans le coffre-fort Firebase
-    document.getElementById("insurer-dashboard-box").classList.add("hidden");
-    document.getElementById("insurer-pricing-box").classList.remove("hidden");
-    this.currentCode = input;
+        const data = doc.data();
+        if (data.status === "RESOLVED") {
+            alert("Ce dossier a déjà été traité et clôturé.");
+            return;
+        }
+      } else {
+          // Simulation si DB n'est pas dispo
+          const parts = input.split("-");
+          if (parts.length >= 2) {
+            const tsStr = parts[1].toLowerCase();
+            const timestamp = parseInt(tsStr, 36);
+            if (!isNaN(timestamp)) {
+              const now = Date.now();
+              const diffHours = (now - timestamp) / (1000 * 60 * 60);
+              if (diffHours > 72) {
+                alert(
+                  "Code Expiré. Le code litige est valable uniquement 72h. Le pilote doit générer un nouveau code depuis son application.",
+                );
+                return;
+              }
+            }
+          }
+      }
+
+      document.getElementById("insurer-dashboard-box").classList.add("hidden");
+      document.getElementById("insurer-pricing-box").classList.remove("hidden");
+      this.currentCode = input;
+    } catch (e) {
+        console.error("Erreur Firestore :", e);
+        alert("Erreur de connexion à la base sécurisée.");
+    }
   },
 
-  buyReport: function (type, price, rewardBvc) {
+  buyReport: async function (type, price, rewardBvc) {
     if (
       confirm(
-        `[SÉCURITÉ ZERO-TRUST]\nConfirmez-vous l'achat du rapport [${type}] pour ${price}€ HT ?\n\n⚠ï¸ CONDITIONS B2B : Les données chiffrées sont définitives.\nLe paiement sera instantanément prélevé via le Smart Contract.`,
+        `[SÉCURITÉ ZERO-TRUST]\nConfirmez-vous l'achat du rapport [${type}] pour ${price}€ HT ?\n\n⚠ï¸  CONDITIONS B2B : Les données chiffrées sont définitives.\nLe paiement sera instantanément prélevé via le Smart Contract.`,
       )
     ) {
+      // 1. Mise à jour statut dans Firestore
+      try {
+          if (typeof db !== "undefined" && this.currentCode) {
+              await db.collection("litigation_proposals").doc(this.currentCode).update({
+                  status: "RESOLVED",
+                  resolvedBy: this.currentInsurer || "ASSUREUR_ANONYME",
+                  resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              
+              // On peut attribuer la récompense au pilote si on récupère son ID du doc.
+              // Ici, pour le MVP, on simule l'appel Web4 comme avant si sur la même session
+          }
+      } catch (e) {
+          console.error("Erreur de mise à jour Firestore :", e);
+      }
+
       // Premium WOW Effect for success
       const pricingBox = document.getElementById("insurer-pricing-box");
       pricingBox.innerHTML = `
@@ -117,15 +154,12 @@ window.InsurerPortal = {
       setTimeout(() => {
         // Déclenchement du Smart Contract Web4 : Rétribution du pilote
         if (window.Web4Economy && rewardBvc > 0) {
+          // Note : en prod, ça doit être le backend qui mint pour le pilote
+          // Ici, c'est une simulation.
           window.Web4Economy.mineToken(
             rewardBvc,
             `Smart Contract: L'assureur a acheté le rapport (${type})`,
           );
-          if (typeof speak === "function") {
-            speak(
-              "Transaction confirmée. Votre assureur a consulté le rapport. Les tokens ont été crédités.",
-            );
-          }
         }
         setTimeout(() => this.close(), 3000);
       }, 2000);

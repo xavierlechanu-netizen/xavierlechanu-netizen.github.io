@@ -373,6 +373,10 @@ window.MecaWizard = {
                     <p><i class="fa-solid fa-microchip" style="color:#10a37f;"></i> <strong>Analyse IA :</strong> ${diag.analyse}</p>
                     <p style="margin-top:10px;"><i class="fa-solid fa-wrench" style="color:#10a37f;"></i> <strong>Recommandation :</strong> ${diag.reco}</p>
                 </div>
+                <!-- AVERTISSEMENT AI ACT (Obligatoire) -->
+                <p style="color:#ffaa00; font-size:0.75rem; margin-top:15px; border:1px solid #ffaa00; padding:10px; border-radius:8px;">
+                    <i class="fa-solid fa-scale-balanced"></i> Avertissement (AI Act) : Rapport expert généré par Intelligence Artificielle. Ce résultat est fourni à titre indicatif et est <strong>soumis à supervision humaine</strong> (expertise d'un mécanicien certifié). Aucune décision automatisée n'est prise.
+                </p>
                 <button onclick="if(window.CertifiedCamera) window.CertifiedCamera.open(); else alert('Module de caméra non disponible');" style="margin-top:20px; width:100%; background:#ffb703; color:#000; padding:10px 15px; border-radius:5px; border:none; font-weight:bold; cursor:pointer; margin-bottom:10px;">
                     <i class="fa-solid fa-camera"></i> Ajouter Preuve Photo au rapport
                 </button>

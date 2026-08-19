@@ -436,54 +436,7 @@ function checkFerryProximity(lat, lng) {
         window.NeuralHUD.logToConsole(`ALERT: FERRY_CROSSING_IN_1KM`);
       }
       if (window.Telemetry) {
-        window.Telemetry.addLog("INFO", "Ferry crossing ahead: 1km");
-      }
-    }
-  });
-}
-
-window.addCategorizedMaint = function (category) {
-  if (!window.session) {
-    alert("🔒 Le Carnet Certifié est réservé aux membres.");
-    return;
-  }
-
-  const proCode = prompt(
-    `🔑 VALIDATION PRO REQUISE\nPour certifier l'entretien "${category}", le garage doit entrer son code partenaire :`,
-  );
-
-  // Simulation de validation (En prod, on vérifie contre la base des garages certifiés)
-  if (
-    proCode === "PRO50" ||
-    (window.session.isCertifiedGarage && proCode === "ME")
-  ) {
-    const action = prompt(
-      `Description de l'intervention ${category} :`,
-      `Révision standard ${category}`,
-    );
-    if (!action) return;
-
-    const entry = {
-      category: category,
-      action: action,
-      date: new Date().toLocaleDateString(),
-      certified: true,
-      garage: window.session.isCertifiedGarage
-        ? window.session.username
-        : "Garage Partenaire Certifié",
-    };
-
-    let history = JSON.parse(secureGetItem("maint_history") || "[]");
-    history.push(entry);
-    secureSetItem("maint_history", JSON.stringify(history));
-
-    speak(
-      "Intervention certifiée et enregistrée dans votre passeport entretien.",
-    );
-    showPage("garage");
-  } else {
-    alert(
-      "âŒ Code invalide. Seul un garage certifié peut valider cette intervention.",
+        windortifié peut valider cette intervention.",
     );
     speak("Échec de la certification.");
   }
@@ -502,28 +455,48 @@ window.saveCTDate = function (val) {
   speak("Date du contrôle technique enregistrée.");
 };
 
-window.addCategorizedMaint = function (cat) {
+window.addCategorizedMaint = async function (cat) {
+  if (!window.session?.uid) {
+    alert("Vous devez être connecté pour ajouter un entretien.");
+    return;
+  }
+
   const action = prompt(`Détail pour l'entretien [${cat}] :`, "Révision");
   if (!action) return;
 
-  let history = JSON.parse(secureGetItem("maint_history") || "[]");
-  history.push({
-    date: new Date().toLocaleDateString(),
-    action: action,
-    category: cat,
-    km: window.session?.totalDistance?.toFixed(0) || 0,
-  });
-  secureSetItem("maint_history", JSON.stringify(history));
+  const safeAction = action.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  if (window.firebase && firebase.firestore) {
+    try {
+      const db = firebase.firestore();
+      await db.collection("maintenance_logs").add({
+        vehicleOwnerUid: window.session.uid,
+        category: cat,
+        description: safeAction,
+        km: window.session?.totalDistance?.toFixed(0) || 0,
+        certified: false, // Enregistrement personnel non certifié
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      // Reset maintenance counter
+      if (window.session && window.session.maintenance) {
+        window.session.maintenance[cat.toLowerCase()] = window.session.totalDistance;
+        secureSetItem("session", JSON.stringify(window.session));
+      }
 
-  // Reset maintenance counter
-  if (window.session && window.session.maintenance) {
-    window.session.maintenance[cat.toLowerCase()] =
-      window.session.totalDistance;
-    secureSetItem("session", JSON.stringify(window.session));
+      speak(`Entretien ${cat} sauvegardé dans le cloud.`);
+      
+      // Recharger l'interface si on est sur la page garage
+      if (document.getElementById("maint-firestore-list")) {
+        loadFirestoreMaintenanceLogs();
+      }
+    } catch (e) {
+      console.error("[MAINT] Firestore write error", e);
+      alert("Erreur lors de la sauvegarde : " + e.message);
+    }
+  } else {
+    alert("Firebase n'est pas disponible.");
   }
-
-  showPage("garage");
-  speak(`Entretien ${cat} validé.`);
 };
 
 window.refreshRodageUI = function () {
@@ -970,23 +943,36 @@ window.loadFirestoreMaintenanceLogs = async function () {
       const date = d.createdAt?.toDate?.()
         ? d.createdAt.toDate().toLocaleDateString("fr-FR")
         : "—";
-      // Assainir les champs dynamiques pour prévenir XSS (OWASP A03)
       const safeCategory = (d.category || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const safeDesc = (d.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const safeGarage = (d.garageName || "Garage Certifié").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const kmStr = d.km ? d.km.toLocaleString("fr-FR") + " km" : "";
 
-      html += `<div style="padding:10px; background:rgba(46, 204, 113, 0.06); margin-bottom:5px; border-radius:8px; border-left:3px solid #2ecc71; font-size:0.8rem;">
-        <div style="display:flex; justify-content:space-between;">
-            <strong style="color:#fff;">${safeCategory}</strong>
-            <span style="color:#666; font-size:0.65rem;">${date}${kmStr ? " · " + kmStr : ""}</span>
-        </div>
-        <div style="font-size:0.72rem; margin-top:3px; color:#ccc;">${safeDesc}</div>
-        <div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;">
-            <i class="fa-solid fa-certificate"></i> CERTIFIÉ PAR : ${safeGarage}
-            <i class="fa-solid fa-cloud" style="margin-left:5px; color:#3498db;" title="Synchronisé via Firestore"></i>
-        </div>
-      </div>`;
+      if (d.certified) {
+        const safeGarage = (d.garageName || "Garage Certifié").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        html += `<div style="padding:10px; background:rgba(46, 204, 113, 0.06); margin-bottom:5px; border-radius:8px; border-left:3px solid #2ecc71; font-size:0.8rem;">
+          <div style="display:flex; justify-content:space-between;">
+              <strong style="color:#fff;">${safeCategory}</strong>
+              <span style="color:#666; font-size:0.65rem;">${date}${kmStr ? " · " + kmStr : ""}</span>
+          </div>
+          <div style="font-size:0.72rem; margin-top:3px; color:#ccc;">${safeDesc}</div>
+          <div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;">
+              <i class="fa-solid fa-certificate"></i> CERTIFIÉ PAR : ${safeGarage}
+              <i class="fa-solid fa-cloud" style="margin-left:5px; color:#3498db;" title="Synchronisé Cloud"></i>
+          </div>
+        </div>`;
+      } else {
+        html += `<div style="padding:10px; background:rgba(255, 255, 255, 0.05); margin-bottom:5px; border-radius:8px; border-left:3px solid #555; font-size:0.8rem;">
+          <div style="display:flex; justify-content:space-between;">
+              <strong style="color:#ddd;">${safeCategory}</strong>
+              <span style="color:#666; font-size:0.65rem;">${date}${kmStr ? " · " + kmStr : ""}</span>
+          </div>
+          <div style="font-size:0.72rem; margin-top:3px; color:#aaa;">${safeDesc}</div>
+          <div style="font-size:0.6rem; color:#888; margin-top:5px;">
+              <i class="fa-solid fa-user"></i> Entretien personnel
+              <i class="fa-solid fa-cloud" style="margin-left:5px; color:#3498db;" title="Synchronisé Cloud"></i>
+          </div>
+        </div>`;
+      }
     });
 
     container.innerHTML = html;

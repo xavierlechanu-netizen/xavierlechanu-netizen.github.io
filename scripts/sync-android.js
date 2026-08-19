@@ -21,6 +21,10 @@ function copyFolderSync(from, to) {
 
 console.log("Synchronisation de l'application Web vers Android WWW...");
 
+if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+}
+
 // Copier index.html
 if (fs.existsSync(path.join(srcDir, 'index.html'))) {
     fs.copyFileSync(path.join(srcDir, 'index.html'), path.join(destDir, 'index.html'));

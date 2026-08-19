@@ -7710,54 +7710,7 @@ function checkFerryProximity(lat, lng) {
         window.NeuralHUD.logToConsole(`ALERT: FERRY_CROSSING_IN_1KM`);
       }
       if (window.Telemetry) {
-        window.Telemetry.addLog("INFO", "Ferry crossing ahead: 1km");
-      }
-    }
-  });
-}
-
-window.addCategorizedMaint = function (category) {
-  if (!window.session) {
-    alert("🔒 Le Carnet Certifié est réservé aux membres.");
-    return;
-  }
-
-  const proCode = prompt(
-    `🔑 VALIDATION PRO REQUISE\nPour certifier l'entretien "${category}", le garage doit entrer son code partenaire :`,
-  );
-
-  // Simulation de validation (En prod, on vérifie contre la base des garages certifiés)
-  if (
-    proCode === "PRO50" ||
-    (window.session.isCertifiedGarage && proCode === "ME")
-  ) {
-    const action = prompt(
-      `Description de l'intervention ${category} :`,
-      `Révision standard ${category}`,
-    );
-    if (!action) return;
-
-    const entry = {
-      category: category,
-      action: action,
-      date: new Date().toLocaleDateString(),
-      certified: true,
-      garage: window.session.isCertifiedGarage
-        ? window.session.username
-        : "Garage Partenaire Certifié",
-    };
-
-    let history = JSON.parse(secureGetItem("maint_history") || "[]");
-    history.push(entry);
-    secureSetItem("maint_history", JSON.stringify(history));
-
-    speak(
-      "Intervention certifiée et enregistrée dans votre passeport entretien.",
-    );
-    showPage("garage");
-  } else {
-    alert(
-      "âŒ Code invalide. Seul un garage certifié peut valider cette intervention.",
+        windortifié peut valider cette intervention.",
     );
     speak("Échec de la certification.");
   }
@@ -7776,28 +7729,48 @@ window.saveCTDate = function (val) {
   speak("Date du contrôle technique enregistrée.");
 };
 
-window.addCategorizedMaint = function (cat) {
+window.addCategorizedMaint = async function (cat) {
+  if (!window.session?.uid) {
+    alert("Vous devez être connecté pour ajouter un entretien.");
+    return;
+  }
+
   const action = prompt(`Détail pour l'entretien [${cat}] :`, "Révision");
   if (!action) return;
 
-  let history = JSON.parse(secureGetItem("maint_history") || "[]");
-  history.push({
-    date: new Date().toLocaleDateString(),
-    action: action,
-    category: cat,
-    km: window.session?.totalDistance?.toFixed(0) || 0,
-  });
-  secureSetItem("maint_history", JSON.stringify(history));
+  const safeAction = action.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  if (window.firebase && firebase.firestore) {
+    try {
+      const db = firebase.firestore();
+      await db.collection("maintenance_logs").add({
+        vehicleOwnerUid: window.session.uid,
+        category: cat,
+        description: safeAction,
+        km: window.session?.totalDistance?.toFixed(0) || 0,
+        certified: false, // Enregistrement personnel non certifié
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      
+      // Reset maintenance counter
+      if (window.session && window.session.maintenance) {
+        window.session.maintenance[cat.toLowerCase()] = window.session.totalDistance;
+        secureSetItem("session", JSON.stringify(window.session));
+      }
 
-  // Reset maintenance counter
-  if (window.session && window.session.maintenance) {
-    window.session.maintenance[cat.toLowerCase()] =
-      window.session.totalDistance;
-    secureSetItem("session", JSON.stringify(window.session));
+      speak(`Entretien ${cat} sauvegardé dans le cloud.`);
+      
+      // Recharger l'interface si on est sur la page garage
+      if (document.getElementById("maint-firestore-list")) {
+        loadFirestoreMaintenanceLogs();
+      }
+    } catch (e) {
+      console.error("[MAINT] Firestore write error", e);
+      alert("Erreur lors de la sauvegarde : " + e.message);
+    }
+  } else {
+    alert("Firebase n'est pas disponible.");
   }
-
-  showPage("garage");
-  speak(`Entretien ${cat} validé.`);
 };
 
 window.refreshRodageUI = function () {
@@ -8244,23 +8217,36 @@ window.loadFirestoreMaintenanceLogs = async function () {
       const date = d.createdAt?.toDate?.()
         ? d.createdAt.toDate().toLocaleDateString("fr-FR")
         : "—";
-      // Assainir les champs dynamiques pour prévenir XSS (OWASP A03)
       const safeCategory = (d.category || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const safeDesc = (d.description || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const safeGarage = (d.garageName || "Garage Certifié").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const kmStr = d.km ? d.km.toLocaleString("fr-FR") + " km" : "";
 
-      html += `<div style="padding:10px; background:rgba(46, 204, 113, 0.06); margin-bottom:5px; border-radius:8px; border-left:3px solid #2ecc71; font-size:0.8rem;">
-        <div style="display:flex; justify-content:space-between;">
-            <strong style="color:#fff;">${safeCategory}</strong>
-            <span style="color:#666; font-size:0.65rem;">${date}${kmStr ? " · " + kmStr : ""}</span>
-        </div>
-        <div style="font-size:0.72rem; margin-top:3px; color:#ccc;">${safeDesc}</div>
-        <div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;">
-            <i class="fa-solid fa-certificate"></i> CERTIFIÉ PAR : ${safeGarage}
-            <i class="fa-solid fa-cloud" style="margin-left:5px; color:#3498db;" title="Synchronisé via Firestore"></i>
-        </div>
-      </div>`;
+      if (d.certified) {
+        const safeGarage = (d.garageName || "Garage Certifié").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        html += `<div style="padding:10px; background:rgba(46, 204, 113, 0.06); margin-bottom:5px; border-radius:8px; border-left:3px solid #2ecc71; font-size:0.8rem;">
+          <div style="display:flex; justify-content:space-between;">
+              <strong style="color:#fff;">${safeCategory}</strong>
+              <span style="color:#666; font-size:0.65rem;">${date}${kmStr ? " · " + kmStr : ""}</span>
+          </div>
+          <div style="font-size:0.72rem; margin-top:3px; color:#ccc;">${safeDesc}</div>
+          <div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;">
+              <i class="fa-solid fa-certificate"></i> CERTIFIÉ PAR : ${safeGarage}
+              <i class="fa-solid fa-cloud" style="margin-left:5px; color:#3498db;" title="Synchronisé Cloud"></i>
+          </div>
+        </div>`;
+      } else {
+        html += `<div style="padding:10px; background:rgba(255, 255, 255, 0.05); margin-bottom:5px; border-radius:8px; border-left:3px solid #555; font-size:0.8rem;">
+          <div style="display:flex; justify-content:space-between;">
+              <strong style="color:#ddd;">${safeCategory}</strong>
+              <span style="color:#666; font-size:0.65rem;">${date}${kmStr ? " · " + kmStr : ""}</span>
+          </div>
+          <div style="font-size:0.72rem; margin-top:3px; color:#aaa;">${safeDesc}</div>
+          <div style="font-size:0.6rem; color:#888; margin-top:5px;">
+              <i class="fa-solid fa-user"></i> Entretien personnel
+              <i class="fa-solid fa-cloud" style="margin-left:5px; color:#3498db;" title="Synchronisé Cloud"></i>
+          </div>
+        </div>`;
+      }
     });
 
     container.innerHTML = html;
@@ -8991,38 +8977,18 @@ window.showPage = function (page) {
                 <button onclick="addCategorizedMaint('Freins')" class="btn-dark" style="font-size:0.7rem; padding:10px;"><i class="fa-solid fa-hard-drive"></i> Freins</button>
             </div>
 
-            <div id="maint-history" style="font-size:0.8rem; margin-top:15px; max-height:200px; overflow-y:auto;">
-                ${
-                  history.length
-                    ? history
-                        .reverse()
-                        .map(
-                          (
-                            h,
-                          ) => `<div style="padding:10px; background:rgba(255,255,255,0.05); margin-bottom:5px; border-radius:8px; border-left:3px solid ${h.certified ? "#2ecc71" : "#444"};">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>${h.category}</strong>
-                        <span style="color:#666; font-size:0.7rem;">${h.date}</span>
-                    </div>
-                    <div style="font-size:0.75rem; margin-top:3px; color:#ccc;">${h.action}</div>
-                    ${h.certified ? `<div style="font-size:0.6rem; color:#2ecc71; margin-top:5px;"><i class="fa-solid fa-certificate"></i> CERTIFIÃƒ‰ PAR : ${h.garage}</div>` : ""}
-                </div>`,
-                        )
-                        .join("")
-                    : '<p style="color:#444; text-align:center;">Votre carnet est vide.</p>'
-                }
-            </div>
-
             <div id="maint-firestore-section" style="margin-top:15px;">
-                <h4 style="font-size:0.85rem; color:#2ecc71; display:flex; justify-content:space-between; align-items:center;">
-                    <span><i class="fa-solid fa-cloud-arrow-down"></i> Entretiens Certifiés (Cloud)</span>
+                <h4 style="font-size:0.85rem; color:#3498db; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-solid fa-cloud"></i> Mon Carnet d'Entretien (Cloud)</span>
                     <button onclick="loadFirestoreMaintenanceLogs()" class="btn-dark" style="font-size:0.6rem; padding:4px 10px; border-radius:12px;">
-                        <i class="fa-solid fa-rotate"></i> Charger
+                        <i class="fa-solid fa-rotate"></i> Actualiser
                     </button>
                 </h4>
-                <div id="maint-firestore-list" style="max-height:200px; overflow-y:auto;"></div>
+                <div id="maint-firestore-list" style="max-height:300px; overflow-y:auto; margin-top:10px;"></div>
             </div>`;
     renderDynamicGarage();
+    // Auto-charger le carnet d'entretien Cloud au chargement de la page
+    setTimeout(() => { if (typeof loadFirestoreMaintenanceLogs === 'function') loadFirestoreMaintenanceLogs(); }, 100);
   } else if (page === "group") {
     if (typeof content !== "undefined")
       content.innerHTML = `<h3>Balade en Groupe</h3>
@@ -13042,6 +13008,10 @@ window.MecaWizard = {
                     <p><i class="fa-solid fa-microchip" style="color:#10a37f;"></i> <strong>Analyse IA :</strong> ${diag.analyse}</p>
                     <p style="margin-top:10px;"><i class="fa-solid fa-wrench" style="color:#10a37f;"></i> <strong>Recommandation :</strong> ${diag.reco}</p>
                 </div>
+                <!-- AVERTISSEMENT AI ACT (Obligatoire) -->
+                <p style="color:#ffaa00; font-size:0.75rem; margin-top:15px; border:1px solid #ffaa00; padding:10px; border-radius:8px;">
+                    <i class="fa-solid fa-scale-balanced"></i> Avertissement (AI Act) : Rapport expert généré par Intelligence Artificielle. Ce résultat est fourni à titre indicatif et est <strong>soumis à supervision humaine</strong> (expertise d'un mécanicien certifié). Aucune décision automatisée n'est prise.
+                </p>
                 <button onclick="if(window.CertifiedCamera) window.CertifiedCamera.open(); else alert('Module de caméra non disponible');" style="margin-top:20px; width:100%; background:#ffb703; color:#000; padding:10px 15px; border-radius:5px; border:none; font-weight:bold; cursor:pointer; margin-bottom:10px;">
                     <i class="fa-solid fa-camera"></i> Ajouter Preuve Photo au rapport
                 </button>
@@ -15163,7 +15133,7 @@ window.InsurerPortal = {
     document.getElementById("insurer-pricing-box").classList.add("hidden");
   },
 
-  verifyCode: function () {
+  verifyCode: async function () {
     const input = document
       .getElementById("insurer-code-input")
       .value.trim()
@@ -15173,34 +15143,71 @@ window.InsurerPortal = {
       return;
     }
 
-    const parts = input.split("-");
-    if (parts.length >= 2) {
-      const tsStr = parts[1].toLowerCase();
-      const timestamp = parseInt(tsStr, 36);
-      if (!isNaN(timestamp)) {
-        const now = Date.now();
-        const diffHours = (now - timestamp) / (1000 * 60 * 60);
-        if (diffHours > 72) {
-          alert(
-            "Code Expiré. Le code litige est valable uniquement 72h. Le pilote doit générer un nouveau code depuis son application.",
-          );
+    try {
+      if (typeof db !== "undefined") {
+        const docRef = db.collection("litigation_proposals").doc(input);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+          alert("Dossier introuvable ou expiré.");
           return;
         }
-      }
-    }
 
-    // Simuler la recherche dans le coffre-fort Firebase
-    document.getElementById("insurer-dashboard-box").classList.add("hidden");
-    document.getElementById("insurer-pricing-box").classList.remove("hidden");
-    this.currentCode = input;
+        const data = doc.data();
+        if (data.status === "RESOLVED") {
+            alert("Ce dossier a déjà été traité et clôturé.");
+            return;
+        }
+      } else {
+          // Simulation si DB n'est pas dispo
+          const parts = input.split("-");
+          if (parts.length >= 2) {
+            const tsStr = parts[1].toLowerCase();
+            const timestamp = parseInt(tsStr, 36);
+            if (!isNaN(timestamp)) {
+              const now = Date.now();
+              const diffHours = (now - timestamp) / (1000 * 60 * 60);
+              if (diffHours > 72) {
+                alert(
+                  "Code Expiré. Le code litige est valable uniquement 72h. Le pilote doit générer un nouveau code depuis son application.",
+                );
+                return;
+              }
+            }
+          }
+      }
+
+      document.getElementById("insurer-dashboard-box").classList.add("hidden");
+      document.getElementById("insurer-pricing-box").classList.remove("hidden");
+      this.currentCode = input;
+    } catch (e) {
+        console.error("Erreur Firestore :", e);
+        alert("Erreur de connexion à la base sécurisée.");
+    }
   },
 
-  buyReport: function (type, price, rewardBvc) {
+  buyReport: async function (type, price, rewardBvc) {
     if (
       confirm(
-        `[SÉCURITÉ ZERO-TRUST]\nConfirmez-vous l'achat du rapport [${type}] pour ${price}€ HT ?\n\n⚠ï¸ CONDITIONS B2B : Les données chiffrées sont définitives.\nLe paiement sera instantanément prélevé via le Smart Contract.`,
+        `[SÉCURITÉ ZERO-TRUST]\nConfirmez-vous l'achat du rapport [${type}] pour ${price}€ HT ?\n\n⚠ï¸  CONDITIONS B2B : Les données chiffrées sont définitives.\nLe paiement sera instantanément prélevé via le Smart Contract.`,
       )
     ) {
+      // 1. Mise à jour statut dans Firestore
+      try {
+          if (typeof db !== "undefined" && this.currentCode) {
+              await db.collection("litigation_proposals").doc(this.currentCode).update({
+                  status: "RESOLVED",
+                  resolvedBy: this.currentInsurer || "ASSUREUR_ANONYME",
+                  resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+              
+              // On peut attribuer la récompense au pilote si on récupère son ID du doc.
+              // Ici, pour le MVP, on simule l'appel Web4 comme avant si sur la même session
+          }
+      } catch (e) {
+          console.error("Erreur de mise à jour Firestore :", e);
+      }
+
       // Premium WOW Effect for success
       const pricingBox = document.getElementById("insurer-pricing-box");
       pricingBox.innerHTML = `
@@ -15217,15 +15224,12 @@ window.InsurerPortal = {
       setTimeout(() => {
         // Déclenchement du Smart Contract Web4 : Rétribution du pilote
         if (window.Web4Economy && rewardBvc > 0) {
+          // Note : en prod, ça doit être le backend qui mint pour le pilote
+          // Ici, c'est une simulation.
           window.Web4Economy.mineToken(
             rewardBvc,
             `Smart Contract: L'assureur a acheté le rapport (${type})`,
           );
-          if (typeof speak === "function") {
-            speak(
-              "Transaction confirmée. Votre assureur a consulté le rapport. Les tokens ont été crédités.",
-            );
-          }
         }
         setTimeout(() => this.close(), 3000);
       }, 2000);
@@ -17603,7 +17607,11 @@ window.PocketLawyer = {
             <i class="fa-solid fa-scale-balanced fa-beat-fade" style="font-size: 3rem; color: #cca300; filter: drop-shadow(0 0 10px #cca300); margin-bottom: 5px;"></i>
             <h1 style="font-size: 1.5rem; margin: 0; text-transform: uppercase; color: #cca300;">Avocat de Poche</h1>
             <div style="background: rgba(0,210,255,0.1); border: 1px solid #00d2ff; color: #00d2ff; font-size: 0.7rem; padding: 3px 10px; border-radius: 10px; margin-top: 5px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; display: inline-block;"><i class="fa-solid fa-microchip"></i> Propulsé par Nexus Atlas</div>
-            <p style="color: #777; font-size: 0.8rem; margin-bottom: 15px; text-align: center; width: 90%; max-width: 400px; white-space: normal; word-wrap: break-word; line-height: 1.3;">Avertissement (AI Act) : Aide indicative générée par IA. Ne remplace pas un conseil juridique. <strong>Soumis à contrôle humain.</strong></p>
+            <div style="color: #ffaa00; font-size: 0.75rem; margin-bottom: 15px; text-align: center; width: 90%; max-width: 450px; border: 1px solid rgba(255,170,0,0.4); padding: 8px; border-radius: 8px; background: rgba(255,170,0,0.05); line-height: 1.3;">
+                <strong><i class="fa-solid fa-scale-balanced"></i> Conformité Légale (AI Act & CCPA)</strong><br>
+                Aide indicative générée par IA. Ne remplace pas un conseil juridique et est <strong>soumis à contrôle humain</strong>.<br>
+                <em style="color:#aaa;">Do Not Sell My Personal Information : Vos données (dont la télémétrie locale) ne sont jamais vendues.</em>
+            </div>
             
             <div id="lawyer-chat-box" style="flex: 1; width: 90%; max-width: 500px; background: rgba(0,0,0,0.5); border-radius: 15px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; scroll-behavior: smooth;">
                 <div style="background: rgba(204,163,0,0.2); padding: 10px 15px; border-radius: 15px; align-self: flex-start; max-width: 85%; border-left: 3px solid #cca300; line-height: 1.4;">

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PREDICTIVE MAINTENANCE AI v1.0
  * Calculates wear and tear based on riding style and vibrations.
  */
@@ -181,10 +181,14 @@ window.PredictiveMeca = {
                 <i class="fa-solid fa-flag-checkered" style="font-size:3rem; color:${color}; margin-bottom:15px;"></i>
                 <h2 style="margin:0; font-size:1.5rem;">SCORE DE PILOTAGE</h2>
                 <div style="font-size:4rem; font-weight:900; margin:20px 0; color:${color}; text-shadow: 0 0 20px ${color};">${score}<span style="font-size:2rem;">/100</span></div>
-                <p style="font-size:1.1rem; margin-bottom:30px;">${feedback}</p>
-                <button onclick="document.getElementById('pilot-score-modal').remove()" style="width:100%; padding:15px; background:var(--glass-bg); color:white; border:1px solid var(--accent); border-radius:10px; font-weight:bold; cursor:pointer;">FERMER LE RAPPORT</button>
+                <p style="color:#777; font-size:0.75rem; margin-top:10px;">
+                    <i class="fa-solid fa-scale-balanced"></i> Avertissement (AI Act) : Modèle prédictif soumis à supervision humaine.
+                </p>
+                <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                    <button class="btn-primary" onclick="document.getElementById('predictive-meca-modal').classList.add('hidden')">Terminer</button>
+                    <button class="btn-secondary" onclick="MecaWizard.startAcousticAnalysis()"><i class="fa-solid fa-microphone"></i> Écoute Acoustique</button>
+                </div>
             </div>
-        `;
-    document.body.appendChild(modal);
+        `;document.body.appendChild(modal);
   },
 };
