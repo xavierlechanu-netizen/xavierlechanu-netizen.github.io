@@ -92,6 +92,9 @@ window.VirtualGarage = {
       overlay.style.display = "flex";
     }
     this.renderUI();
+    if (window.GarageClient) {
+      window.GarageClient.loadMaintenanceLogs();
+    }
   },
 
   closeUI: function () {
@@ -165,3 +168,67 @@ window.VirtualGarage = {
 document.addEventListener("DOMContentLoaded", () => {
   VirtualGarage.init();
 });
+
+window.GarageClient = {
+  loadMaintenanceLogs: async function() {
+    const container = document.getElementById('maintenance-logs-container');
+    if (!container) return;
+
+    if (typeof firebase === 'undefined' || !firebase.auth().currentUser || typeof db === 'undefined') {
+      container.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#ff3333; border:1px dashed #333; border-radius:10px; font-size:0.9rem;">
+          <i class="fa-solid fa-triangle-exclamation"></i> Connexion requise pour consulter votre carnet d'entretien.
+        </div>
+      `;
+      return;
+    }
+
+    try {
+      const uid = firebase.auth().currentUser.uid;
+      const snapshot = await db.collection('maintenance_logs')
+                               .where('vehicleOwnerUid', '==', uid)
+                               .orderBy('timestamp', 'desc')
+                               .get();
+
+      if (snapshot.empty) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:20px; color:#888; border:1px dashed #333; border-radius:10px; font-size:0.9rem;">
+            Aucun entretien certifié n'a encore été scellé pour votre véhicule.
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const dateStr = data.timestamp ? data.timestamp.toDate().toLocaleDateString('fr-FR') : 'Date inconnue';
+        
+        html += `
+          <div style="background: rgba(255,255,255,0.05); border: 1px solid ${data.certified ? '#00ff88' : '#333'}; border-radius: 10px; padding: 15px; position:relative;">
+            ${data.certified ? '<div style="position:absolute; top:-10px; right:10px; background:#00ff88; color:#000; font-weight:bold; font-size:0.6rem; padding:3px 8px; border-radius:10px; text-transform:uppercase;"><i class="fa-solid fa-check-circle"></i> Certifié</div>' : ''}
+            <div style="color: #aaa; font-size: 0.8rem; margin-bottom: 5px;">
+              <i class="fa-regular fa-calendar"></i> ${dateStr} &nbsp;&nbsp;|&nbsp;&nbsp; 
+              <i class="fa-solid fa-gauge-high"></i> ${data.mileage} km
+            </div>
+            <strong style="color: #fff; font-size: 1rem; display:block; margin-bottom: 5px;">${data.category}</strong>
+            <p style="color: #ccc; font-size: 0.85rem; line-height: 1.4; margin: 0;">${data.description}</p>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+
+    } catch (e) {
+      console.error("Erreur de récupération du carnet", e);
+      container.innerHTML = `
+        <div style="text-align:center; padding:20px; color:#ff3333; border:1px dashed #333; border-radius:10px; font-size:0.9rem;">
+          <i class="fa-solid fa-triangle-exclamation"></i> Impossible de synchroniser avec la base de données.
+        </div>
+      `;
+    }
+  },
+
+  generatePDF: function() {
+    alert("🖨️ Génération du PDF en cours...\n(Fonctionnalité simulée : ce bouton compilera prochainement vos certificats d'entretien sous forme d'un document officiel pour la revente).");
+  }
+};
