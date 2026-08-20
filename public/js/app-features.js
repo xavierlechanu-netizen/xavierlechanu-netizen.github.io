@@ -436,11 +436,11 @@ function checkFerryProximity(lat, lng) {
         window.NeuralHUD.logToConsole(`ALERT: FERRY_CROSSING_IN_1KM`);
       }
       if (window.Telemetry) {
-        windortifié peut valider cette intervention.",
-    );
-    speak("Échec de la certification.");
-  }
-};
+        window.Telemetry.logEvent("ferry_alert_triggered");
+      }
+    }
+  });
+}
 
 function getSOSActions() {
   const num = secureGetItem("emergency_contact");

@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Espace Partenaires & Concessionnaires - mon50ccetmoi</title>
+    <meta name="description" content="Rejoignez le réseau de partenaires mon50ccetmoi. Développez votre activité avec notre portail dédié aux concessionnaires et professionnels du 50cc et VSP." />
+    <meta property="og:title" content="Espace Partenaires & Concessionnaires - mon50ccetmoi" />
+    <meta property="og:description" content="Rejoignez le réseau de partenaires mon50ccetmoi. Développez votre activité avec notre portail dédié aux concessionnaires et professionnels du 50cc et VSP." />
+    <meta property="og:image" content="https://mon50ccetmoi.com/assets/ui/screenshot_wide.jpg" />
+    <meta property="og:url" content="https://mon50ccetmoi.com/partenaires" />
+    <meta property="og:type" content="website" />
     <link rel="canonical" href="https://mon50ccetmoi.com/partenaires" />
     <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
     <link
@@ -16,6 +22,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
     <script src="js/config.js" charset="utf-8"></script>
+    <script src="js/garage-pro.js" charset="utf-8"></script>
 
     <script>
       // Initialisation de Firebase
@@ -375,6 +382,9 @@
           onmouseout="this.style.color = 'var(--text-muted)'"
           >Mot de passe oublié ?</a
         >
+        <button onclick="if(window.GaragePro) GaragePro.initRegistration()" style="margin-top:20px; width:100%; padding:10px; background:transparent; color:#00ff88; border:1px solid #00ff88; border-radius:6px; cursor:pointer; font-weight:bold;">
+            Devenir Garage Partenaire
+        </button>
       </div>
 
       <!-- Modal SIRET -->
@@ -445,6 +455,9 @@
         >
         <a class="nav-item" onclick="switchView('audit')"
           ><i class="fa-solid fa-shield-halved"></i> Audit & Conformité</a
+        >
+        <a class="nav-item" id="nav-maintenance" style="display:none;" onclick="switchView('maintenance')"
+          ><i class="fa-solid fa-book"></i> Cahier d'Entretien</a
         >
         <div style="flex: 1"></div>
         <a class="nav-item" onclick="window.location.reload()"
@@ -1299,6 +1312,42 @@
         </div>
       </div>
     </div>
+    <!-- View: Maintenance Log (Garage Pro) -->
+    <div id="view-maintenance" class="view" style="display: none;">
+      <div class="section-title">
+        <i class="fa-solid fa-book"></i> Carnet d'Entretien Numérique (Certifié)
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+        Saisissez le rapport d'intervention. Celui-div sera scellé dans le profil du véhicule.
+      </p>
+
+      <div style="background: var(--bg-panel); padding: 25px; border-radius: 12px; border: 1px solid var(--border); max-width: 600px;">
+        
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Identifiant Client (UID ou Code Véhicule)</label>
+        <input type="text" id="maint-client-uid" placeholder="Ex: UID-12345" style="width: 100%; padding: 12px; margin: 10px 0 20px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 6px;" />
+
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Type d'intervention</label>
+        <select id="maint-category" style="width: 100%; padding: 12px; margin: 10px 0 20px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+          <option value="Révision Générale">Révision Générale</option>
+          <option value="Changement Pneumatiques">Changement Pneumatiques</option>
+          <option value="Freinage (Plaquettes/Disques)">Freinage (Plaquettes/Disques)</option>
+          <option value="Vidange / Filtres">Vidange / Filtres</option>
+          <option value="Transmission / Chaîne">Transmission / Chaîne</option>
+          <option value="Autre (Préciser en description)">Autre</option>
+        </select>
+
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Kilométrage actuel (km)</label>
+        <input type="number" id="maint-mileage" placeholder="Ex: 12500" style="width: 100%; padding: 12px; margin: 10px 0 20px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 6px;" />
+
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Description détaillée des travaux</label>
+        <textarea id="maint-desc" rows="4" placeholder="Détails des pièces changées, remarques..." style="width: 100%; padding: 12px; margin: 10px 0 20px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 6px; resize: vertical;"></textarea>
+
+        <button onclick="if(window.GaragePro) GaragePro.submitMaintenanceLog()" style="width: 100%; padding: 15px; background: #00ff88; color: #000; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer;">
+          <i class="fa-solid fa-stamp"></i> Certifier & Sceller l'Entretien
+        </button>
+      </div>
+    </div>
+
 
     <!-- Campaign Modal -->
     <div class="modal-overlay" id="campaign-modal">
@@ -1919,6 +1968,20 @@
 
           document.getElementById("login-overlay").style.display = "none";
           document.getElementById("dashboard").style.display = "flex";
+
+          if (typeof db !== "undefined" && firebase.auth().currentUser) {
+            const uid = firebase.auth().currentUser.uid;
+            try {
+              const doc = await db.collection("users").doc(uid).get();
+              if (doc.exists && doc.data().isCertifiedGarage) {
+                document.getElementById("nav-maintenance").style.display = "flex";
+              }
+            } catch (e) {
+              console.warn("Could not fetch user profile", e);
+            }
+          } else if (idLowerNormalized.includes("garage")) {
+            document.getElementById("nav-maintenance").style.display = "flex";
+          }
 
           if (isEuroAssuranceAttempt) {
             const balanceElem = document.getElementById(

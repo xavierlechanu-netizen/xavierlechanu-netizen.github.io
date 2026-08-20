@@ -7,6 +7,12 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>Connexion - mon50ccetmoi</title>
+    <meta name="description" content="Connectez-vous pour rejoindre la première communauté des conducteurs de 50cc et Voitures Sans Permis (VSP)." />
+    <meta property="og:title" content="Connexion - mon50ccetmoi" />
+    <meta property="og:description" content="Connectez-vous pour rejoindre la première communauté des conducteurs de 50cc et Voitures Sans Permis (VSP)." />
+    <meta property="og:image" content="https://mon50ccetmoi.com/assets/ui/screenshot_wide.jpg" />
+    <meta property="og:url" content="https://mon50ccetmoi.com/login" />
+    <meta property="og:type" content="website" />
     <link rel="canonical" href="https://mon50ccetmoi.com/login" />
     <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
     <link
@@ -245,6 +251,21 @@
             data-logo_alignment="left"
             style="margin-bottom: 20px"
           ></div>
+
+          <!-- Facebook Login Button -->
+          <button
+            onclick="loginFacebook()"
+            class="btn-auth"
+            style="
+              background: #1877F2;
+              color: #fff;
+              margin-bottom: 20px;
+              border: none;
+              box-shadow: 0 0 10px rgba(24, 119, 242, 0.4);
+            "
+          >
+            <i class="fa-brands fa-facebook"></i> Continuer avec Facebook
+          </button>
           <p class="switch-link" onclick="toggleForm('register')">
             Pas encore membre ? <strong>Rejoindre</strong>
           </p>
@@ -440,6 +461,39 @@
         } catch (error) {
           console.error("Google Auth Error:", error);
           alert("Erreur Google Auth : " + error.message);
+        }
+      }
+
+      // --- NEW: Facebook Login via Firebase ---
+      async function loginFacebook() {
+        console.log("Tentative de connexion Facebook via Firebase...");
+        const provider = new firebase.auth.FacebookAuthProvider();
+        try {
+          const userCredential = await firebase.auth().signInWithPopup(provider);
+          const user = userCredential.user;
+
+          // Vérifier si le profil Firestore existe
+          const doc = await firebase.firestore().collection("users").doc(user.uid).get();
+          let profile;
+          if (!doc.exists) {
+            profile = {
+              uid: user.uid,
+              username: user.displayName || user.email.split("@")[0],
+              role: "user",
+              points: 50,
+              registrationDate: Date.now(),
+              brand: "Facebook Pilot",
+            };
+            await firebase.firestore().collection("users").doc(user.uid).set(profile);
+          } else {
+            profile = doc.data();
+          }
+
+          secureSetItem("session", JSON.stringify(profile));
+          window.location.href = "app.html";
+        } catch (error) {
+          console.error("Facebook Auth Error:", error);
+          alert("Erreur Facebook Auth : " + error.message);
         }
       }
 
