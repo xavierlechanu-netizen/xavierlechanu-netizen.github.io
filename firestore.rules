@@ -74,7 +74,8 @@ service cloud.firestore {
       allow create: if isSignedIn() && isOwner(userId);
       allow update: if isSignedIn() && isOwner(userId)
         && request.resource.data.xp is number
-        && request.resource.data.xp >= 0;
+        && request.resource.data.xp >= 0
+        && (request.resource.data.xp <= resource.data.xp + 2000); // OWASP A01: Anti-Cheat (limite +2000 XP/req)
       allow delete: if false; // On ne supprime pas un profil de gamification
     }
 

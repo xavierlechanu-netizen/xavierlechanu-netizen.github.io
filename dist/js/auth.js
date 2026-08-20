@@ -2,6 +2,15 @@
 if (typeof firebase !== "undefined" && typeof CONFIG !== "undefined") {
   if (!firebase.apps.length) {
     firebase.initializeApp(CONFIG.FIREBASE);
+    
+    // OWASP A11 : Protection App Check (ReCAPTCHA v3)
+    if (typeof firebase.appCheck === 'function') {
+      const appCheck = firebase.appCheck();
+      appCheck.activate(
+        new firebase.appCheck.ReCaptchaV3Provider('INSERER_CLE_RECAPTCHA_ICI'),
+        true
+      );
+    }
   }
 }
 

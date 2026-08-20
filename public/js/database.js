@@ -15,6 +15,16 @@ function initDatabase() {
     // Initialisation Firebase (si pas déjà fait par auth.js)
     if (!firebase.apps.length) {
       firebase.initializeApp(CONFIG.FIREBASE);
+      
+      // OWASP A11 : Protection App Check (ReCAPTCHA v3)
+      if (typeof firebase.appCheck === 'function') {
+        const appCheck = firebase.appCheck();
+        appCheck.activate(
+          // TODO: Remplacer par la vraie clé du site reCAPTCHA v3
+          new firebase.appCheck.ReCaptchaV3Provider('INSERER_CLE_RECAPTCHA_ICI'),
+          true
+        );
+      }
     }
     db = firebase.firestore();
 

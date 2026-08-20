@@ -94,8 +94,8 @@ window.Gamification = {
         this.xp += totalXp;
         localStorage.setItem('mon50cc_xp', this.xp.toString());
         
-        // Sauvegarde Cloud
-        this.syncToCloud();
+        // Sauvegarde Cloud Sécurisée (Incrément côté serveur)
+        this.syncXpToCloud(totalXp);
 
         const newRank = this.getCurrentRank();
 
@@ -126,7 +126,7 @@ window.Gamification = {
         }
         if (newBadges.length > 0) {
             localStorage.setItem('mon50cc_badges', JSON.stringify(this.badges));
-            this.syncToCloud();
+            this.syncBadgesToCloud();
             for (const badge of newBadges) {
                 this.showBadgeUnlock(badge);
             }
@@ -158,18 +158,31 @@ window.Gamification = {
         }
     },
 
-    syncToCloud: function() {
+    syncXpToCloud: function(addedXp) {
         if (typeof firebase !== 'undefined' && firebase.auth && typeof firebase.auth === 'function' && firebase.auth().currentUser) {
             try {
                 const uid = firebase.auth().currentUser.uid;
                 firebase.firestore().collection('gamification_stats').doc(uid).set({
-                    xp: this.xp,
+                    xp: firebase.firestore.FieldValue.increment(addedXp),
                     rank: this.getCurrentRank().name,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch(e) {
+                console.warn("Gamification: Firestore XP sync failed", e);
+            }
+        }
+    },
+
+    syncBadgesToCloud: function() {
+        if (typeof firebase !== 'undefined' && firebase.auth && typeof firebase.auth === 'function' && firebase.auth().currentUser) {
+            try {
+                const uid = firebase.auth().currentUser.uid;
+                firebase.firestore().collection('gamification_stats').doc(uid).set({
                     badges: this.badges,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
             } catch(e) {
-                console.warn("Gamification: Firestore sync failed", e);
+                console.warn("Gamification: Firestore Badges sync failed", e);
             }
         }
     },
