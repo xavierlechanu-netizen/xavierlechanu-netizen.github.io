@@ -12,7 +12,7 @@
     />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
@@ -359,17 +359,17 @@
     <script defer src="js/radar-social.js" charset="utf-8"></script>
 
     <!-- GAMIFICATION HUD -->
-    <div id="gamification-hud" style="position: fixed; top: 160px; left: 15px; z-index: 1000; background: rgba(0,0,0,0.8); border: 1px solid rgba(0, 210, 255, 0.5); padding: 10px; border-radius: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer;">
-        <div style="font-size: 2rem;">
-            <i id="gami-icon" class="fa-solid fa-motorcycle" style="color: #a0a0a0; filter: drop-shadow(0 0 5px currentColor);"></i>
+    <div id="gamification-hud" class="gami-hud-cyber">
+        <div>
+            <i id="gami-icon" class="fa-solid fa-motorcycle gami-icon" style="color: #a0a0a0;"></i>
         </div>
         <div style="display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span id="gami-rank-name" style="color: #fff; font-weight: bold; font-family: 'Inter', sans-serif; font-size: 0.9rem;">Novice</span>
-                <span id="gami-xp-text" style="color: #00d2ff; font-family: monospace; font-size: 0.8rem;">0 XP</span>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; gap: 12px;">
+                <span id="gami-rank-name" class="gami-rank-label">Novice</span>
+                <span id="gami-xp-text" class="gami-xp-label">0 XP</span>
             </div>
-            <div style="width: 120px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden;">
-                <div id="gami-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00d2ff, #00ff88); transition: width 0.5s;"></div>
+            <div class="gami-progress-track">
+                <div id="gami-progress-bar" class="gami-progress-fill" style="width: 0%;"></div>
             </div>
         </div>
     </div>
@@ -2029,102 +2029,35 @@
     <!-- OBD-II HUD OVERLAY -->
     <div
       id="obd-hud-screen"
-      class="hidden"
-      style="
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 20000;
-        width: 90%;
-        max-width: 600px;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        background: rgba(10, 10, 15, 0.75);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 170, 0, 0.4);
-        border-radius: 20px;
-        padding: 15px;
-        box-shadow:
-          0 10px 30px rgba(0, 0, 0, 0.5),
-          inset 0 0 15px rgba(255, 170, 0, 0.2);
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-      "
+      class="hidden obd-hud-cyber"
     >
       <!-- RPM -->
-      <div style="text-align: center; color: #fff">
-        <div
-          style="
-            font-size: 0.8rem;
-            color: #ffaa00;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          "
-        >
+      <div class="hud-gauge">
+        <div class="hud-gauge-label rpm">
           <i class="fa-solid fa-gauge-simple-high"></i> RPM
         </div>
-        <div
-          style="
-            font-size: 2.2rem;
-            font-weight: 900;
-            font-family: &quot;JetBrains Mono&quot;, monospace;
-            text-shadow: 0 0 10px #ffaa00;
-          "
-        >
+        <div class="hud-gauge-value rpm">
           <span id="obd-val-rpm" class="hud-neon-active">--</span>
         </div>
       </div>
       <!-- SPEED -->
-      <div style="text-align: center; color: #fff">
-        <div
-          style="
-            font-size: 0.8rem;
-            color: #00d2ff;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          "
-        >
+      <div class="hud-gauge">
+        <div class="hud-gauge-label speed">
           <i class="fa-solid fa-gauge"></i> Vitesse
         </div>
-        <div
-          style="
-            font-size: 3rem;
-            font-weight: 900;
-            font-family: &quot;JetBrains Mono&quot;, monospace;
-            text-shadow: 0 0 15px #00d2ff;
-          "
-        >
+        <div class="hud-gauge-value speed">
           <span id="obd-val-speed" class="hud-neon-active">--</span>
-          <span style="font-size: 1rem; color: #aaa">km/h</span>
+          <span class="hud-gauge-unit">km/h</span>
         </div>
       </div>
       <!-- TEMP -->
-      <div style="text-align: center; color: #fff">
-        <div
-          style="
-            font-size: 0.8rem;
-            color: #ff4d4d;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-          "
-        >
+      <div class="hud-gauge">
+        <div class="hud-gauge-label temp">
           <i class="fa-solid fa-temperature-half"></i> Moteur
         </div>
-        <div
-          style="
-            font-size: 2.2rem;
-            font-weight: 900;
-            font-family: &quot;JetBrains Mono&quot;, monospace;
-            text-shadow: 0 0 10px #ff4d4d;
-          "
-        >
-          <span id="obd-val-temp" class="hud-neon-active">--</span
-          ><span style="font-size: 1rem; color: #aaa">°C</span>
+        <div class="hud-gauge-value temp">
+          <span id="obd-val-temp" class="hud-neon-active">--</span>
+          <span class="hud-gauge-unit">°C</span>
         </div>
       </div>
     </div>

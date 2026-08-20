@@ -1,4 +1,4 @@
-﻿/**
+/**
  * mon 50cc et moi - Module OBD-II Bluetooth
  * v106.00.00
  * Utilise l'API Web Bluetooth pour se connecter aux boîtiers ELM327
@@ -31,6 +31,12 @@ class OBDManager {
     // Throttling des alertes vocales IA
     this.lastRpmAlertTime = 0;
     this.lastTempAlertTime = 0;
+
+    // Session Metrics
+    this.sessionStartTime = null;
+    this.sessionMaxSpeed = 0;
+    this.sessionMaxRpm = 0;
+    this.sessionTemps = [];
   }
 
   async connect() {
@@ -67,6 +73,11 @@ class OBDManager {
 
       this.isConnected = true;
       this.dispatchStateChange(true);
+      
+      this.sessionStartTime = new Date();
+      this.sessionMaxSpeed = 0;
+      this.sessionMaxRpm = 0;
+      this.sessionTemps = [];
 
       // Initialisation de l'ELM327 (Reset, Echo off, Formatting off)
       await this.sendCommand("ATZ");
@@ -96,6 +107,38 @@ class OBDManager {
     this.isConnected = false;
     this.stopPolling();
     this.dispatchStateChange(false);
+    this.saveSessionToFirebase();
+  }
+
+  saveSessionToFirebase() {
+    if (!this.sessionStartTime) return;
+    const endTime = new Date();
+    const durationSec = Math.floor((endTime - this.sessionStartTime) / 1000);
+    
+    if (durationSec > 60 && typeof firebase !== 'undefined' && firebase.auth && typeof firebase.auth === 'function' && firebase.auth().currentUser) {
+        const avgTemp = this.sessionTemps.length > 0 ? (this.sessionTemps.reduce((a, b) => a + b, 0) / this.sessionTemps.length) : 0;
+        try {
+            const db = firebase.firestore();
+            db.collection("obd_sessions").add({
+                userId: firebase.auth().currentUser.uid,
+                startTime: this.sessionStartTime,
+                endTime: endTime,
+                durationSeconds: durationSec,
+                maxSpeed: Math.round(this.sessionMaxSpeed),
+                maxRpm: Math.round(this.sessionMaxRpm),
+                avgTemp: Math.round(avgTemp),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                console.log("mon50cc : OBD Session saved to Firebase");
+                if (window.Gamification && typeof window.Gamification.awardXP === 'function') {
+                    window.Gamification.awardXP(100, { reason: "Session OBD-II enregistrée" });
+                }
+            }).catch(e => console.error("mon50cc : OBD Session save error", e));
+        } catch(e) {
+            console.error("mon50cc : OBD Session save error", e);
+        }
+    }
+    this.sessionStartTime = null;
   }
 
   async sendCommand(cmd) {
@@ -156,6 +199,10 @@ class OBDManager {
       }
 
       if (value !== null) {
+        if (type === "rpm" && value > this.sessionMaxRpm) this.sessionMaxRpm = value;
+        if (type === "speed" && value > this.sessionMaxSpeed) this.sessionMaxSpeed = value;
+        if (type === "temp") this.sessionTemps.push(value);
+        
         // Dispatch event to UI
         window.dispatchEvent(
           new CustomEvent("obd_data", {

@@ -61,6 +61,23 @@ service cloud.firestore {
       allow read, write: if isOwner(walletId);
     }
 
+    // OBD-II Sessions (Historique des balades)
+    match /obd_sessions/{sessionId} {
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      allow read: if isSignedIn() && isOwner(resource.data.userId);
+      allow update, delete: if false; // Immuable
+    }
+
+    // Gamification Stats (XP, Badges, Rangs)
+    match /gamification_stats/{userId} {
+      allow read: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId)
+        && request.resource.data.xp is number
+        && request.resource.data.xp >= 0;
+      allow delete: if false; // On ne supprime pas un profil de gamification
+    }
+
     // Guardian Angel Sessions : Partage à durée limitée, ou propriétaire
     match /guardian_sessions/{sessionId} {
       allow read: if isOwner(resource.data.userId) || (resource.data.isShared == true && resource.data.expiresAt > request.time);
