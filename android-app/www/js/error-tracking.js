@@ -49,7 +49,7 @@ window.CrashReporter = {
         ...errorData,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         userAgent: navigator.userAgent,
-        appVersion: "106.00.00", // Updated version
+        appVersion: "109.00.00", // Updated version
         url: window.location.href,
         online: navigator.onLine,
       };

@@ -1,11 +1,8 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr-FR" dir="ltr">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>Marketplace 50cc - mon50ccetmoi</title>
     <meta name="description" content="Achetez et vendez vos pièces, scooters 50cc et VSP entre passionnés sur la Marketplace sécurisée mon50ccetmoi." />
     <meta property="og:title" content="Marketplace 50cc - mon50ccetmoi" />
@@ -14,808 +11,665 @@
     <meta property="og:url" content="https://mon50ccetmoi.com/marketplace" />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://mon50ccetmoi.com/marketplace" />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      rel="stylesheet"
-    />
+    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
     <script src="https://merchant.revolut.com/embed.js" async charset="utf-8"></script>
-    <link rel="stylesheet" href="css/style.min.css" />
+
     <style>
       body {
-        background-color: #060913;
-        color: #fff;
-        padding: 20px;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        padding: calc(var(--space-xl) + var(--safe-top)) var(--space-lg) calc(100px + var(--safe-bottom));
         overflow-y: auto;
       }
-      .header-market {
+
+      .market-container {
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
+
+      /* ─── Header ─────────────────────────────────────────── */
+      .market-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
-        border-bottom: 1px solid rgba(0, 242, 255, 0.3);
-        padding-bottom: 15px;
+        margin-bottom: var(--space-xl);
       }
+
+      .market-title-group {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+      }
+
+      .market-title {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: var(--text-2xl);
+        font-weight: 900;
+        text-shadow: 0 0 15px var(--color-primary-glow);
+      }
+
       .bvc-balance {
-        background: linear-gradient(135deg, rgba(183, 0, 255, 0.2), rgba(0, 242, 255, 0.15));
-        border: 1px solid #b700ff;
+        background: rgba(183, 0, 255, 0.1);
+        border: 1px solid rgba(183, 0, 255, 0.3);
         padding: 8px 16px;
-        border-radius: 20px;
-        font-family: "JetBrains Mono", monospace;
-        font-weight: bold;
-        box-shadow: 0 0 15px rgba(183, 0, 255, 0.4);
+        border-radius: var(--radius-full);
+        font-family: var(--font-mono);
+        font-weight: 700;
+        box-shadow: 0 0 15px rgba(183, 0, 255, 0.2);
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #e099ff;
+        color: var(--neon-purple);
       }
-      .filter-toolbar {
+
+      /* ─── Toolbar ────────────────────────────────────────── */
+      .toolbar {
         display: flex;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: var(--space-md);
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 25px;
-        background: rgba(15, 22, 36, 0.7);
-        backdrop-filter: blur(10px);
-        padding: 15px;
-        border-radius: 16px;
-        border: 1px solid rgba(0, 242, 255, 0.2);
+        margin-bottom: var(--space-xl);
       }
-      .search-box {
-        position: relative;
+
+      .toolbar-search {
         flex: 1;
-        min-width: 240px;
+        min-width: 280px;
       }
-      .search-box input {
-        width: 100%;
-        background: rgba(8, 12, 22, 0.9);
-        border: 1px solid rgba(0, 242, 255, 0.3);
-        color: #fff;
-        padding: 10px 15px 10px 40px;
-        border-radius: 12px;
-        outline: none;
-        box-sizing: border-box;
-        font-size: 0.9rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
-      }
-      .search-box input:focus {
-        border-color: #00f2ff;
-        box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
-      }
-      .search-box i {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #00f2ff;
-      }
-      .select-controls {
+
+      .toolbar-filters {
         display: flex;
-        gap: 10px;
+        gap: var(--space-sm);
+        flex-wrap: wrap;
       }
-      .select-controls select {
-        background: rgba(8, 12, 22, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        color: #fff;
-        padding: 10px 14px;
-        border-radius: 12px;
-        outline: none;
-        font-size: 0.85rem;
-        cursor: pointer;
-      }
-      .cat-tabs {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 8px;
-        margin-bottom: 25px;
-        scrollbar-width: thin;
-      }
-      .market-cat-btn {
-        background: rgba(20, 28, 45, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #aaa;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        cursor: pointer;
-        transition: all 0.2s ease;
+
+      .garage-toggle-card {
+        background: rgba(0, 242, 255, 0.05);
+        border: 1px solid rgba(0, 242, 255, 0.2);
+        padding: 12px 16px;
+        border-radius: var(--radius-md);
         display: flex;
         align-items: center;
-        gap: 6px;
+        justify-content: space-between;
+        gap: var(--space-md);
+        width: 100%;
+        margin-top: var(--space-sm);
       }
-      .market-cat-btn:hover {
-        border-color: #00f2ff;
-        color: #fff;
-      }
-      .market-cat-btn.active {
-        background: linear-gradient(135deg, rgba(0, 242, 255, 0.2), rgba(0, 119, 255, 0.4));
-        border-color: #00f2ff;
-        color: #00f2ff;
+
+      .garage-toggle-label {
+        color: var(--neon-cyan);
         font-weight: 600;
-        box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+        font-size: var(--text-sm);
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
-      .grid-market {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
+
+      /* Switch */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
       }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        transition: .4s;
+        border-radius: 24px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: var(--text-primary);
+        transition: .4s;
+        border-radius: 50%;
+      }
+      input:checked + .slider { background-color: var(--color-primary); }
+      input:checked + .slider:before { transform: translateX(20px); }
+
+      /* ─── Tabs ───────────────────────────────────────────── */
+      .cat-tabs {
+        display: flex;
+        gap: var(--space-sm);
+        overflow-x: auto;
+        padding-bottom: var(--space-sm);
+        margin-bottom: var(--space-xl);
+        scrollbar-width: none; /* Firefox */
+      }
+      .cat-tabs::-webkit-scrollbar { display: none; }
+
+      .cat-btn {
+        background: rgba(20, 28, 45, 0.6);
+        border: 1px solid var(--glass-border);
+        color: var(--text-secondary);
+        padding: 10px 20px;
+        border-radius: var(--radius-full);
+        font-size: var(--text-sm);
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all var(--transition-base);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .cat-btn:hover {
+        border-color: var(--glass-border-hover);
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .cat-btn.active {
+        background: linear-gradient(135deg, rgba(0, 242, 255, 0.15), rgba(0, 119, 255, 0.25));
+        border-color: var(--neon-cyan);
+        color: var(--neon-cyan);
+        font-weight: 600;
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+      }
+
+      /* ─── Product Card ───────────────────────────────────── */
       .product-card {
-        background: rgba(20, 26, 40, 0.65);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 18px;
-        transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
       }
-      .product-card:hover {
-        transform: translateY(-5px);
-        border-color: #00f2ff;
-        box-shadow: 0 10px 25px rgba(0, 242, 255, 0.25);
-      }
+
       .product-img {
         width: 100%;
-        height: 150px;
+        height: 180px;
         background: rgba(10, 14, 25, 0.8);
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3.5rem;
-        color: #00f2ff;
-        margin-bottom: 12px;
+        font-size: 4rem;
+        color: var(--color-primary);
+        margin-bottom: var(--space-md);
+        position: relative;
         overflow: hidden;
+        transition: all var(--transition-base);
       }
-      .price-tag {
-        color: #00f2ff;
-        font-size: 1.3rem;
-        font-weight: bold;
-        margin: 10px 0;
+      
+      .product-card:hover .product-img {
+        transform: scale(1.02);
       }
-      .buy-btn {
-        width: 100%;
-        padding: 12px;
-        background: linear-gradient(135deg, #00f2ff, #0055ff);
-        border: none;
-        border-radius: 10px;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-        transition: filter 0.2s, transform 0.1s;
+
+      .product-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 2;
       }
-      .buy-btn:hover {
-        filter: brightness(1.2);
+
+      .product-title {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        margin-bottom: var(--space-xs);
+        line-height: 1.3;
       }
-      .buy-btn:active {
-        transform: scale(0.98);
+
+      .product-desc {
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+        margin-bottom: var(--space-md);
+        flex-grow: 1;
+      }
+
+      .product-price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: var(--space-md);
+      }
+
+      .price-main {
+        color: var(--color-primary);
+        font-family: var(--font-mono);
+        font-size: var(--text-2xl);
+        font-weight: 800;
+      }
+
+      .price-old {
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        text-decoration: line-through;
+      }
+
+      /* Product Card Variants */
+      .card-purple .product-img { color: var(--neon-purple); background: linear-gradient(160deg, rgba(183, 0, 255, 0.1), rgba(10, 14, 25, 0.9)); }
+      .card-purple .price-main { color: var(--neon-purple); }
+      .card-purple { border-color: rgba(183, 0, 255, 0.3); }
+      .card-purple:hover { border-color: var(--neon-purple); box-shadow: 0 0 25px rgba(183, 0, 255, 0.2); }
+
+      .card-gold .product-img { color: var(--neon-gold); background: linear-gradient(160deg, rgba(255, 170, 0, 0.1), rgba(10, 14, 25, 0.9)); }
+      .card-gold .price-main { color: var(--neon-gold); }
+      .card-gold { border-color: rgba(255, 170, 0, 0.3); }
+      .card-gold:hover { border-color: var(--neon-gold); box-shadow: 0 0 25px rgba(255, 170, 0, 0.2); }
+
+      .card-cyan .product-img { color: var(--neon-cyan); background: linear-gradient(160deg, rgba(0, 242, 255, 0.1), rgba(10, 14, 25, 0.9)); }
+      .card-cyan .price-main { color: var(--neon-cyan); }
+      .card-cyan { border-color: rgba(0, 242, 255, 0.3); }
+      .card-cyan:hover { border-color: var(--neon-cyan); box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); }
+
+      /* ─── Feature Guarantee Grid ─────────────────────────── */
+      .guarantee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+        margin-top: var(--space-2xl);
+      }
+      
+      .guarantee-card {
+        background: rgba(255, 170, 0, 0.05);
+        border: 1px solid rgba(255, 170, 0, 0.15);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        text-align: center;
+        transition: all var(--transition-base);
+      }
+      .guarantee-card:hover {
+        background: rgba(255, 170, 0, 0.08);
+        border-color: rgba(255, 170, 0, 0.3);
+      }
+      .guarantee-card i {
+        color: var(--neon-gold);
+        font-size: 1.5rem;
+        margin-bottom: var(--space-sm);
+      }
+      .guarantee-card p {
+        color: var(--text-secondary);
+        font-size: var(--text-sm);
+        margin: 0;
+      }
+      .guarantee-card span {
+        display: block;
+        color: var(--text-muted);
+        font-size: var(--text-xs);
+        margin-top: 4px;
+      }
+
+      /* ─── Responsive ─────────────────────────────────────── */
+      @media (max-width: 768px) {
+        .market-header { flex-direction: column; align-items: flex-start; gap: var(--space-md); }
+        .toolbar { flex-direction: column; align-items: stretch; }
+        .toolbar-filters { flex-direction: column; }
       }
     </style>
+    <link rel="stylesheet" crossorigin href="/assets/design-system-CmWfQv_Q.css">
   </head>
   <body>
-    <div class="header-market">
-      <button
-        onclick="history.back()"
-        style="
-          background: none;
-          border: none;
-          color: white;
-          font-size: 1.5rem;
-          cursor: pointer;
-        "
-        aria-label="Retour"
-      >
-        <i class="fa-solid fa-arrow-left"></i>
-      </button>
-      <h1 style="margin: 0; font-size: 1.5rem; text-shadow: 0 0 10px #00f2ff">
-        <i class="fa-solid fa-store"></i> Marketplace 50cc
-      </h1>
-      <div class="bvc-balance">
-        <i class="fa-brands fa-ethereum"></i> <span id="user-bvc-balance">1,450 BVC</span>
-      </div>
-    </div>
+    <div class="bg-grid"></div>
 
-    <!-- BARRE D'ACTION ET FILTRES -->
-    <div class="filter-toolbar">
-      <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="market-search-input" placeholder="Rechercher une pièce, marque, galets, échappement..." />
-      </div>
-      <div class="select-controls">
-        <select id="market-pricetype-select">
-          <option value="all">Tous les paiements</option>
-          <option value="bvc">BVC uniquement</option>
-          <option value="euro">Euros uniquement</option>
-        </select>
-        <select id="market-state-select">
-          <option value="all">Tous les états</option>
-          <option value="neuf">Neuf</option>
-          <option value="occasion">Occasion</option>
-          <option value="service">Service / Recharge</option>
-        </select>
-        <select id="market-sort-select">
-          <option value="newest">Plus récents</option>
-          <option value="price_asc">Prix croissant</option>
-          <option value="price_desc">Prix décroissant</option>
-        </select>
-      </div>
-
-      <!-- Garage Virtuel Toggle -->
-      <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; background: rgba(0,242,255,0.1); padding: 10px 15px; border-radius: 12px; border: 1px solid rgba(0,242,255,0.3);">
-        <div style="display: flex; align-items: center; gap: 10px; color: #00f2ff; font-weight: 600; font-size: 0.9rem;">
-          <i class="fa-solid fa-motorcycle"></i> Pièces compatibles avec mon Garage
+    <div class="market-container">
+      
+      <!-- ─── HEADER ───────────────────────────────────────── -->
+      <header class="market-header animate-fade-in-up">
+        <div class="market-title-group">
+          <button class="btn-icon" onclick="history.back()" aria-label="Retour">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <h1 class="market-title"><i class="fa-solid fa-store"></i> Marketplace</h1>
         </div>
-        <label class="switch" style="width: 40px; height: 22px;">
-          <input type="checkbox" id="market-garage-filter">
-          <span class="slider" style="background-color: rgba(0,242,255,0.2); border: none;"></span>
-        </label>
+        <div class="bvc-balance">
+          <i class="fa-brands fa-ethereum"></i> <span id="user-bvc-balance">1,450 BVC</span>
+        </div>
+      </header>
+
+      <!-- ─── TOOLBAR & FILTERS ────────────────────────────── -->
+      <div class="glass-card toolbar animate-fade-in-up delay-1">
+        <div class="input-group toolbar-search">
+          <i class="fa-solid fa-magnifying-glass input-icon"></i>
+          <input type="text" id="market-search-input" class="input-field" placeholder="Rechercher une pièce, marque, galets..." />
+        </div>
+        <div class="toolbar-filters">
+          <select class="select-field" id="market-pricetype-select">
+            <option value="all">Tous paiements</option>
+            <option value="bvc">BVC uniquement</option>
+            <option value="euro">Euros uniquement</option>
+          </select>
+          <select class="select-field" id="market-state-select">
+            <option value="all">Tous états</option>
+            <option value="neuf">Neuf</option>
+            <option value="occasion">Occasion</option>
+            <option value="service">Service / Recharge</option>
+          </select>
+          <select class="select-field" id="market-sort-select">
+            <option value="newest">Plus récents</option>
+            <option value="price_asc">Prix croissant</option>
+            <option value="price_desc">Prix décroissant</option>
+          </select>
+        </div>
+
+        <div class="garage-toggle-card">
+          <div class="garage-toggle-label">
+            <i class="fa-solid fa-motorcycle"></i> Pièces compatibles avec mon Garage
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="market-garage-filter">
+            <span class="slider"></span>
+          </label>
+        </div>
       </div>
-    </div>
 
-    <!-- ONGLETS DE CATÉGORIES -->
-    <div class="cat-tabs">
-      <button class="market-cat-btn active" onclick="ExchangeMarket.setCategory('all', this)">
-        <i class="fa-solid fa-border-all"></i> Toutes
-      </button>
-      <button class="market-cat-btn" onclick="ExchangeMarket.setCategory('mecanique', this)">
-        <i class="fa-solid fa-gears"></i> Galets & Variateurs
-      </button>
-      <button class="market-cat-btn" onclick="ExchangeMarket.setCategory('pot', this)">
-        <i class="fa-solid fa-wind"></i> Échappements
-      </button>
-      <button class="market-cat-btn" onclick="ExchangeMarket.setCategory('carenage', this)">
-        <i class="fa-solid fa-shield-halved"></i> Carénages
-      </button>
-      <button class="market-cat-btn" onclick="ExchangeMarket.setCategory('pneus', this)">
-        <i class="fa-solid fa-circle-dot"></i> Pneus & Freins
-      </button>
-      <button class="market-cat-btn" onclick="ExchangeMarket.setCategory('equipement', this)">
-        <i class="fa-solid fa-helmet-safety"></i> Équipements
-      </button>
-      <button class="market-cat-btn" onclick="ExchangeMarket.setCategory('services', this)" style="border-color: #00f2ff; color: #00f2ff;">
-        <i class="fa-solid fa-bolt"></i> Recharge & Services
-      </button>
-    </div>
-
-    <!-- BOURSE D'ÉCHANGE COMMUNAUTAIRE -->
-    <div style="margin-bottom: 40px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; color: #00d2ff; text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);">
-          <i class="fa-solid fa-arrows-rotate"></i> Annonces Communautaires
-        </h2>
-        <button
-          onclick="if (window.ExchangeMarket) ExchangeMarket.openPublishForm();"
-          style="
-            background: linear-gradient(135deg, #00d2ff, #0090ff);
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.9rem;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
-          "
-        >
-          <i class="fa-solid fa-plus"></i> Publier une annonce
+      <!-- ─── CATEGORY TABS ────────────────────────────────── -->
+      <div class="cat-tabs animate-fade-in-up delay-2">
+        <button class="cat-btn active" onclick="ExchangeMarket.setCategory('all', this)">
+          <i class="fa-solid fa-border-all"></i> Toutes
+        </button>
+        <button class="cat-btn" onclick="ExchangeMarket.setCategory('mecanique', this)">
+          <i class="fa-solid fa-gears"></i> Galets & Variateurs
+        </button>
+        <button class="cat-btn" onclick="ExchangeMarket.setCategory('pot', this)">
+          <i class="fa-solid fa-wind"></i> Échappements
+        </button>
+        <button class="cat-btn" onclick="ExchangeMarket.setCategory('carenage', this)">
+          <i class="fa-solid fa-shield-halved"></i> Carénages
+        </button>
+        <button class="cat-btn" onclick="ExchangeMarket.setCategory('pneus', this)">
+          <i class="fa-solid fa-circle-dot"></i> Pneus & Freins
+        </button>
+        <button class="cat-btn" onclick="ExchangeMarket.setCategory('equipement', this)">
+          <i class="fa-solid fa-helmet-safety"></i> Équipements
+        </button>
+        <button class="cat-btn" onclick="ExchangeMarket.setCategory('services', this)" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">
+          <i class="fa-solid fa-bolt"></i> Recharge & Services
         </button>
       </div>
 
-      <div class="grid-market" id="exchange-listings-container">
-        <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666">
-          <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px"></i>
-          <p>Chargement des annonces en temps réel…</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- MARCHÉ OFFICIEL PARTENAIRES -->
-    <div style="border-top: 1px solid rgba(0, 242, 255, 0.2); padding-top: 30px; margin-bottom: 40px;">
-      <h2 style="margin: 0 0 20px 0; color: #00f2ff; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);">
-        <i class="fa-solid fa-certificate"></i> Boutique Officielle & Réductions Partenaires
-      </h2>
-      <div class="grid-market">
-        <!-- Produit 1 -->
-        <div class="product-card">
-          <div class="product-img">
-            <i class="fa-solid fa-oil-can"></i>
-          </div>
-          <h3>Huile Moteur 2T (Ipone)</h3>
-          <p style="color: #888; font-size: 0.9rem">
-            Huile de synthèse 1L haute performance avec bec verseur.
-          </p>
-          <div class="price-tag">
-            350 BVC
-            <span style="font-size: 0.9rem; color: #888; text-decoration: line-through;">14.99 €</span>
-          </div>
-          <button class="buy-btn" onclick="alert('Achat validé ! Livraison estimée: 48h')">
-            Échanger
-          </button>
-        </div>
-
-        <!-- Produit 2 -->
-        <div class="product-card">
-          <div class="product-img">
-            <i class="fa-solid fa-motorcycle"></i>
-          </div>
-          <h3>Pot d'échappement homologué</h3>
-          <p style="color: #888; font-size: 0.9rem">
-            Type origine, norme Euro 5 pour Booster & Nitro.
-          </p>
-          <div class="price-tag">
-            2,500 BVC
-            <span style="font-size: 0.9rem; color: #888; text-decoration: line-through;">129.00 €</span>
-          </div>
-          <button class="buy-btn" style="background: #444; color: #888; cursor: not-allowed" disabled>
-            Fonds insuffisants
-          </button>
-        </div>
-
-        <!-- Produit 3 -->
-        <div class="product-card">
-          <div class="product-img">
-            <i class="fa-solid fa-helmet-safety"></i>
-          </div>
-          <h3>Visière Casque Teintée</h3>
-          <p style="color: #888; font-size: 0.9rem">
-            Visière universelle anti-rayures & anti-buée.
-          </p>
-          <div class="price-tag">
-            500 BVC
-            <span style="font-size: 0.9rem; color: #888; text-decoration: line-through;">25.00 €</span>
-          </div>
-          <button class="buy-btn" onclick="alert('Achat validé ! Livraison estimée: 48h')">
-            Échanger
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MARCHÉ NOIR DE NEXUS ATLAS (VOIX IA) -->
-    <div style="border-top: 1px solid rgba(255, 0, 255, 0.2); padding-top: 30px; margin-bottom: 40px;">
-      <h2 style="margin: 0 0 20px 0; color: #ff00ff; text-shadow: 0 0 10px rgba(255, 0, 255, 0.5);">
-        <i class="fa-solid fa-robot"></i> Marché Noir IA (Skins Vocaux)
-      </h2>
-      <div class="grid-market">
-        <!-- Voix 1 -->
-        <div class="product-card" style="border-color: #ff00ff; box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);">
-          <div class="product-img" style="color: #ff00ff">
-            <i class="fa-solid fa-microchip"></i>
-          </div>
-          <h3>Nexus Atlas (Classique)</h3>
-          <p style="color: #888; font-size: 0.9rem">Voix de base et guidage vocal standard.</p>
-          <div class="price-tag" style="color: #ff00ff;">Gratuit</div>
-          <button class="buy-btn" style="background: linear-gradient(135deg, #ff00ff, #8a2be2)" onclick="setVoiceMode('standard')">
-            Activer
-          </button>
-        </div>
-
-        <!-- Voix 2 -->
-        <div class="product-card" style="border-color: #ff00ff; box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);">
-          <div class="product-img" style="color: #ff00ff">
-            <i class="fa-solid fa-user-astronaut"></i>
-          </div>
-          <h3>Cyberpunk</h3>
-          <p style="color: #888; font-size: 0.9rem">Voix grave et synthétiseur robotique.</p>
-          <div class="price-tag" style="color: #ff00ff;">100 BVC</div>
-          <button class="buy-btn" style="background: linear-gradient(135deg, #ff00ff, #8a2be2)" onclick="buyVoiceMode('cyberpunk', 100)">
-            Débloquer
-          </button>
-        </div>
-
-        <!-- Voix 3 -->
-        <div class="product-card" style="border-color: #ff00ff; box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);">
-          <div class="product-img" style="color: #ff00ff">
-            <i class="fa-solid fa-flag-checkered"></i>
-          </div>
-          <h3>Pilote de Rallye</h3>
-          <p style="color: #888; font-size: 0.9rem">Voix dynamique avec alertes virage serré.</p>
-          <div class="price-tag" style="color: #ff00ff;">150 BVC</div>
-          <button class="buy-btn" style="background: linear-gradient(135deg, #ff00ff, #8a2be2)" onclick="buyVoiceMode('rally', 150)">
-            Débloquer
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- SECTION BOÎTE NOIRE — HARDWARE OFFICIEL mon50ccetmoi.com     -->
-    <!-- ============================================================ -->
-    <div id="blackbox-shop-section" style="border-top: 2px solid rgba(255, 170, 0, 0.5); padding-top: 40px; margin-bottom: 40px;">
-
-      <!-- En-tête Premium -->
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px;">
-        <div>
-          <h2 style="margin: 0; color: #ffaa00; text-shadow: 0 0 15px rgba(255, 170, 0, 0.6); font-size: 1.6rem;">
-            <i class="fa-solid fa-box"></i> Boîte Noire — Matériel Officiel
+      <!-- ─── COMMUNITY EXCHANGE ───────────────────────────── -->
+      <div class="animate-fade-in-up delay-3" style="margin-bottom: var(--space-4xl);">
+        <div class="flex-between" style="margin-bottom: var(--space-lg);">
+          <h2 class="heading-3 text-gradient-cyan">
+            <i class="fa-solid fa-arrows-rotate"></i> Annonces Communautaires
           </h2>
-          <p style="color: #999; margin: 5px 0 0; font-size: 0.9rem;">
-            Boîtier enregistreur inviolable pour 50 cc — Chiffrement AES-256 · BLE 5.0 · GPS · IP68
-          </p>
+          <button class="btn btn-primary" onclick="if (window.ExchangeMarket) ExchangeMarket.openPublishForm();">
+            <i class="fa-solid fa-plus"></i> Publier
+          </button>
         </div>
-        <div style="
-          background: linear-gradient(135deg, rgba(255, 170, 0, 0.15), rgba(255, 100, 0, 0.1));
-          border: 1px solid rgba(255, 170, 0, 0.4);
-          padding: 10px 20px;
-          border-radius: 25px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-family: 'JetBrains Mono', monospace;
-          font-weight: bold;
-          color: #ffaa00;
-          font-size: 0.9rem;
-          box-shadow: 0 0 15px rgba(255, 170, 0, 0.2);
-        ">
-          <i class="fa-solid fa-cubes-stacked"></i>
-          <span id="bb-stock-count">47</span> en stock
+        <div class="grid-3" id="exchange-listings-container">
+          <div style="grid-column: 1 / -1; text-align: center; padding: var(--space-4xl); color: var(--text-muted);">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: var(--space-sm);"></i>
+            <p>Chargement des annonces en temps réel…</p>
+          </div>
         </div>
       </div>
 
-      <!-- Grille Produits Boîte Noire -->
-      <div class="grid-market" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+      <div class="divider"></div>
 
-        <!-- PRODUIT : Boîte Noire V1 (Unitaire) -->
-        <div class="product-card" id="bb-card-unit" style="
-          border-color: rgba(255, 170, 0, 0.4);
-          box-shadow: 0 0 20px rgba(255, 170, 0, 0.15);
-          position: relative;
-          overflow: hidden;
-        ">
-          <!-- Badge Officiel -->
-          <div style="
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: linear-gradient(135deg, #ffaa00, #ff6600);
-            color: #000;
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          ">Officiel</div>
-
-          <!-- Image Produit -->
-          <div class="product-img" style="
-            background: url('/assets/blackbox-DZHaHrSH.jpg') center/cover no-repeat, linear-gradient(160deg, #1a1a1a, #000);
-            position: relative;
-            border-bottom: 1px solid rgba(255,170,0,0.2);
-          ">
-            <!-- Fallback icon si l'image n'est pas encore dispo -->
-            <i class="fa-solid fa-microchip" style="font-size: 3rem; color: rgba(255,255,255,0.1); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0;"></i>
-            
-            <div style="
-              position: absolute;
-              bottom: 8px;
-              right: 10px;
-              font-family: 'JetBrains Mono', monospace;
-              font-size: 0.65rem;
-              color: rgba(255, 255, 255, 0.5);
-              z-index: 1;
-              letter-spacing: 1px;
-            ">WIRELESS & SEALED</div>
+      <!-- ─── OFFICIAL PARTNERS SHOP ───────────────────────── -->
+      <div class="animate-fade-in-up delay-4" style="margin-bottom: var(--space-4xl);">
+        <h2 class="heading-3 text-gradient-cyan" style="margin-bottom: var(--space-xl);">
+          <i class="fa-solid fa-certificate"></i> Boutique Officielle & Partenaires
+        </h2>
+        <div class="grid-3">
+          <!-- Produit 1 -->
+          <div class="glass-card product-card card-cyan">
+            <div class="product-img"><i class="fa-solid fa-oil-can"></i></div>
+            <h3 class="product-title">Huile Moteur 2T (Ipone)</h3>
+            <p class="product-desc">Huile de synthèse 1L haute performance avec bec verseur.</p>
+            <div class="product-price-row">
+              <span class="price-main">350 BVC</span>
+              <span class="price-old">14.99 €</span>
+            </div>
+            <button class="btn btn-primary w-100" style="width: 100%;" onclick="alert('Achat validé ! Livraison estimée: 48h')">
+              Échanger
+            </button>
           </div>
-
-          <h3 style="color: #fff; margin: 10px 0 5px;">Boîte Noire V1 — 50 cc</h3>
-          <div style="font-size: 0.75rem; color: #00ff88; margin-bottom: 8px;">
-            <i class="fa-solid fa-truck-fast"></i> Vendu et expédié par <strong>mon50ccetmoi.com</strong>
+          <!-- Produit 2 -->
+          <div class="glass-card product-card card-cyan">
+            <div class="product-img"><i class="fa-solid fa-motorcycle"></i></div>
+            <h3 class="product-title">Pot d'échappement homologué</h3>
+            <p class="product-desc">Type origine, norme Euro 5 pour Booster & Nitro.</p>
+            <div class="product-price-row">
+              <span class="price-main">2,500 BVC</span>
+              <span class="price-old">129.00 €</span>
+            </div>
+            <button class="btn btn-ghost" style="width: 100%; cursor: not-allowed; opacity: 0.5;" disabled>
+              Fonds insuffisants
+            </button>
           </div>
-          <div style="background: rgba(183, 0, 255, 0.15); border: 1px solid rgba(183, 0, 255, 0.3); padding: 6px 10px; border-radius: 8px; margin-bottom: 12px; display: inline-block;">
-            <span style="color: #b700ff; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-gift"></i> Offre de Lancement (10 premiers) : Prototype garanti à vie !</span>
+          <!-- Produit 3 -->
+          <div class="glass-card product-card card-cyan">
+            <div class="product-img"><i class="fa-solid fa-helmet-safety"></i></div>
+            <h3 class="product-title">Visière Casque Teintée</h3>
+            <p class="product-desc">Visière universelle anti-rayures & anti-buée.</p>
+            <div class="product-price-row">
+              <span class="price-main">500 BVC</span>
+              <span class="price-old">25.00 €</span>
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="alert('Achat validé ! Livraison estimée: 48h')">
+              Échanger
+            </button>
           </div>
-          <p style="color: #888; font-size: 0.85rem; line-height: 1.4; margin-bottom: 10px;">
-            Finition ultra-premium en <strong>Aluminium Noir Mat</strong>. Format ultra-plat inviolable (85×54 mm). 
-            Résine ignifuge UL 94-V0, IP68, scellé à vie avec autodestruction AES en cas d'ouverture.
-          </p>
+        </div>
+      </div>
 
-          <!-- Specs mini -->
-          <div style="
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 12px;
-          ">
-            <span style="background: rgba(255,170,0,0.1); border: 1px solid rgba(255,170,0,0.3); color: #ffaa00; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-lock"></i> AES-256
-            </span>
-            <span style="background: rgba(0,242,255,0.1); border: 1px solid rgba(0,242,255,0.3); color: #00f2ff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-bluetooth-b"></i> BLE 5.0
-            </span>
-            <span style="background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: #00ff88; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-satellite"></i> GPS
-            </span>
-            <span style="background: rgba(255,0,80,0.1); border: 1px solid rgba(255,0,80,0.3); color: #ff0050; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-shield-halved"></i> IP68
-            </span>
+      <div class="divider"></div>
+
+      <!-- ─── AI VOICE SKINS (BLACK MARKET) ────────────────── -->
+      <div class="animate-fade-in-up delay-5" style="margin-bottom: var(--space-4xl);">
+        <h2 class="heading-3" style="color: var(--neon-purple); text-shadow: 0 0 15px rgba(183, 0, 255, 0.4); margin-bottom: var(--space-xl);">
+          <i class="fa-solid fa-robot"></i> Marché Noir IA (Skins Vocaux)
+        </h2>
+        <div class="grid-3">
+          <div class="glass-card product-card card-purple">
+            <div class="product-img"><i class="fa-solid fa-microchip"></i></div>
+            <h3 class="product-title">Nexus Atlas (Classique)</h3>
+            <p class="product-desc">Voix de base et guidage vocal standard.</p>
+            <div class="product-price-row">
+              <span class="price-main">Gratuit</span>
+            </div>
+            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="setVoiceMode('standard')">
+              Activer
+            </button>
           </div>
+          <div class="glass-card product-card card-purple">
+            <div class="product-img"><i class="fa-solid fa-user-astronaut"></i></div>
+            <h3 class="product-title">Cyberpunk</h3>
+            <p class="product-desc">Voix grave et synthétiseur robotique.</p>
+            <div class="product-price-row">
+              <span class="price-main">100 BVC</span>
+            </div>
+            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="buyVoiceMode('cyberpunk', 100)">
+              Débloquer
+            </button>
+          </div>
+          <div class="glass-card product-card card-purple">
+            <div class="product-img"><i class="fa-solid fa-flag-checkered"></i></div>
+            <h3 class="product-title">Pilote de Rallye</h3>
+            <p class="product-desc">Voix dynamique avec alertes virage serré.</p>
+            <div class="product-price-row">
+              <span class="price-main">150 BVC</span>
+            </div>
+            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="buyVoiceMode('rally', 150)">
+              Débloquer
+            </button>
+          </div>
+        </div>
+      </div>
 
-          <!-- Sélection S/N -->
-          <div style="
-            background: rgba(10, 14, 25, 0.8);
-            border: 1px solid rgba(255, 170, 0, 0.2);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 12px;
-          ">
-            <label style="color: #ffaa00; font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 6px;">
-              <i class="fa-solid fa-barcode"></i> NUMÉRO DE SÉRIE ATTRIBUÉ
-            </label>
-            <div id="bb-serial-display" style="
-              font-family: 'JetBrains Mono', monospace;
-              font-size: 1.1rem;
-              color: #fff;
-              letter-spacing: 2px;
-              text-align: center;
-              padding: 6px;
-              background: rgba(255, 170, 0, 0.05);
-              border-radius: 6px;
-            ">BB50-00048</div>
-            <p style="color: #666; font-size: 0.7rem; margin: 5px 0 0; text-align: center;">
-              <strong>1 boîtier matériel = 1 numéro de série unique</strong><br>
-              Gravé à vie dans la puce matérielle, infalsifiable.
+      <div class="divider"></div>
+
+      <!-- ─── HARDWARE SHOP (BLACKBOX) ─────────────────────── -->
+      <div id="blackbox-shop-section" class="animate-fade-in-up delay-6" style="margin-bottom: var(--space-4xl);">
+        
+        <div class="flex-between" style="flex-wrap: wrap; gap: var(--space-md); margin-bottom: var(--space-xl);">
+          <div>
+            <h2 class="heading-3 text-gradient-gold">
+              <i class="fa-solid fa-box"></i> Boîte Noire — Matériel Officiel
+            </h2>
+            <p class="text-small" style="margin-top: 4px;">
+              Boîtier enregistreur inviolable pour 50 cc — Chiffrement AES-256 · BLE 5.0 · GPS · IP68
             </p>
           </div>
+          <div class="badge badge-gold" style="font-family: var(--font-mono); padding: 10px 20px; font-size: var(--text-sm);">
+            <i class="fa-solid fa-cubes-stacked"></i> <span id="bb-stock-count">47</span> en stock
+          </div>
+        </div>
 
-          <!-- Prix -->
-          <div style="display: flex; flex-direction: column; margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-              <div class="price-tag" style="color: #ffaa00; font-size: 1.5rem;">49,99 €</div>
-              <span style="color: #555; font-size: 0.8rem;">TTC · Livraison offerte 🇫🇷</span>
+        <div class="grid-2">
+          
+          <!-- Boîte Noire V1 (Unitaire) -->
+          <div class="glass-card product-card card-gold" id="bb-card-unit">
+            <div class="badge product-badge" style="background: linear-gradient(135deg, var(--neon-gold), #ff6600); color: black;">Officiel</div>
+            <div class="product-img" style="background: url('/assets/blackbox-DZHaHrSH.jpg') center/cover no-repeat, linear-gradient(160deg, #1a1a1a, #000);">
+              <i class="fa-solid fa-microchip" style="position: absolute; opacity: 0.1; font-size: 5rem; z-index: 0;"></i>
+              <div style="position: absolute; bottom: 8px; right: 10px; font-family: var(--font-mono); font-size: 0.65rem; color: rgba(255,255,255,0.5); z-index: 1;">WIRELESS & SEALED</div>
             </div>
-            <span style="color: #00ff88; font-size: 0.75rem; font-weight: 600; margin-top: 4px;">
-              <i class="fa-solid fa-tag"></i> Tarif standard (dès le 11ème) : 89,99 €
-            </span>
-          </div>
-
-          <!-- Bouton Achat -->
-          <button class="buy-btn" id="bb-buy-unit-btn" style="
-            background: linear-gradient(135deg, #ffaa00, #ff6600);
-            color: #000;
-            font-size: 1rem;
-            padding: 14px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-          " onclick="BlackBoxShop.buyUnit()">
-            <i class="fa-solid fa-cart-shopping"></i> Commander ma Boîte Noire
-          </button>
-        </div>
-
-        <!-- PRODUIT : Pack Duo (2 boîtiers) -->
-        <div class="product-card" style="
-          border-color: rgba(255, 170, 0, 0.3);
-          box-shadow: 0 0 15px rgba(255, 170, 0, 0.1);
-          position: relative;
-          overflow: hidden;
-        ">
-          <!-- Badge Promo -->
-          <div style="
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: linear-gradient(135deg, #00ff88, #00cc66);
-            color: #000;
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 8px;
-            text-transform: uppercase;
-          ">-10% Pack</div>
-
-          <div class="product-img" style="
-            background: linear-gradient(160deg, rgba(255, 170, 0, 0.08), rgba(10, 14, 25, 0.9));
-            color: #ffaa00;
-          ">
-            <i class="fa-solid fa-boxes-stacked" style="font-size: 3rem;"></i>
-          </div>
-          <h3 style="color: #fff; margin-bottom: 5px;">Pack Duo — 2 Boîtiers</h3>
-          <div style="font-size: 0.75rem; color: #00ff88; margin-bottom: 8px;">
-            <i class="fa-solid fa-truck-fast"></i> Vendu et expédié par <strong>mon50ccetmoi.com</strong>
-          </div>
-          <div style="background: rgba(255, 0, 80, 0.15); border: 1px solid rgba(255, 0, 80, 0.3); padding: 6px 10px; border-radius: 8px; margin-bottom: 12px; display: inline-block;">
-            <span style="color: #ff0050; font-size: 0.75rem; font-weight: bold;"><i class="fa-solid fa-circle-info"></i> Attention : L'édition Prototype n'est pas incluse dans le Pack.</span>
-          </div>
-          <p style="color: #888; font-size: 0.85rem; line-height: 1.4;">
-            Idéal pour protéger 2 véhicules ou offrir à un proche avec l'édition <strong>Standard</strong>. 
-            Chaque boîtier possède son propre numéro de série unique.
-          </p>
-
-          <div style="
-            background: rgba(10, 14, 25, 0.8);
-            border: 1px solid rgba(255, 170, 0, 0.2);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin: 12px 0;
-          ">
-            <label style="color: #ffaa00; font-size: 0.75rem; font-weight: 600;">
-              <i class="fa-solid fa-barcode"></i> S/N ATTRIBUÉS
-            </label>
-            <div style="
-              font-family: 'JetBrains Mono', monospace;
-              font-size: 0.95rem;
-              color: #fff;
-              letter-spacing: 1.5px;
-              text-align: center;
-              padding: 6px;
-              margin-top: 6px;
-            ">
-              <span style="color: #ffaa00;">BB50-00048</span> &amp;
-              <span style="color: #ffaa00;">BB50-00049</span>
+            <h3 class="product-title">Boîte Noire V1 — 50 cc</h3>
+            <div style="font-size: var(--text-xs); color: var(--neon-green); margin-bottom: var(--space-sm);">
+              <i class="fa-solid fa-truck-fast"></i> Vendu par <strong>mon50ccetmoi.com</strong>
             </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;">
-            <div>
-              <div class="price-tag" style="color: #ffaa00; font-size: 1.4rem;">161,98 €</div>
+            <div style="background: rgba(183, 0, 255, 0.1); border: 1px solid rgba(183, 0, 255, 0.3); padding: 8px; border-radius: var(--radius-sm); margin-bottom: var(--space-md);">
+              <span style="color: var(--neon-purple); font-size: var(--text-xs); font-weight: 700;"><i class="fa-solid fa-gift"></i> Offre Lancement : Prototype garanti à vie !</span>
             </div>
-            <span style="color: #00ff88; font-size: 0.8rem; font-weight: 600;">
-              <i class="fa-solid fa-tag"></i> au lieu de 179,98 €
-            </span>
+            <p class="product-desc" style="font-size: var(--text-xs);">
+              Finition Aluminium Noir Mat. Format ultra-plat (85×54 mm). Résine ignifuge UL 94-V0, scellé à vie avec autodestruction AES en cas d'ouverture.
+            </p>
+            
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: var(--space-md);">
+              <span class="badge badge-gold" style="padding: 4px 8px;"><i class="fa-solid fa-lock"></i> AES-256</span>
+              <span class="badge badge-cyan" style="padding: 4px 8px;"><i class="fa-solid fa-bluetooth-b"></i> BLE 5.0</span>
+              <span class="badge badge-green" style="padding: 4px 8px;"><i class="fa-solid fa-satellite"></i> GPS</span>
+              <span class="badge badge-red" style="padding: 4px 8px;"><i class="fa-solid fa-shield-halved"></i> IP68</span>
+            </div>
+
+            <div style="background: rgba(10, 14, 25, 0.8); border: 1px solid rgba(255, 170, 0, 0.2); border-radius: var(--radius-sm); padding: var(--space-sm); margin-bottom: var(--space-md); text-align: center;">
+              <label style="color: var(--neon-gold); font-size: 0.7rem; font-weight: 700; display: block; margin-bottom: 4px;">
+                <i class="fa-solid fa-barcode"></i> S/N ATTRIBUÉ
+              </label>
+              <div id="bb-serial-display" style="font-family: var(--font-mono); font-size: 1.1rem; color: #fff; letter-spacing: 2px; padding: 4px; background: rgba(255, 170, 0, 0.05); border-radius: 4px;">BB50-00048</div>
+            </div>
+
+            <div class="product-price-row">
+              <span class="price-main">49,99 €</span>
+              <span class="price-old" style="text-decoration: none;">Livraison offerte 🇫🇷</span>
+            </div>
+            <button class="btn btn-cta" style="width: 100%;" id="bb-buy-unit-btn" onclick="BlackBoxShop.buyUnit()">
+              <i class="fa-solid fa-cart-shopping"></i> Commander (49,99 €)
+            </button>
           </div>
-          <button class="buy-btn" style="
-            background: linear-gradient(135deg, #ffaa00, #ff6600);
-            color: #000;
-            font-weight: 800;
-          " onclick="BlackBoxShop.buyPack(2)">
-            <i class="fa-solid fa-cart-shopping"></i> Commander le Pack Duo
-          </button>
+
+          <!-- Pack Duo & Premium -->
+          <div class="flex-col gap-lg">
+            
+            <!-- Pack Duo -->
+            <div class="glass-card product-card card-gold">
+              <div class="badge product-badge" style="background: linear-gradient(135deg, var(--neon-green), #00cc66); color: black;">-10% Pack</div>
+              <div class="flex-between">
+                <div>
+                  <h3 class="product-title">Pack Duo — 2 Boîtiers</h3>
+                  <div style="font-size: var(--text-xs); color: var(--neon-green); margin-bottom: var(--space-xs);">
+                    <i class="fa-solid fa-truck-fast"></i> Vendu par <strong>mon50ccetmoi.com</strong>
+                  </div>
+                </div>
+                <div style="font-size: 2.5rem; color: var(--neon-gold);"><i class="fa-solid fa-boxes-stacked"></i></div>
+              </div>
+              <p class="product-desc" style="font-size: var(--text-xs); margin-top: var(--space-sm);">
+                Idéal pour protéger 2 véhicules ou offrir à un proche avec l'édition Standard. 
+                S/N attribués : <span style="font-family: var(--font-mono); color: var(--neon-gold);">BB50-00048 & BB50-00049</span>
+              </p>
+              <div class="product-price-row" style="margin-bottom: var(--space-xs);">
+                <span class="price-main">161,98 €</span>
+                <span class="price-old">179,98 €</span>
+              </div>
+              <button class="btn btn-cta" style="width: 100%; padding: 12px;" onclick="BlackBoxShop.buyPack(2)">
+                <i class="fa-solid fa-cart-shopping"></i> Commander Pack
+              </button>
+            </div>
+
+            <!-- Abonnement Premium -->
+            <div class="glass-card product-card card-purple">
+              <div class="badge product-badge" style="background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;">Premium</div>
+              <div class="flex-between">
+                <div>
+                  <h3 class="product-title">Abonnement Boîte Noire+</h3>
+                  <div style="font-size: var(--text-xs); color: var(--neon-purple); margin-bottom: var(--space-xs);">
+                    <i class="fa-solid fa-gift"></i> Gratuit la 1ère année
+                  </div>
+                </div>
+                <div style="font-size: 2.5rem; color: var(--neon-purple);"><i class="fa-solid fa-crown"></i></div>
+              </div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin: var(--space-sm) 0;">
+                <span class="badge badge-purple" style="padding: 4px 8px; font-size: 0.65rem;"><i class="fa-solid fa-brain"></i> IA Litige</span>
+                <span class="badge badge-purple" style="padding: 4px 8px; font-size: 0.65rem;"><i class="fa-solid fa-bell"></i> Alertes Assureur</span>
+                <span class="badge badge-purple" style="padding: 4px 8px; font-size: 0.65rem;"><i class="fa-solid fa-infinity"></i> Historique ∞</span>
+              </div>
+              <div class="product-price-row" style="margin-bottom: var(--space-xs);">
+                <span class="price-main">4,99 € <span style="font-size: var(--text-sm); font-weight: normal;">/mois</span></span>
+                <span class="price-old" style="text-decoration: none;">Sans engagement</span>
+              </div>
+              <button class="btn" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="BlackBoxShop.subscribePremium()">
+                <i class="fa-solid fa-rocket"></i> S'abonner
+              </button>
+            </div>
+
+          </div>
         </div>
 
-        <!-- PRODUIT : Abonnement Premium -->
-        <div class="product-card" style="
-          border-color: rgba(183, 0, 255, 0.4);
-          box-shadow: 0 0 15px rgba(183, 0, 255, 0.15);
-          position: relative;
-          overflow: hidden;
-        ">
-          <div style="
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: linear-gradient(135deg, #b700ff, #8a2be2);
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 8px;
-            text-transform: uppercase;
-          ">Premium</div>
-
-          <div class="product-img" style="
-            background: linear-gradient(160deg, rgba(183, 0, 255, 0.1), rgba(10, 14, 25, 0.9));
-            color: #b700ff;
-          ">
-            <i class="fa-solid fa-crown" style="font-size: 3rem;"></i>
+        <!-- Garanties -->
+        <div class="guarantee-grid">
+          <div class="guarantee-card">
+            <i class="fa-solid fa-truck-fast"></i>
+            <p>Livraison 48h</p>
+            <span>Colissimo Suivi</span>
           </div>
-          <h3 style="color: #fff;">Abonnement Boîte Noire+</h3>
-          <p style="color: #888; font-size: 0.85rem; line-height: 1.4;">
-            Débloquez les fonctionnalités avancées : reconstitution IA d'accident, 
-            alertes assureur en temps réel, historique illimité, support prioritaire.
-          </p>
-
-          <div style="
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 12px 0;
-          ">
-            <span style="background: rgba(183,0,255,0.1); border: 1px solid rgba(183,0,255,0.3); color: #b700ff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-brain"></i> IA Litige
-            </span>
-            <span style="background: rgba(183,0,255,0.1); border: 1px solid rgba(183,0,255,0.3); color: #b700ff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-bell"></i> Alertes Assureur
-            </span>
-            <span style="background: rgba(183,0,255,0.1); border: 1px solid rgba(183,0,255,0.3); color: #b700ff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-infinity"></i> Historique ∞
-            </span>
+          <div class="guarantee-card">
+            <i class="fa-solid fa-shield-halved"></i>
+            <p>Garantie 2 ans</p>
+            <span>Pièces & main d'œuvre</span>
           </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;">
-            <div class="price-tag" style="color: #b700ff; font-size: 1.4rem;">4,99 € <span style="font-size: 0.8rem; color: #888;">/mois</span></div>
-            <span style="color: #555; font-size: 0.8rem;">Sans engagement</span>
+          <div class="guarantee-card">
+            <i class="fa-solid fa-lock"></i>
+            <p>Paiement sécurisé</p>
+            <span>Revolut / CB / Apple Pay</span>
           </div>
-          <div style="color: #b700ff; font-size: 0.75rem; font-weight: bold; margin-bottom: 12px; text-align: center;">
-            <i class="fa-solid fa-gift"></i> Gratuit la 1ère année avec l'achat d'une Boîte Noire
+          <div class="guarantee-card">
+            <i class="fa-solid fa-rotate-left"></i>
+            <p>Satisfait ou remboursé</p>
+            <span>30 jours</span>
           </div>
-          <button class="buy-btn" style="
-            background: linear-gradient(135deg, #b700ff, #8a2be2);
-            font-weight: 800;
-          " onclick="BlackBoxShop.subscribePremium()">
-            <i class="fa-solid fa-rocket"></i> S'abonner
-          </button>
         </div>
 
-        <!-- PRODUIT : Porte-clés Officiel (Précommande) -->
-        <div class="product-card" style="
-          border-color: rgba(0, 242, 255, 0.4);
-          box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);
-          position: relative;
-          overflow: hidden;
-        ">
-          <!-- Badge Précommande -->
-          <div style="
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: linear-gradient(135deg, #00f2ff, #0055ff);
-            color: #fff;
-            font-size: 0.7rem;
-            font-weight: 800;
-            padding: 4px 10px;
-            border-radius: 8px;
-            text-transform: uppercase;
-          ">Précommande</div>
-
-          <div class="product-img" style="
-            background: linear-gradient(160deg, rgba(0, 242, 255, 0.1), rgba(10, 14, 25, 0.9));
-            color: #00f2ff;
-          ">
-            <i class="fa-solid fa-key" style="font-size: 3rem;"></i>
-          </div>
-          <h3 style="color: #fff;">Porte-clés "mon50ccetmoi"</h3>
-          <p style="color: #888; font-size: 0.85rem; line-height: 1.4;">
-            Porte-clés officiel avec le logo de l'app. Finition métal brossé premium, résistant aux intempéries. Montrez votre appartenance à la communauté !
-          </p>
-
-          <div style="
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 12px 0;
-          ">
-            <span style="background: rgba(0,242,255,0.1); border: 1px solid rgba(0,242,255,0.3); color: #00f2ff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-medal"></i> Métal Premium
-            </span>
-            <span style="background: rgba(0,242,255,0.1); border: 1px solid rgba(0,242,255,0.3); color: #00f2ff; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem;">
-              <i class="fa-solid fa-droplet"></i> Anti-pluie
-            </span>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;">
-            <div class="price-tag" style="color: #00f2ff; font-size: 1.4rem;">9,90 €</div>
-            <span style="color: #555; font-size: 0.8rem;">Bientôt disponible</span>
-          </div>
-          <button class="buy-btn" style="
-            background: linear-gradient(135deg, #00f2ff, #0055ff);
-            font-weight: 800;
-          " onclick="alert('Les précommandes ouvriront très prochainement !')">
-            <i class="fa-solid fa-clock"></i> M'alerter
-          </button>
-        </div>
-      </div>
-
-      <!-- Garanties -->
-      <div style="
-        margin-top: 25px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 12px;
-      ">
-        <div style="background: rgba(255,170,0,0.05); border: 1px solid rgba(255,170,0,0.15); border-radius: 12px; padding: 14px; text-align: center;">
-          <i class="fa-solid fa-truck-fast" style="color: #ffaa00; font-size: 1.3rem; margin-bottom: 6px;"></i>
-          <p style="color: #ccc; font-size: 0.8rem; margin: 0;">Livraison 48h<br><span style="color: #666;">Colissimo Suivi</span></p>
-        </div>
-        <div style="background: rgba(255,170,0,0.05); border: 1px solid rgba(255,170,0,0.15); border-radius: 12px; padding: 14px; text-align: center;">
-          <i class="fa-solid fa-shield-halved" style="color: #ffaa00; font-size: 1.3rem; margin-bottom: 6px;"></i>
-          <p style="color: #ccc; font-size: 0.8rem; margin: 0;">Garantie 2 ans<br><span style="color: #666;">Pièces & main d'œuvre</span></p>
-        </div>
-        <div style="background: rgba(255,170,0,0.05); border: 1px solid rgba(255,170,0,0.15); border-radius: 12px; padding: 14px; text-align: center;">
-          <i class="fa-solid fa-lock" style="color: #ffaa00; font-size: 1.3rem; margin-bottom: 6px;"></i>
-          <p style="color: #ccc; font-size: 0.8rem; margin: 0;">Paiement sécurisé<br><span style="color: #666;">Revolut / CB / Apple Pay</span></p>
-        </div>
-        <div style="background: rgba(255,170,0,0.05); border: 1px solid rgba(255,170,0,0.15); border-radius: 12px; padding: 14px; text-align: center;">
-          <i class="fa-solid fa-rotate-left" style="color: #ffaa00; font-size: 1.3rem; margin-bottom: 6px;"></i>
-          <p style="color: #ccc; font-size: 0.8rem; margin: 0;">Satisfait ou remboursé<br><span style="color: #666;">30 jours</span></p>
-        </div>
       </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- ─── Bottom Navigation ──────────────────────────────── -->
+    <nav class="bottom-nav hide-desktop">
+      <a href="app.html" class="bottom-nav-item">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>GPS</span>
+      </a>
+      <a href="dashboard.html" class="bottom-nav-item">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="marketplace.html" class="bottom-nav-item active">
+        <i class="fa-solid fa-store"></i>
+        <span>Market</span>
+      </a>
+      <a href="profile.html" class="bottom-nav-item">
+        <i class="fa-solid fa-user"></i>
+        <span>Profil</span>
+      </a>
+    </nav>
+
+    <!-- Firebase SDK & Scripts -->
     <script src="js/infallible.js" charset="utf-8"></script>
     <script src="js/config.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
@@ -839,8 +693,8 @@
       }
     </script>
     <script src="js/exchange.js" charset="utf-8"></script>
-
     <script src="js/blackbox-shop.js" charset="utf-8"></script>
+    
     <script>
       function setVoiceMode(mode) {
         localStorage.setItem("nexus-atlasVoiceMode", mode);

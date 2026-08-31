@@ -333,7 +333,7 @@ window.NexusAtlasEngine = {
         break;
       case "OPEN_PROFILE":
         if (typeof window.openProfile === "function") window.openProfile();
-        else window.location.href = "/profil.html";
+        else window.location.href = "profile.html";
         break;
       case "DRUGS_WARNING":
         console.warn(

@@ -44,6 +44,25 @@ window.NexusAtlasChat = {
         // Afficher indicateur de frappe
         const typingId = this.addTypingIndicator();
 
+        // 🛡️ Première barrière invisible : Détection de toxicité locale via Dictionnaire
+        let isToxic = false;
+        if (window.FrenchBadWords && Array.isArray(window.FrenchBadWords)) {
+            const lowerText = text.toLowerCase();
+            isToxic = window.FrenchBadWords.some(word => lowerText.includes(word.toLowerCase()));
+        } else {
+            // Fallback si le dictionnaire n'est pas chargé
+            const toxicPatterns = /(connard|salop|pute|encul|fdp|gueule|tg\b|bâtard|merde|chier|tuer|suicide)/i;
+            isToxic = toxicPatterns.test(text);
+        }
+
+        if (isToxic) {
+            setTimeout(() => {
+                this.removeElement(typingId);
+                this.addMessage("Nexus Atlas (Modération)", "Je détecte une anomalie dans votre langage. Notre communauté repose sur le respect mutuel. Considérez ceci comme un avertissement subtil avant l'application stricte de nos CGU.", "ai");
+            }, 1000);
+            return; // Bloque l'envoi au serveur
+        }
+
         try {
             if (!window.NexusAtlasGemini) throw new Error("Gemini non initialisé.");
             

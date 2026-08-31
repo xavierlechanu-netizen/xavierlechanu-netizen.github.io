@@ -44,6 +44,16 @@ window.NexusAtlasChat = {
         // Afficher indicateur de frappe
         const typingId = this.addTypingIndicator();
 
+        // 🛡️ Première barrière invisible : Détection de toxicité locale
+        const toxicPatterns = /(connard|salop|pute|encul|fdp|gueule|tg\b|bâtard|merde|chier|tuer|suicide)/i;
+        if (toxicPatterns.test(text)) {
+            setTimeout(() => {
+                this.removeElement(typingId);
+                this.addMessage("Nexus Atlas (Modération)", "Je détecte une anomalie dans votre langage. Notre communauté repose sur le respect mutuel. Considérez ceci comme un avertissement subtil avant l'application stricte de nos CGU.", "ai");
+            }, 1000);
+            return; // Bloque l'envoi au serveur
+        }
+
         try {
             if (!window.NexusAtlasGemini) throw new Error("Gemini non initialisé.");
             

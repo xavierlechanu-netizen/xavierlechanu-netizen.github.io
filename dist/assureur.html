@@ -2,10 +2,7 @@
 <html lang="fr-FR" dir="ltr">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>Portail Assureur B2B - mon50ccetmoi</title>
     <meta name="description" content="Portail dédié aux assureurs pour consulter les données télématiques certifiées (boîte noire) des scooters 50cc et VSP." />
     <meta property="og:title" content="Portail Assureur B2B - mon50ccetmoi" />
@@ -14,589 +11,533 @@
     <meta property="og:url" content="https://mon50ccetmoi.com/assureur" />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://mon50ccetmoi.com/assureur" />
+    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <script src="https://merchant.revolut.com/embed.js" async charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-
     <script src="js/config.js" charset="utf-8"></script>
     <script src="js/database.js" charset="utf-8"></script>
     <script>
-      // Initialiser Firebase et la base de données (db)
       firebase.initializeApp(CONFIG.FIREBASE);
       initDatabase();
     </script>
 
+
     <style>
       body {
-        margin: 0;
-        padding: 0;
-        font-family: "Inter", monospace;
-        background: #050a15;
-        color: #e2e8f0;
         display: flex;
         justify-content: center;
         align-items: center;
         min-height: 100vh;
-        background-image: radial-gradient(
-          circle at 50% -20%,
-          rgba(0, 210, 255, 0.1) 0%,
-          transparent 70%
-        );
-      }
-      .container {
-        width: 100%;
-        max-width: 650px;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(15px);
-        border-radius: 16px;
-        border: 1px solid rgba(0, 210, 255, 0.2);
-        box-shadow:
-          0 10px 40px rgba(0, 0, 0, 0.8),
-          inset 0 1px 1px rgba(255, 255, 255, 0.1);
-        padding: 40px;
-        box-sizing: border-box;
-        position: relative;
-        overflow: hidden;
-      }
-      .container::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #00d2ff, #ff0055);
-      }
-      h1 {
-        color: #fff;
-        text-align: center;
-        margin-bottom: 5px;
-        font-size: 2rem;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
-      }
-      p.subtitle {
-        text-align: center;
-        color: #94a3b8;
-        margin-bottom: 30px;
-      }
-      .search-box {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 30px;
-      }
-      .search-box input {
-        flex: 1;
-        padding: 15px;
-        background: rgba(0, 0, 0, 0.5);
-        color: #fff;
-        border: 2px solid #1e293b;
-        border-radius: 8px;
-        font-size: 1.1rem;
-        font-family: monospace;
-        outline: none;
-        transition: all 0.3s;
-      }
-      .search-box input:focus {
-        border-color: #00d2ff;
-        box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
-      }
-      .search-box button {
-        background: linear-gradient(135deg, #00d2ff, #0056b3);
-        color: white;
-        border: none;
-        padding: 0 25px;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
-      }
-      .search-box button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 25px rgba(0, 210, 255, 0.6);
+        padding: var(--space-lg);
+        background-image: radial-gradient(circle at 50% -20%, rgba(0, 210, 255, 0.06), transparent 50%);
       }
 
+      .portal-container {
+        width: 100%;
+        max-width: 680px;
+        position: relative;
+      }
+
+      /* ─── Top Bar ────────────────────────────────────────── */
+      .portal-container > .glass-card::before {
+        height: 3px;
+        background: linear-gradient(90deg, var(--neon-cyan), var(--neon-red));
+      }
+
+      .portal-title {
+        text-align: center;
+        margin-bottom: var(--space-xl);
+      }
+
+      .portal-title h1 {
+        font-family: var(--font-display);
+        font-size: var(--text-3xl);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 15px var(--color-primary-glow);
+        margin-bottom: 4px;
+      }
+
+      .portal-title p {
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+      }
+
+      /* ─── Search Box ─────────────────────────────────────── */
+      .search-row {
+        display: flex;
+        gap: var(--space-sm);
+      }
+
+      .search-row .input-field {
+        flex: 1;
+        font-family: var(--font-mono);
+        font-size: var(--text-lg);
+        letter-spacing: 0.05em;
+      }
+
+      .search-row .btn-primary {
+        padding: 14px 24px;
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+      }
+
+      /* ─── Report Options ─────────────────────────────────── */
       .report-options {
         display: none;
         flex-direction: column;
-        gap: 15px;
+        gap: var(--space-md);
+        margin-top: var(--space-xl);
       }
+
       .report-card {
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid #1e293b;
-        border-radius: 8px;
-        padding: 20px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+        padding: var(--space-lg);
         display: flex;
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
-        transition: all 0.3s;
-      }
-      .report-card:hover {
-        border-color: #ffb703;
-        background: rgba(255, 183, 3, 0.05);
-      }
-      .report-card.selected {
-        border-color: #00ffcc;
-        background: rgba(0, 255, 204, 0.1);
-        box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
-      }
-      .report-info h3 {
-        margin: 0 0 5px 0;
-        font-size: 1.2rem;
-        color: #fff;
-      }
-      .report-info p {
-        margin: 0;
-        font-size: 0.85rem;
-        color: #94a3b8;
-      }
-      .report-price {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: #00ffcc;
-        text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        transition: all var(--transition-base);
       }
 
+      .report-card:hover {
+        border-color: rgba(255, 183, 3, 0.3);
+        background: rgba(255, 183, 3, 0.03);
+      }
+
+      .report-card.selected {
+        border-color: rgba(0, 255, 204, 0.4);
+        background: rgba(0, 255, 204, 0.05);
+        box-shadow: 0 0 25px rgba(0, 255, 204, 0.1);
+      }
+
+      .report-info h3 {
+        margin: 0 0 4px 0;
+        font-size: var(--text-lg);
+        font-weight: 700;
+      }
+
+      .report-info p {
+        margin: 0;
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+      }
+
+      .report-price {
+        font-family: var(--font-mono);
+        font-size: var(--text-2xl);
+        font-weight: 700;
+        color: #00ffcc;
+        text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+      }
+
+      /* ─── Pay Button ─────────────────────────────────────── */
       .btn-pay {
         display: none;
         width: 100%;
-        padding: 15px;
-        background: linear-gradient(135deg, #b700ff 0%, #ff0055 100%);
-        color: #fff;
+        padding: 16px;
+        background: linear-gradient(135deg, var(--neon-purple), var(--neon-red));
+        color: white;
         border: none;
-        border-radius: 8px;
-        font-size: 1.1rem;
-        font-weight: bold;
-        margin-top: 20px;
+        border-radius: var(--radius-md);
+        font-size: var(--text-lg);
+        font-weight: 800;
+        margin-top: var(--space-lg);
         cursor: pointer;
         text-transform: uppercase;
-        box-shadow: 0 0 20px rgba(183, 0, 255, 0.6);
-        transition: transform 0.2s;
-      }
-      .btn-pay:hover {
-        transform: scale(1.02);
-        box-shadow: 0 0 30px rgba(255, 0, 85, 0.8);
+        box-shadow: 0 0 25px rgba(183, 0, 255, 0.4);
+        transition: all var(--transition-base);
+        font-family: var(--font-sans);
       }
 
+      .btn-pay:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 35px rgba(255, 0, 85, 0.5);
+      }
+
+      /* ─── Status Messages ────────────────────────────────── */
       .status-msg {
         text-align: center;
-        margin-top: 15px;
+        margin-top: var(--space-md);
         font-weight: 600;
-        font-family: monospace;
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
       }
-      .error {
-        color: #ff3333;
-        text-shadow: 0 0 5px #ff3333;
+
+      .error { color: #ff3333; text-shadow: 0 0 5px rgba(255, 50, 50, 0.5); }
+      .success { color: #00ffcc; text-shadow: 0 0 5px rgba(0, 255, 204, 0.5); }
+      .info { color: var(--neon-cyan); text-shadow: 0 0 5px var(--color-primary-glow); }
+
+      /* ─── Decryption Modal ───────────────────────────────── */
+      .decrypt-modal {
+        display: none;
+        margin-top: var(--space-lg);
+        padding: var(--space-lg);
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 0, 85, 0.3);
+        background: rgba(0, 0, 0, 0.3);
       }
-      .success {
+
+      .decrypt-modal h3 {
+        color: var(--neon-red);
+        margin: 0 0 var(--space-sm) 0;
+        font-size: var(--text-base);
+      }
+
+      .decrypt-modal p {
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+        margin-bottom: var(--space-md);
+      }
+
+      /* ─── Expert Dashboard ───────────────────────────────── */
+      .expert-dashboard {
+        display: none;
+        margin-top: var(--space-lg);
+      }
+
+      .telemetry-panel {
+        background: rgba(5, 8, 15, 0.9);
         color: #00ffcc;
-        text-shadow: 0 0 5px #00ffcc;
+        padding: var(--space-xl);
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(0, 86, 179, 0.3);
+        font-family: var(--font-mono);
+        position: relative;
+        overflow: hidden;
       }
-      .info {
-        color: #00d2ff;
-        text-shadow: 0 0 5px #00d2ff;
+
+      .telemetry-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-35deg);
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: rgba(255, 183, 3, 0.06);
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 0;
+        text-align: center;
+        line-height: 1.2;
+      }
+
+      .telemetry-content { position: relative; z-index: 1; }
+
+      .telemetry-content h3 {
+        margin: 0 0 var(--space-lg) 0;
+        color: var(--neon-cyan);
+        font-size: var(--text-base);
+      }
+
+      .telemetry-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-md);
+        margin-bottom: var(--space-lg);
+      }
+
+      .telem-stat {
+        background: rgba(20, 20, 30, 0.8);
+        padding: var(--space-md);
+        border-radius: var(--radius-sm);
+        text-align: center;
+      }
+
+      .telem-stat .telem-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .telem-stat .telem-value {
+        font-size: var(--text-2xl);
+        font-weight: 700;
+        margin-top: 4px;
+      }
+
+      .telem-value.red { color: #ff3333; }
+      .telem-value.orange { color: #ff9900; }
+      .telem-value.green { color: #00ffcc; }
+
+      .telemetry-details {
+        background: rgba(20, 20, 30, 0.8);
+        padding: var(--space-md);
+        border-radius: var(--radius-sm);
+        font-size: var(--text-sm);
+        line-height: 1.7;
+      }
+
+      .telemetry-details div { margin-bottom: 4px; }
+
+      .telemetry-hash {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        word-break: break-all;
+        margin-top: var(--space-sm);
+      }
+
+      /* ─── AI Litigation Module ───────────────────────────── */
+      .ai-module {
+        margin-top: var(--space-lg);
+        background: rgba(183, 0, 255, 0.06);
+        border: 1px solid rgba(183, 0, 255, 0.2);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+      }
+
+      .ai-module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-md);
+      }
+
+      .ai-module-header h4 {
+        margin: 0;
+        color: var(--neon-purple);
+        font-size: var(--text-sm);
+      }
+
+      .ai-module-header .btn {
+        font-size: var(--text-xs);
+        padding: 8px 14px;
+        background: linear-gradient(135deg, var(--neon-purple), #8a2be2);
+        color: white;
+        border: none;
+      }
+
+      .ai-legal-warning {
+        background: rgba(255, 170, 0, 0.06);
+        border-left: 3px solid var(--neon-gold);
+        padding: var(--space-sm) var(--space-md);
+        margin-bottom: var(--space-md);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      .ai-legal-warning i { color: var(--neon-gold); }
+
+      #ai-report-area {
+        display: none;
+        background: rgba(10, 10, 15, 0.9);
+        padding: var(--space-md);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        line-height: 1.7;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* ─── Login Security Hint ────────────────────────────── */
+      .security-hint {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        margin-top: var(--space-sm);
+        line-height: 1.5;
+      }
+
+      .security-hint i { color: var(--text-muted); }
+
+      .login-error-box {
+        display: none;
+        font-size: var(--text-sm);
+        margin-top: var(--space-md);
+        padding: var(--space-md);
+        background: rgba(255, 0, 0, 0.06);
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(255, 50, 50, 0.3);
+        color: #ff3333;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .legal-disclaimer {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-align: center;
+        margin-top: var(--space-md);
+        line-height: 1.5;
+        padding: 0 var(--space-sm);
+      }
+
+      /* ─── Responsive ─────────────────────────────────────── */
+      @media (max-width: 768px) {
+        .telemetry-grid { grid-template-columns: 1fr; }
+        .portal-title h1 { font-size: var(--text-2xl); letter-spacing: 1px; }
+        .search-row { flex-direction: column; }
+        .search-row .btn-primary { width: 100%; }
       }
     </style>
-    <script src="js/error-tracking.js?v=1008000"></script>
+    <script src="js/error-tracking.js?v=1009000"></script>
+    <link rel="stylesheet" crossorigin href="/assets/design-system-CmWfQv_Q.css">
   </head>
   <body>
-    <!-- NOUVEL ÉCRAN DE CONNEXION -->
-    <div id="login-screen" class="container" style="max-width: 450px">
-      <h1><i class="fa-solid fa-lock"></i> Accès B2B</h1>
-      <p class="subtitle">Authentification Expert Requise</p>
+    <div class="bg-grid"></div>
 
-      <div style="margin-bottom: 20px">
-        <label
-          style="
-            display: block;
-            margin-bottom: 5px;
-            color: #94a3b8;
-            font-size: 0.9rem;
-          "
-          >Identifiant Agence / Expert</label
-        >
-        <input
-          type="text"
-          id="insurer-username"
-          placeholder="Ex: AXA-PRO-01"
-          style="
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #1e293b;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 1.1rem;
-            outline: none;
-            box-sizing: border-box;
-          "
-        />
-      </div>
-
-      <div style="margin-bottom: 20px">
-        <label
-          style="
-            display: block;
-            margin-bottom: 5px;
-            color: #94a3b8;
-            font-size: 0.9rem;
-          "
-          >Mot de passe Haute Sécurité</label
-        >
-        <input
-          type="password"
-          id="insurer-password"
-          placeholder="Mot de passe"
-          style="
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #1e293b;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 1.1rem;
-            outline: none;
-            box-sizing: border-box;
-          "
-          onkeyup="if (event.key === 'Enter') authenticateInsurer();"
-        />
-        <div
-          style="
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 8px;
-            line-height: 1.4;
-          "
-        >
-          <i class="fa-solid fa-shield-halved"></i>
-          <strong>Règles de sécurité :</strong><br />
-          - Minimum 20 caractères<br />
-          - Au moins 1 lettre majuscule<br />
-          - Au moins 1 caractère spécial
+    <div class="portal-container">
+      <!-- LOGIN SCREEN -->
+      <div id="login-screen" class="glass-card animate-fade-in-up">
+        <div class="portal-title">
+          <h1><i class="fa-solid fa-lock"></i> Accès B2B</h1>
+          <p>Authentification Expert Requise</p>
         </div>
-      </div>
 
-      <button
-        onclick="authenticateInsurer()"
-        class="btn-pay"
-        style="display: block; width: 100%"
-      >
-        SE CONNECTER
-      </button>
-      <div
-        id="login-error"
-        class="status-msg error"
-        style="
-          display: none;
-          font-size: 0.85rem;
-          margin-top: 15px;
-          padding: 10px;
-          background: rgba(255, 0, 0, 0.1);
-          border-radius: 5px;
-          border: 1px solid #ff3333;
-        "
-      ></div>
-    </div>
+        <div style="margin-bottom: var(--space-lg);">
+          <label class="form-label">Identifiant Agence / Expert</label>
+          <input type="text" id="insurer-username" class="input-field" placeholder="Ex: AXA-PRO-01" style="font-family: var(--font-mono);" />
+        </div>
 
-    <!-- CONTENU DU PORTAIL EXPERT (Caché au départ) -->
-    <div id="portal-content" class="container" style="display: none">
-      <h1><i class="fa-solid fa-shield-halved"></i> Portail Expert</h1>
-      <p class="subtitle">Accès sécurisé aux rapports Blackbox certifiés.</p>
-
-      <div class="search-box">
-        <input
-          type="text"
-          id="input-case-code"
-          placeholder="Ex: LITIGE-XXXXXX"
-          onkeyup="if (event.key === 'Enter') searchCase();"
-        />
-        <button onclick="searchCase()">
-          <i class="fa-solid fa-search"></i> Rechercher
-        </button>
-      </div>
-
-      <div id="status-display" class="status-msg"></div>
-
-      <div id="report-options" class="report-options">
-        <div class="report-card" onclick="selectReport('SIMPLE', 49.9)">
-          <div class="report-info">
-            <h3>Rapport Simple</h3>
-            <p>Télémétrie de base (Vitesse, GPS).</p>
+        <div style="margin-bottom: var(--space-lg);">
+          <label class="form-label">Mot de passe Haute Sécurité</label>
+          <input type="password" id="insurer-password" class="input-field" placeholder="Mot de passe" style="font-family: var(--font-mono);" onkeyup="if (event.key === 'Enter') authenticateInsurer();" />
+          <div class="security-hint">
+            <i class="fa-solid fa-shield-halved"></i>
+            <strong>Règles :</strong> Min. 20 caractères · 1 majuscule · 1 caractère spécial
           </div>
-          <div class="report-price">49.90€</div>
         </div>
 
-        <div class="report-card" onclick="selectReport('INTERMEDIAIRE', 89.99)">
-          <div class="report-info">
-            <h3>Rapport Intermédiaire</h3>
-            <p>Détection de choc, G-Force et inclinaison.</p>
-          </div>
-          <div class="report-price">89.99€</div>
-        </div>
-
-        <div
-          class="report-card selected"
-          onclick="selectReport('EXPERT', 199.99)"
-        >
-          <div class="report-info">
-            <h3>Expertise Complète</h3>
-            <p>Replay 3D certifié, signature SHA-256 et données HF.</p>
-          </div>
-          <div class="report-price">199.99€</div>
-        </div>
-
-        <button id="btn-pay" class="btn-pay" onclick="payReport()">
-          Payer par virement (Revolut) <span id="btn-price">199.99€</span>
+        <button onclick="authenticateInsurer()" class="btn-pay" style="display: block; width: 100%;">
+          SE CONNECTER
         </button>
 
-        <p
-          style="
-            font-size: 0.75rem;
-            color: #94a3b8;
-            text-align: center;
-            margin-top: 15px;
-            line-height: 1.4;
-            padding: 0 10px;
-          "
-        >
-          <i class="fa-solid fa-circle-info"></i> Conformément à la législation
-          sur les contenus numériques immatériels, vous renoncez expressément à
-          votre droit de rétractation.
-          <strong
-            >Aucun remboursement ne pourra être exigé après la livraison
-            numérique et le déverrouillage du rapport.</strong
-          >
-        </p>
+        <div id="login-error" class="login-error-box"></div>
       </div>
 
-      <!-- DECRYPTION MODAL (Hidden until paid) -->
-      <div id="decryption-modal" style="display: none; margin-top: 20px; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 8px; border: 1px solid #ff0055;">
-        <h3 style="color: #ff0055; margin-top: 0;"><i class="fa-solid fa-key"></i> Déchiffrement AES-256 (Zero-Knowledge)</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem;">Le cloud ne possède pas la clé de déchiffrement. Veuillez saisir la Master Key de l'agence pour lire le rapport localement.</p>
-        
-        <input
-          type="password"
-          id="master-key-input"
-          placeholder="Saisissez la clé privée AES (Ex: 0x...)"
-          style="
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid #1e293b;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 1.1rem;
-            outline: none;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-          "
-        />
-        <button
-          onclick="decryptTelemetry()"
-          style="
-            width: 100%;
-            padding: 15px;
-            background: #00d2ff;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-          "
-        >
-          <i class="fa-solid fa-unlock"></i> Déchiffrer
-        </button>
-      </div>
+      <!-- PORTAL CONTENT (Hidden until login) -->
+      <div id="portal-content" class="glass-card" style="display: none;">
+        <div class="portal-title">
+          <h1><i class="fa-solid fa-shield-halved"></i> Portail Expert</h1>
+          <p>Accès sécurisé aux rapports Blackbox certifiés.</p>
+        </div>
 
-      <!-- EXPERT DASHBOARD (Hidden until decrypted) -->
-      <div id="expert-dashboard" style="display: none; margin-top: 20px">
-        <div
-          style="
-            background: #111;
-            color: #00ffcc;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #0056b3;
-            font-family: monospace;
-            position: relative;
-            overflow: hidden;
-          "
-        >
-          <!-- BACKGROUND WATERMARK -->
-          <div
-            style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%) rotate(-35deg);
-              font-size: 4rem;
-              font-weight: 800;
-              color: rgba(255, 183, 3, 0.1);
-              white-space: nowrap;
-              pointer-events: none;
-              z-index: 0;
-              text-align: center;
-              line-height: 1.2;
-            "
-          >
-            CERTIFICATION<br />mon50cc.com
+        <div class="search-row">
+          <input type="text" id="input-case-code" class="input-field" placeholder="Ex: LITIGE-XXXXXX" style="font-family: var(--font-mono);" onkeyup="if (event.key === 'Enter') searchCase();" />
+          <button onclick="searchCase()" class="btn btn-primary">
+            <i class="fa-solid fa-search"></i> Rechercher
+          </button>
+        </div>
+
+        <div id="status-display" class="status-msg"></div>
+
+        <div id="report-options" class="report-options">
+          <div class="report-card" onclick="selectReport('SIMPLE', 49.9)">
+            <div class="report-info">
+              <h3>Rapport Simple</h3>
+              <p>Télémétrie de base (Vitesse, GPS).</p>
+            </div>
+            <div class="report-price">49.90€</div>
           </div>
 
-          <div style="position: relative; z-index: 1">
-            <h3 style="margin-top: 0; color: #00d2ff">
-              <i class="fa-solid fa-satellite-dish"></i> TÉLÉMÉTRIE BLACKBOX :
-              <span id="telemetry-id"></span>
-            </h3>
-
-            <div style="display: flex; gap: 15px; margin-bottom: 20px">
-              <div
-                style="
-                  flex: 1;
-                  background: #222;
-                  padding: 15px;
-                  border-radius: 6px;
-                  text-align: center;
-                "
-              >
-                <div style="font-size: 0.8rem; color: #aaa">
-                  VITESSE À L'IMPACT
-                </div>
-                <div
-                  style="font-size: 1.5rem; font-weight: bold; color: #ff3333"
-                  id="telemetry-speed"
-                >
-                  -- km/h
-                </div>
-              </div>
-              <div
-                style="
-                  flex: 1;
-                  background: #222;
-                  padding: 15px;
-                  border-radius: 6px;
-                  text-align: center;
-                "
-              >
-                <div style="font-size: 0.8rem; color: #aaa">FORCE G (CHOC)</div>
-                <div
-                  style="font-size: 1.5rem; font-weight: bold; color: #ff9900"
-                  id="telemetry-g"
-                >
-                  -- G
-                </div>
-              </div>
-              <div
-                style="
-                  flex: 1;
-                  background: #222;
-                  padding: 15px;
-                  border-radius: 6px;
-                  text-align: center;
-                "
-              >
-                <div style="font-size: 0.8rem; color: #aaa">INCLINAISON</div>
-                <div
-                  style="font-size: 1.5rem; font-weight: bold; color: #00ffcc"
-                  id="telemetry-lean"
-                >
-                  -- °
-                </div>
-              </div>
+          <div class="report-card" onclick="selectReport('INTERMEDIAIRE', 89.99)">
+            <div class="report-info">
+              <h3>Rapport Intermédiaire</h3>
+              <p>Détection de choc, G-Force et inclinaison.</p>
             </div>
-
-            <div
-              style="
-                background: #222;
-                padding: 15px;
-                border-radius: 6px;
-                font-size: 0.9rem;
-                line-height: 1.5;
-              "
-            >
-              <div>
-                <i class="fa-solid fa-clock"></i> <strong>Horodatage :</strong>
-                <span id="telemetry-time"></span>
-              </div>
-              <div>
-                <i class="fa-solid fa-location-dot"></i>
-                <strong>Coordonnées GPS :</strong>
-                <span id="telemetry-gps"></span>
-              </div>
-              <div>
-                <i class="fa-solid fa-shield-halved"></i>
-                <strong>Signature Cryptographique (SHA-256) :</strong>
-              </div>
-              <div
-                style="
-                  font-size: 0.7rem;
-                  color: #666;
-                  word-break: break-all;
-                  margin-top: 5px;
-                "
-                id="telemetry-hash"
-              ></div>
-            </div>
-
-            <!-- MODULE IA LITIGE -->
-            <div style="margin-top: 20px; background: rgba(183, 0, 255, 0.1); border: 1px solid rgba(183, 0, 255, 0.3); border-radius: 8px; padding: 15px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h4 style="margin: 0; color: #b700ff;"><i class="fa-solid fa-brain"></i> IA Litige (Reconstitution)</h4>
-                <button onclick="runLitigationAI()" style="background: linear-gradient(135deg, #b700ff, #8a2be2); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem;">
-                  Lancer l'Analyse
-                </button>
-              </div>
-              
-              <!-- Legal Warning (AI Act) -->
-              <div style="background: rgba(255, 170, 0, 0.1); border-left: 4px solid #ffaa00; padding: 10px; margin-bottom: 15px; font-size: 0.75rem; color: #ccc;">
-                <i class="fa-solid fa-triangle-exclamation" style="color: #ffaa00;"></i> <strong>AI Act Compliance :</strong> Cet outil agit à titre d'assistance. Aucune décision légale automatisée ne peut être prise sans supervision humaine par l'expert en sinistre.
-              </div>
-
-              <!-- Result Area -->
-              <div id="ai-report-area" style="display: none; background: #111; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; line-height: 1.6; border: 1px solid #333;">
-                <span id="ai-report-content">Génération du rapport en cours...</span>
-              </div>
-            </div>
-
-            <button
-              onclick="window.print()"
-              style="
-                margin-top: 20px;
-                width: 100%;
-                padding: 12px;
-                background: #00d2ff;
-                color: #000;
-                border: none;
-                border-radius: 6px;
-                font-weight: bold;
-                cursor: pointer;
-              "
-            >
-              <i class="fa-solid fa-file-pdf"></i> Générer l'Attestation
-              Officielle (PDF)
-            </button>
+            <div class="report-price">89.99€</div>
           </div>
-          <!-- END OF Z-INDEX:1 -->
+
+          <div class="report-card selected" onclick="selectReport('EXPERT', 199.99)">
+            <div class="report-info">
+              <h3>Expertise Complète</h3>
+              <p>Replay 3D certifié, signature SHA-256 et données HF.</p>
+            </div>
+            <div class="report-price">199.99€</div>
+          </div>
+
+          <button id="btn-pay" class="btn-pay" onclick="payReport()">
+            Payer par virement (Revolut) <span id="btn-price">199.99€</span>
+          </button>
+
+          <p class="legal-disclaimer">
+            <i class="fa-solid fa-circle-info"></i> Conformément à la législation
+            sur les contenus numériques immatériels, vous renoncez expressément à
+            votre droit de rétractation.
+            <strong>Aucun remboursement ne pourra être exigé après la livraison
+            numérique et le déverrouillage du rapport.</strong>
+          </p>
+        </div>
+
+        <!-- DECRYPTION MODAL -->
+        <div id="decryption-modal" class="decrypt-modal">
+          <h3><i class="fa-solid fa-key"></i> Déchiffrement AES-256 (Zero-Knowledge)</h3>
+          <p>Le cloud ne possède pas la clé de déchiffrement. Veuillez saisir la Master Key de l'agence pour lire le rapport localement.</p>
+          <input type="password" id="master-key-input" class="input-field" placeholder="Saisissez la clé privée AES (Ex: 0x...)" style="font-family: var(--font-mono); margin-bottom: var(--space-md);" />
+          <button onclick="decryptTelemetry()" class="btn btn-primary" style="width: 100%;">
+            <i class="fa-solid fa-unlock"></i> Déchiffrer
+          </button>
+        </div>
+
+        <!-- EXPERT DASHBOARD -->
+        <div id="expert-dashboard" class="expert-dashboard">
+          <div class="telemetry-panel">
+            <div class="telemetry-watermark">CERTIFICATION<br />mon50cc.com</div>
+
+            <div class="telemetry-content">
+              <h3>
+                <i class="fa-solid fa-satellite-dish"></i> TÉLÉMÉTRIE BLACKBOX :
+                <span id="telemetry-id"></span>
+              </h3>
+
+              <div class="telemetry-grid">
+                <div class="telem-stat">
+                  <div class="telem-label">Vitesse à l'impact</div>
+                  <div class="telem-value red" id="telemetry-speed">-- km/h</div>
+                </div>
+                <div class="telem-stat">
+                  <div class="telem-label">Force G (Choc)</div>
+                  <div class="telem-value orange" id="telemetry-g">-- G</div>
+                </div>
+                <div class="telem-stat">
+                  <div class="telem-label">Inclinaison</div>
+                  <div class="telem-value green" id="telemetry-lean">-- °</div>
+                </div>
+              </div>
+
+              <div class="telemetry-details">
+                <div><i class="fa-solid fa-clock"></i> <strong>Horodatage :</strong> <span id="telemetry-time"></span></div>
+                <div><i class="fa-solid fa-location-dot"></i> <strong>Coordonnées GPS :</strong> <span id="telemetry-gps"></span></div>
+                <div><i class="fa-solid fa-shield-halved"></i> <strong>Signature Cryptographique (SHA-256) :</strong></div>
+                <div class="telemetry-hash" id="telemetry-hash"></div>
+              </div>
+
+              <!-- AI Litigation Module -->
+              <div class="ai-module">
+                <div class="ai-module-header">
+                  <h4><i class="fa-solid fa-brain"></i> IA Litige (Reconstitution)</h4>
+                  <button onclick="runLitigationAI()" class="btn">Lancer l'Analyse</button>
+                </div>
+
+                <div class="ai-legal-warning">
+                  <i class="fa-solid fa-triangle-exclamation"></i> <strong>AI Act Compliance :</strong>
+                  Cet outil agit à titre d'assistance. Aucune décision légale automatisée ne peut être prise sans supervision humaine par l'expert en sinistre.
+                </div>
+
+                <div id="ai-report-area">
+                  <span id="ai-report-content">Génération du rapport en cours...</span>
+                </div>
+              </div>
+
+              <button onclick="window.print()" class="btn btn-primary" style="width: 100%; margin-top: var(--space-lg);">
+                <i class="fa-solid fa-file-pdf"></i> Générer l'Attestation Officielle (PDF)
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Fin portal-content -->
 
     <script src="js/assureur.js?v=2"></script>
   </body>

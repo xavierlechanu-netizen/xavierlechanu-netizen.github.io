@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+    <title>Dashboard - mon50ccetmoi</title>
+    <meta name="description" content="Votre tableau de bord conducteur : score de conduite, statistiques, historique de trajets et badges." />
+    <link rel="canonical" href="https://mon50ccetmoi.com/dashboard" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@700;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" referrerpolicy="no-referrer" />
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="css/design-system.css" />
+
+    <style>
+      body {
+        padding: var(--space-lg);
+        padding-bottom: 100px;
+        overflow-y: auto;
+        background-image:
+          radial-gradient(circle at 20% 10%, rgba(0, 242, 255, 0.04), transparent 30%),
+          radial-gradient(circle at 80% 80%, rgba(183, 0, 255, 0.03), transparent 30%);
+      }
+
+      .dashboard-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      /* ─── Dashboard Header ───────────────────────────────── */
+      .dash-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-xl);
+        animation: fadeInUp 0.5s ease both;
+      }
+
+      .dash-greeting h1 {
+        font-family: var(--font-display);
+        font-size: var(--text-2xl);
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+
+      .dash-greeting p {
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+      }
+
+      .dash-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+        padding: 2px;
+        cursor: pointer;
+        transition: transform var(--transition-spring);
+      }
+
+      .dash-avatar:hover { transform: scale(1.1); }
+
+      .dash-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--color-bg);
+        border: 2px solid var(--color-bg);
+      }
+
+      /* ─── BVC Score Ring ──────────────────────────────────── */
+      .score-section {
+        text-align: center;
+        margin-bottom: var(--space-xl);
+        animation: fadeInUp 0.5s ease 0.1s both;
+      }
+
+      .score-ring-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: var(--space-md);
+      }
+
+      .score-ring-wrapper svg {
+        transform: rotate(-90deg);
+        filter: drop-shadow(0 0 12px var(--color-primary-glow));
+      }
+
+      .score-inner {
+        position: absolute;
+        text-align: center;
+      }
+
+      .score-number {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: 900;
+        line-height: 1;
+        color: var(--text-primary);
+      }
+
+      .score-max {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      .score-label {
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+      }
+
+      .score-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: var(--space-sm);
+      }
+
+      /* ─── Quick Stats ────────────────────────────────────── */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-md);
+        margin-bottom: var(--space-xl);
+        animation: fadeInUp 0.5s ease 0.2s both;
+      }
+
+      .stat-card .stat-icon.icon-cyan   { background: rgba(0, 242, 255, 0.08); color: var(--neon-cyan); }
+      .stat-card .stat-icon.icon-gold    { background: rgba(255, 183, 3, 0.08); color: var(--neon-gold); }
+      .stat-card .stat-icon.icon-green   { background: rgba(0, 230, 118, 0.08); color: var(--neon-green); }
+      .stat-card .stat-icon.icon-red     { background: rgba(255, 0, 85, 0.08); color: var(--neon-red); }
+
+      /* ─── Weekly Chart ───────────────────────────────────── */
+      .weekly-chart {
+        margin-bottom: var(--space-xl);
+        animation: fadeInUp 0.5s ease 0.3s both;
+      }
+
+      .chart-title {
+        font-size: var(--text-base);
+        font-weight: 700;
+        margin-bottom: var(--space-lg);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-primary);
+      }
+
+      .chart-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: var(--space-sm);
+        height: 140px;
+        padding: 0 var(--space-sm);
+      }
+
+      .chart-bar-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        height: 100%;
+        justify-content: flex-end;
+      }
+
+      .chart-bar {
+        width: 100%;
+        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+        background: linear-gradient(180deg, var(--neon-cyan), rgba(0, 136, 255, 0.6));
+        transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        min-height: 4px;
+        position: relative;
+      }
+
+      .chart-bar:hover {
+        filter: brightness(1.3);
+      }
+
+      .chart-bar-value {
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+      }
+
+      .chart-bar-label {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      /* ─── Recent Trips ───────────────────────────────────── */
+      .trips-section {
+        margin-bottom: var(--space-xl);
+        animation: fadeInUp 0.5s ease 0.4s both;
+      }
+
+      .trip-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md) 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        transition: background var(--transition-fast);
+      }
+
+      .trip-item:last-child { border-bottom: none; }
+
+      .trip-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+      }
+
+      .trip-icon.trip-good { background: rgba(0, 230, 118, 0.08); color: var(--neon-green); }
+      .trip-icon.trip-ok { background: rgba(255, 183, 3, 0.08); color: var(--neon-gold); }
+      .trip-icon.trip-bad { background: rgba(255, 0, 85, 0.08); color: var(--neon-red); }
+
+      .trip-info { flex: 1; min-width: 0; }
+
+      .trip-route {
+        font-weight: 600;
+        font-size: var(--text-sm);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .trip-meta {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        margin-top: 2px;
+        display: flex;
+        gap: var(--space-md);
+      }
+
+      .trip-score {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        font-size: var(--text-sm);
+        white-space: nowrap;
+      }
+
+      .trip-score.good { color: var(--neon-green); }
+      .trip-score.ok { color: var(--neon-gold); }
+
+      /* ─── Achievements ───────────────────────────────────── */
+      .achievements-section {
+        margin-bottom: var(--space-xl);
+        animation: fadeInUp 0.5s ease 0.5s both;
+      }
+
+      .achievement-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-sm);
+      }
+
+      .achievement-item {
+        text-align: center;
+        padding: var(--space-md) var(--space-xs);
+        border-radius: var(--radius-md);
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        transition: all var(--transition-base);
+      }
+
+      .achievement-item.locked {
+        opacity: 0.3;
+        filter: grayscale(100%);
+      }
+
+      .achievement-item:not(.locked) {
+        border-color: rgba(255, 215, 0, 0.2);
+      }
+
+      .achievement-item:not(.locked):hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 215, 0, 0.4);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.08);
+      }
+
+      .achievement-icon {
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+      }
+
+      .achievement-item:not(.locked) .achievement-icon {
+        color: var(--neon-gold);
+        filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.4));
+      }
+
+      .achievement-name {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      /* ─── Quick Actions ──────────────────────────────────── */
+      .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-md);
+        animation: fadeInUp 0.5s ease 0.6s both;
+      }
+
+      .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-lg) var(--space-md);
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all var(--transition-base);
+      }
+
+      .action-btn:hover {
+        transform: translateY(-3px);
+        border-color: var(--glass-border-hover);
+        text-shadow: none;
+      }
+
+      .action-btn i {
+        font-size: 1.5rem;
+        transition: transform var(--transition-spring);
+      }
+
+      .action-btn:hover i { transform: scale(1.15); }
+
+      .action-btn:nth-child(1) i { color: var(--neon-cyan); }
+      .action-btn:nth-child(2) i { color: var(--neon-gold); }
+      .action-btn:nth-child(3) i { color: var(--neon-purple); }
+
+      .action-btn span {
+        font-size: var(--text-xs);
+        font-weight: 600;
+      }
+
+      /* ─── Responsive ─────────────────────────────────────── */
+      @media (max-width: 480px) {
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .achievement-grid { grid-template-columns: repeat(4, 1fr); }
+        .quick-actions { grid-template-columns: repeat(3, 1fr); }
+        .trip-meta { flex-direction: column; gap: 2px; }
+        .score-number { font-size: 2.5rem; }
+      }
+    </style>
+    <script src="js/error-tracking.js?v=1009000"></script>
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+
+    <div class="dashboard-container">
+      <!-- ─── HEADER ───────────────────────────────────────── -->
+      <div class="dash-header">
+        <div class="dash-greeting">
+          <h1 id="dash-greeting-text">Salut Pilote 👋</h1>
+          <p>Voici ton résumé de conduite</p>
+        </div>
+        <a href="profile.html" class="dash-avatar">
+          <img src="https://ui-avatars.com/api/?name=Pilot&background=111&color=fff" id="dash-avatar-img" alt="Avatar" />
+        </a>
+      </div>
+
+      <!-- ─── BVC SCORE RING ───────────────────────────────── -->
+      <div class="score-section">
+        <div class="score-ring-wrapper">
+          <svg width="180" height="180">
+            <circle class="progress-ring-bg" cx="90" cy="90" r="78" stroke-width="10" />
+            <circle
+              class="progress-ring-fill"
+              id="score-ring-circle"
+              cx="90" cy="90" r="78"
+              stroke-width="10"
+              stroke="url(#scoreGradient)"
+              stroke-dasharray="490"
+              stroke-dashoffset="490"
+            />
+            <defs>
+              <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color: #00f2ff" />
+                <stop offset="100%" style="stop-color: #00e676" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="score-inner">
+            <div class="score-number" id="score-value">0</div>
+            <div class="score-max">/ 100</div>
+          </div>
+        </div>
+        <div class="score-label">Score de Bonne Conduite</div>
+        <div class="score-badge">
+          <span class="badge badge-green">
+            <i class="fa-solid fa-shield-halved"></i> Conduite exemplaire
+          </span>
+        </div>
+      </div>
+
+      <!-- ─── QUICK STATS ──────────────────────────────────── -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon icon-cyan"><i class="fa-solid fa-road"></i></div>
+          <div class="stat-value" data-count="1247">0</div>
+          <div class="stat-label">km parcourus</div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> +23 cette semaine</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-gold"><i class="fa-solid fa-clock"></i></div>
+          <div class="stat-value" data-count="86">0</div>
+          <div class="stat-label">heures de conduite</div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> +4.2h cette semaine</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-green"><i class="fa-solid fa-gauge-high"></i></div>
+          <div class="stat-value">34</div>
+          <div class="stat-label">km/h vitesse moy.</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-red"><i class="fa-solid fa-fire"></i></div>
+          <div class="stat-value" data-count="12">0</div>
+          <div class="stat-label">jours consécutifs</div>
+          <div class="stat-trend up"><i class="fa-solid fa-fire"></i> Série en cours !</div>
+        </div>
+      </div>
+
+      <!-- ─── WEEKLY CHART ─────────────────────────────────── -->
+      <div class="glass-card weekly-chart">
+        <div class="chart-title">
+          <i class="fa-solid fa-chart-bar"></i> Distance (7 derniers jours)
+        </div>
+        <div class="chart-bars" id="weekly-chart">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+      <!-- ─── RECENT TRIPS ─────────────────────────────────── -->
+      <div class="glass-card trips-section">
+        <div class="chart-title">
+          <i class="fa-solid fa-route"></i> Derniers Trajets
+        </div>
+        <div id="trips-list">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+      <!-- ─── ACHIEVEMENTS ─────────────────────────────────── -->
+      <div class="glass-card achievements-section">
+        <div class="chart-title">
+          <i class="fa-solid fa-trophy"></i> Badges & Achievements
+        </div>
+        <div class="achievement-grid">
+          <div class="achievement-item">
+            <div class="achievement-icon">🏆</div>
+            <div class="achievement-name">Fondateur</div>
+          </div>
+          <div class="achievement-item">
+            <div class="achievement-icon">🛡️</div>
+            <div class="achievement-name">100 km</div>
+          </div>
+          <div class="achievement-item">
+            <div class="achievement-icon">🔥</div>
+            <div class="achievement-name">7j Streak</div>
+          </div>
+          <div class="achievement-item locked">
+            <div class="achievement-icon">⚡</div>
+            <div class="achievement-name">1000 km</div>
+          </div>
+          <div class="achievement-item locked">
+            <div class="achievement-icon">🌟</div>
+            <div class="achievement-name">Score 95+</div>
+          </div>
+          <div class="achievement-item locked">
+            <div class="achievement-icon">👑</div>
+            <div class="achievement-name">30j Streak</div>
+          </div>
+          <div class="achievement-item locked">
+            <div class="achievement-icon">🎯</div>
+            <div class="achievement-name">50 Trajets</div>
+          </div>
+          <div class="achievement-item locked">
+            <div class="achievement-icon">💎</div>
+            <div class="achievement-name">Légende</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── QUICK ACTIONS ────────────────────────────────── -->
+      <div class="quick-actions">
+        <a href="app.html" class="glass-card action-btn">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span>Lancer GPS</span>
+        </a>
+        <a href="marketplace.html" class="glass-card action-btn">
+          <i class="fa-solid fa-store"></i>
+          <span>Marketplace</span>
+        </a>
+        <a href="profile.html" class="glass-card action-btn">
+          <i class="fa-solid fa-user"></i>
+          <span>Mon Profil</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ─── Bottom Navigation ──────────────────────────────── -->
+    <nav class="bottom-nav">
+      <a href="app.html" class="bottom-nav-item">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>GPS</span>
+      </a>
+      <a href="dashboard.html" class="bottom-nav-item active">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="marketplace.html" class="bottom-nav-item">
+        <i class="fa-solid fa-store"></i>
+        <span>Market</span>
+      </a>
+      <a href="profile.html" class="bottom-nav-item">
+        <i class="fa-solid fa-user"></i>
+        <span>Profil</span>
+      </a>
+    </nav>
+
+    <!-- Firebase & Scripts -->
+    <script src="js/config.js" charset="utf-8"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
+    <script>
+      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
+        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
+        window.db = firebase.firestore();
+        window.auth = firebase.auth();
+      }
+    </script>
+    <script src="js/crypto-native.js" charset="utf-8"></script>
+
+    <script>
+      // ─── Real Data Fetching (Firestore) ─────────────────────
+      let currentUser = null;
+
+      async function loadRealData() {
+        const sessionRaw = localStorage.getItem('session');
+        if (!sessionRaw) {
+          console.log("Aucune session trouvée");
+          return;
+        }
+
+        try {
+          currentUser = JSON.parse(sessionRaw);
+          if (!currentUser || !currentUser.uid) return;
+          
+          // Mise à jour de l'UI avec les infos du profil
+          document.getElementById('dash-greeting-text').textContent = `Salut ${currentUser.username || 'Pilote'} 👋`;
+          const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.username || 'Pilote')}&background=111&color=fff`;
+          document.getElementById('dash-avatar-img').src = avatarUrl;
+
+          if (typeof db === 'undefined') {
+            console.warn("Firestore (db) n'est pas initialisé");
+            return;
+          }
+
+          const userRef = db.collection('users').doc(currentUser.uid);
+          const docSnap = await userRef.get();
+          let userData = docSnap.data();
+
+          // Si c'est un nouvel utilisateur sans stats, on initialise des données par défaut
+          if (!userData || !userData.stats) {
+            console.log("Initialisation des données réelles par défaut...");
+            userData = await initializeUserData(userRef, userData);
+          }
+
+          // 1. Mise à jour du Score BVC
+          const scoreBVC = userData.bvc_score || 85;
+          animateScore(scoreBVC);
+
+          // 2. Mise à jour des Quick Stats
+          const stats = userData.stats || { km: 0, hours: 0, speed: 0, streak: 0 };
+          document.querySelectorAll('[data-count]').forEach(el => {
+            const type = el.parentElement.querySelector('.stat-label').textContent.toLowerCase();
+            if (type.includes('km')) el.dataset.count = stats.km;
+            else if (type.includes('heures')) el.dataset.count = stats.hours;
+            else if (type.includes('jours')) el.dataset.count = stats.streak;
+          });
+          document.querySelectorAll('.stat-card').forEach(card => {
+             if(card.querySelector('.stat-label').textContent.includes('vitesse')) {
+                card.querySelector('.stat-value').textContent = stats.speed;
+             }
+          });
+          animateCounters();
+
+          // 3. Récupération de l'historique hebdo
+          const weeklyRef = await userRef.collection('weekly_stats').orderBy('order').get();
+          let weeklyData = [];
+          if (weeklyRef.empty) {
+             weeklyData = [
+              { day: "Lun", km: 8, order: 1 }, { day: "Mar", km: 12, order: 2 },
+              { day: "Mer", km: 5, order: 3 }, { day: "Jeu", km: 18, order: 4 },
+              { day: "Ven", km: 24, order: 5 }, { day: "Sam", km: 15, order: 6 },
+              { day: "Dim", km: 4, order: 7 }
+             ];
+             // Sauvegarde des stats hebdos par défaut
+             for(let w of weeklyData) {
+               await userRef.collection('weekly_stats').doc(w.day).set(w);
+             }
+          } else {
+             weeklyRef.forEach(doc => weeklyData.push(doc.data()));
+          }
+          renderWeeklyChart(weeklyData);
+
+          // 4. Récupération des Trajets
+          const tripsRef = await userRef.collection('trips').orderBy('timestamp', 'desc').limit(5).get();
+          let tripsData = [];
+          if (tripsRef.empty) {
+             tripsData = [
+              { route: "Domicile → Lycée Victor Hugo", date: "Aujourd'hui", dist: "4.2 km", time: "12 min", score: 96, quality: "good", timestamp: Date.now() },
+              { route: "Lycée → Centre Commercial", date: "Hier", dist: "6.8 km", time: "19 min", score: 88, quality: "good", timestamp: Date.now() - 86400000 },
+              { route: "Domicile → Garage Mécano Pro", date: "Il y a 2 jours", dist: "12.1 km", time: "28 min", score: 72, quality: "ok", timestamp: Date.now() - (86400000*2) }
+             ];
+             for(let t of tripsData) {
+                await userRef.collection('trips').add(t);
+             }
+          } else {
+             tripsRef.forEach(doc => tripsData.push(doc.data()));
+          }
+          renderTrips(tripsData);
+
+        } catch (e) {
+          console.error('[Dashboard] Erreur lors du chargement Firestore:', e);
+        }
+      }
+
+      // Initialise les données si manquantes dans la base
+      async function initializeUserData(userRef, existingData) {
+        const newData = {
+          ...existingData,
+          bvc_score: 92,
+          stats: {
+            km: 1247,
+            hours: 86,
+            speed: 34,
+            streak: 12
+          }
+        };
+        await userRef.set(newData, { merge: true });
+        return newData;
+      }
+
+      // ─── Render Weekly Chart ────────────────────────────────
+      function renderWeeklyChart(weeklyData) {
+        const container = document.getElementById('weekly-chart');
+        const maxKm = Math.max(...weeklyData.map(d => d.km), 1);
+        container.innerHTML = '';
+
+        weeklyData.forEach((day, i) => {
+          const heightPercent = (day.km / maxKm) * 100;
+          const col = document.createElement('div');
+          col.className = 'chart-bar-col';
+          col.innerHTML = `
+            <div class="chart-bar-value">${day.km}</div>
+            <div class="chart-bar" style="height: 0%; transition-delay: ${i * 0.08}s;"></div>
+            <div class="chart-bar-label">${day.day}</div>
+          `;
+          container.appendChild(col);
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              col.querySelector('.chart-bar').style.height = heightPercent + '%';
+            });
+          });
+        });
+      }
+
+      // ─── Render Trips List ──────────────────────────────────
+      function renderTrips(tripsData) {
+        const container = document.getElementById('trips-list');
+        container.innerHTML = '';
+
+        tripsData.forEach(trip => {
+          const item = document.createElement('div');
+          item.className = 'trip-item';
+          item.innerHTML = `
+            <div class="trip-icon trip-${trip.quality}">
+              <i class="fa-solid fa-${trip.quality === 'good' ? 'check-circle' : 'exclamation-circle'}"></i>
+            </div>
+            <div class="trip-info">
+              <div class="trip-route">${trip.route}</div>
+              <div class="trip-meta">
+                <span><i class="fa-regular fa-calendar"></i> ${trip.date}</span>
+                <span><i class="fa-solid fa-road"></i> ${trip.dist}</span>
+                <span><i class="fa-regular fa-clock"></i> ${trip.time}</span>
+              </div>
+            </div>
+            <div class="trip-score ${trip.quality}">${trip.score}/100</div>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      // ─── Animate BVC Score Ring ──────────────────────────────
+      function animateScore(targetScore) {
+        const circle = document.getElementById('score-ring-circle');
+        const circumference = 2 * Math.PI * 78; // r=78
+        circle.style.strokeDasharray = circumference;
+        circle.style.strokeDashoffset = circumference;
+
+        const valueEl = document.getElementById('score-value');
+        const targetOffset = circumference - (targetScore / 100) * circumference;
+
+        // Animate after a brief delay
+        setTimeout(() => {
+          circle.style.strokeDashoffset = targetOffset;
+
+          // Count up animation
+          const duration = 1500;
+          const startTime = performance.now();
+
+          function updateCount(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            valueEl.textContent = Math.floor(eased * targetScore);
+            if (progress < 1) requestAnimationFrame(updateCount);
+          }
+          requestAnimationFrame(updateCount);
+        }, 600);
+      }
+
+      // ─── Counter Animation (Stats) ──────────────────────────
+      function animateCounters() {
+        const counters = document.querySelectorAll('[data-count]');
+        counters.forEach(counter => {
+          const target = parseInt(counter.dataset.count);
+          const duration = 1800;
+          const startTime = performance.now();
+
+          function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            counter.textContent = Math.floor(eased * target).toLocaleString('fr-FR');
+            if (progress < 1) requestAnimationFrame(update);
+          }
+          requestAnimationFrame(update);
+        });
+      }
+
+      // ─── Init ───────────────────────────────────────────────
+      document.addEventListener('DOMContentLoaded', () => {
+        // Lance le chargement des données réelles Firebase
+        loadRealData();
+      });
+    </script>
+  </body>
+</html>

@@ -29,6 +29,8 @@ export default defineConfig({
         cookies: resolve(__dirname, 'cookies.html'),
         cgv: resolve(__dirname, 'cgv.html'),
         mentions: resolve(__dirname, 'mentions-legales.html'),
+        profile: resolve(__dirname, 'profile.html'),
+        moderation: resolve(__dirname, 'moderation.html'),
         p404: resolve(__dirname, '404.html')
       }
     }

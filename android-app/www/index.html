@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
     />
     <title>mon 50cc et moi | Le Copilote IA des Scooters et VSP</title>
 
@@ -51,7 +51,7 @@
           "price": "0",
           "priceCurrency": "EUR"
         },
-        "softwareVersion": "106.00.00",
+        "softwareVersion": "109.00.00",
         "inLanguage": "fr-FR",
         "featureList": [
           "Navigation GPS VSP et 50cc",
@@ -69,7 +69,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@700;900&display=swap"
       rel="stylesheet"
     />
     <link
@@ -78,91 +78,21 @@
       referrerpolicy="no-referrer"
     />
 
-    <style>
-      /* CSS Premium Dark Mode / Cyberpunk */
-      :root {
-        --bg-color: #050505;
-        --surface-color: rgba(20, 20, 20, 0.7);
-        --primary: #00d2ff;
-        --primary-glow: rgba(0, 210, 255, 0.4);
-        --secondary: #10a37f;
-        --text-main: #ffffff;
-        --text-muted: #a0a0a0;
-        --glass-border: rgba(255, 255, 255, 0.1);
-      }
+    <!-- Design System -->
+    <link rel="stylesheet" href="css/design-system.css" />
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Inter", sans-serif;
-      }
+    <style>
+      /* ─── Landing Page Specific Styles ──────────────────────── */
 
       body {
-        background-color: var(--bg-color);
-        color: var(--text-main);
-        overflow-x: hidden;
         background-image:
-          radial-gradient(
-            circle at 15% 50%,
-            rgba(0, 210, 255, 0.05),
-            transparent 25%
-          ),
-          radial-gradient(
-            circle at 85% 30%,
-            rgba(16, 163, 127, 0.05),
-            transparent 25%
-          );
+          radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.04), transparent 25%),
+          radial-gradient(circle at 85% 30%, rgba(183, 0, 255, 0.03), transparent 25%);
+        overflow-x: hidden;
+        overflow-y: auto;
       }
 
-      /* Navbar */
-      header {
-        position: fixed;
-        top: 0;
-        width: 100%;
-        padding: 20px 5%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(5, 5, 5, 0.8);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--glass-border);
-        z-index: 1000;
-      }
-
-      .logo {
-        font-family: "Outfit", sans-serif;
-        font-size: 1.5rem;
-        font-weight: 900;
-        color: var(--text-main);
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .logo i {
-        color: var(--primary);
-      }
-
-      .btn-login {
-        background: transparent;
-        color: var(--text-main);
-        border: 1px solid var(--glass-border);
-        padding: 10px 20px;
-        border-radius: 30px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
-
-      .btn-login:hover {
-        border-color: var(--primary);
-        box-shadow: 0 0 15px var(--primary-glow);
-      }
-
-      /* Hero Section */
+      /* ─── Hero Section ──────────────────────────────────────── */
       .hero {
         min-height: 100vh;
         display: flex;
@@ -170,471 +100,533 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        padding: 120px 20px 60px;
+        padding: 140px 20px 80px;
         position: relative;
       }
 
-      .hero::before {
-        content: "";
-        position: absolute;
-        top: 20%;
+      .hero-glow-1 {
+        width: 400px;
+        height: 400px;
+        top: 10%;
         left: 50%;
         transform: translateX(-50%);
-        width: 300px;
-        height: 300px;
-        background: var(--primary);
-        filter: blur(150px);
-        opacity: 0.2;
-        z-index: -1;
       }
 
-      .badge-update {
-        background: rgba(16, 163, 127, 0.1);
-        color: var(--secondary);
-        border: 1px solid rgba(16, 163, 127, 0.3);
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 25px;
-        display: inline-block;
+      .hero-glow-2 {
+        width: 300px;
+        height: 300px;
+        bottom: 10%;
+        right: 10%;
       }
 
       .hero h1 {
-        font-family: "Outfit", sans-serif;
-        font-size: clamp(3rem, 6vw, 5rem);
-        line-height: 1.1;
-        margin-bottom: 20px;
-        background: linear-gradient(to right, #fff, #a0a0a0);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        margin-bottom: var(--space-lg);
+        max-width: 800px;
       }
 
-      .hero h1 span {
-        background: linear-gradient(to right, var(--primary), var(--secondary));
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .hero p {
-        font-size: 1.2rem;
-        color: var(--text-muted);
+      .hero .subtitle {
+        font-size: var(--text-lg);
+        color: var(--text-secondary);
         max-width: 600px;
-        margin-bottom: 40px;
-        line-height: 1.6;
+        margin-bottom: var(--space-2xl);
+        line-height: 1.7;
+        animation: fadeInUp 0.8s ease 0.2s both;
       }
 
-      .btn-cta {
-        background: linear-gradient(135deg, var(--primary), #0077ff);
-        color: white;
-        padding: 18px 40px;
-        border-radius: 30px;
-        text-decoration: none;
-        font-size: 1.2rem;
-        font-weight: 800;
-        box-shadow: 0 10px 30px var(--primary-glow);
-        transition:
-          transform 0.2s,
-          box-shadow 0.2s;
-        border: none;
-        cursor: pointer;
-        display: inline-flex;
+      .hero-actions {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 10px;
+        gap: var(--space-md);
+        animation: fadeInUp 0.8s ease 0.4s both;
       }
 
-      .btn-cta:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 40px var(--primary-glow);
+      .hero-sublinks {
+        display: flex;
+        gap: var(--space-lg);
+        font-size: var(--text-sm);
+        margin-top: var(--space-md);
       }
 
-      /* Features Section */
+      .hero-sublinks a {
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: color var(--transition-fast);
+      }
+
+      .hero-sublinks a:hover {
+        color: var(--text-primary);
+      }
+
+      .hero-platform-info {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        margin-top: var(--space-sm);
+      }
+
+      .hero-platform-info i { color: #3ddc84; font-size: 1.2rem; }
+
+      /* Animated Stats Counter */
+      .hero-stats {
+        display: flex;
+        gap: var(--space-2xl);
+        margin-top: var(--space-3xl);
+        animation: fadeInUp 0.8s ease 0.6s both;
+      }
+
+      .hero-stat {
+        text-align: center;
+      }
+
+      .hero-stat .value {
+        font-family: var(--font-display);
+        font-size: var(--text-3xl);
+        font-weight: 900;
+        color: var(--text-primary);
+      }
+
+      .hero-stat .label {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 4px;
+      }
+
+      /* Founder badge */
+      .founder-badge {
+        background: rgba(255, 170, 0, 0.08);
+        border: 1px solid rgba(255, 170, 0, 0.25);
+        color: var(--neon-gold);
+        padding: 12px 24px;
+        border-radius: var(--radius-full);
+        font-size: var(--text-sm);
+        font-weight: 700;
+        animation: pulseGlow 3s ease-in-out infinite;
+        --color-primary-glow: rgba(255, 183, 3, 0.25);
+      }
+
+      /* ─── Features Section ──────────────────────────────────── */
       .features {
-        padding: 80px 5%;
-        max-width: 1200px;
+        padding: var(--space-4xl) 5%;
+        max-width: var(--max-width);
         margin: 0 auto;
       }
 
-      .section-title {
+      .section-header {
         text-align: center;
-        font-family: "Outfit", sans-serif;
-        font-size: 2.5rem;
-        margin-bottom: 60px;
+        margin-bottom: var(--space-3xl);
       }
 
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 30px;
+      .section-header .heading-2 {
+        margin-bottom: var(--space-md);
       }
 
-      .card {
-        background: var(--surface-color);
-        border: 1px solid var(--glass-border);
-        padding: 40px 30px;
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        transition:
-          transform 0.3s,
-          border-color 0.3s;
-      }
-
-      .card:hover {
-        transform: translateY(-5px);
-        border-color: rgba(255, 255, 255, 0.3);
-      }
-
-      .card i {
-        font-size: 2.5rem;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .card h3 {
-        font-size: 1.4rem;
-        margin-bottom: 15px;
-      }
-
-      .card p {
+      .section-header p {
         color: var(--text-muted);
-        line-height: 1.6;
+        font-size: var(--text-lg);
+        max-width: 500px;
+        margin: 0 auto;
       }
 
-      /* Footer */
-      footer {
-        border-top: 1px solid var(--glass-border);
-        padding: 40px 5%;
-        text-align: center;
-        color: var(--text-muted);
-        margin-top: 80px;
+      .feature-card {
+        text-align: left;
+        cursor: default;
       }
 
-      .footer-links {
-        margin-top: 20px;
+      .feature-card .feature-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-lg);
         display: flex;
+        align-items: center;
         justify-content: center;
-        gap: 20px;
+        font-size: 1.5rem;
+        margin-bottom: var(--space-lg);
+        transition: transform var(--transition-spring);
       }
 
-      .footer-links a {
+      .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+      }
+
+      .feature-card h3 {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        margin-bottom: var(--space-sm);
+        color: var(--text-primary);
+      }
+
+      .feature-card p {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .icon-cyan   { background: rgba(0, 242, 255, 0.1); color: var(--neon-cyan); }
+      .icon-red    { background: rgba(255, 0, 85, 0.1);  color: var(--neon-red); }
+      .icon-green  { background: rgba(0, 230, 118, 0.1); color: var(--neon-green); }
+      .icon-purple { background: rgba(183, 0, 255, 0.1); color: var(--neon-purple); }
+      .icon-gold   { background: rgba(255, 183, 3, 0.1); color: var(--neon-gold); }
+      .icon-blue   { background: rgba(0, 136, 255, 0.1); color: var(--neon-blue); }
+
+      /* ─── Testimonials Section ──────────────────────────────── */
+      .testimonials {
+        padding: var(--space-4xl) 5%;
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
+
+      .testimonial-card {
+        text-align: left;
+      }
+
+      .testimonial-card .stars {
+        color: var(--neon-gold);
+        margin-bottom: var(--space-md);
+        font-size: var(--text-sm);
+      }
+
+      .testimonial-card blockquote {
+        font-size: var(--text-base);
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: var(--space-lg);
+        font-style: italic;
+      }
+
+      .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+      }
+
+      .testimonial-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: var(--text-sm);
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .testimonial-name {
+        font-weight: 600;
+        font-size: var(--text-sm);
+        color: var(--text-primary);
+      }
+
+      .testimonial-role {
+        font-size: var(--text-xs);
         color: var(--text-muted);
-        text-decoration: none;
-        font-size: 0.9rem;
-      }
-      .footer-links a:hover {
-        color: var(--text-main);
       }
 
-      @media (max-width: 768px) {
-        .hero h1 {
-          font-size: 2.5rem;
-        }
-        .hero p {
-          font-size: 1rem;
-        }
-        .grid {
-          grid-template-columns: 1fr;
-        }
-        header {
-          padding: calc(15px + env(safe-area-inset-top, 25px)) 10px 10px;
-          gap: 5px;
-        }
-        .logo {
-          font-size: 1.2rem;
-        }
-        .logo span {
-          display: none; /* Cache le texte mon50cc sur petit écran pour faire de la place */
-        }
-        .btn-login {
-          padding: 6px 10px;
-          font-size: 0.8rem;
-        }
+      /* ─── CTA Section ───────────────────────────────────────── */
+      .cta-section {
+        padding: var(--space-4xl) 5%;
+        text-align: center;
+        position: relative;
       }
-    </style>
-    <script src="js/error-tracking.js?v=1008000"></script>
-  </head>
-  <body>
-    <!-- PROMINENT DISCLOSURE BACKGROUND LOCATION (GOOGLE PLAY COMPLIANCE) -->
-    <div
-      id="prominent-disclosure-modal"
-      style="
+
+      .cta-box {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: var(--space-3xl);
+        border-radius: var(--radius-2xl);
+        background: linear-gradient(135deg, rgba(0, 242, 255, 0.06), rgba(183, 0, 255, 0.04));
+        border: 1px solid rgba(0, 242, 255, 0.15);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta-box::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 30% 20%, rgba(0, 242, 255, 0.08), transparent 50%),
+                    radial-gradient(circle at 70% 80%, rgba(183, 0, 255, 0.06), transparent 50%);
+        pointer-events: none;
+      }
+
+      .cta-box h2 {
+        position: relative;
+        margin-bottom: var(--space-md);
+      }
+
+      .cta-box p {
+        position: relative;
+        color: var(--text-secondary);
+        margin-bottom: var(--space-xl);
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .cta-box .btn-cta {
+        position: relative;
+      }
+
+      /* ─── Prominent Disclosure ──────────────────────────────── */
+      #prominent-disclosure-modal {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #0a0a0a;
-        z-index: 9999999;
+        inset: 0;
+        background: rgba(5, 5, 8, 0.97);
+        z-index: 100000;
         display: none;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        color: white;
-        padding: 24px;
-        text-align: left;
+        justify-content: center;
+        padding: var(--space-xl);
         overflow-y: auto;
-        box-sizing: border-box;
         -webkit-overflow-scrolling: touch;
-      "
-    >
-      <div style="max-width: 480px; width: 100%; margin: auto">
-        <div style="text-align: center; margin-bottom: 20px">
-          <i
-            class="fa-solid fa-location-dot"
-            style="font-size: 3rem; color: #ffb703"
-          ></i>
-        </div>
-        <h2
-          style="
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-            color: #ffffff;
-          "
-        >
-          Utilisation de vos données de localisation
-        </h2>
+      }
 
-        <div
-          style="
-            background: #1a1a1a;
-            padding: 16px;
-            border-radius: 8px;
-            border-left: 4px solid #ffb703;
-            margin-bottom: 20px;
-          "
-        >
-          <p
-            style="font-size: 1rem; line-height: 1.5; color: #ffffff; margin: 0"
-          >
-            <strong
-              >L'application mon 50cc et moi collecte et utilise vos données de
-              localisation en arrière-plan</strong
-            >
-            pour permettre la détection automatique de chute (Guardian Angel),
-            la navigation GPS étape par étape, et le signalement de dangers
-            routiers. Ces données sont collectées
-            <strong
-              >même lorsque l'application est fermée ou qu'elle n'est pas
-              utilisée.</strong
-            >
-            Elles ne sont pas utilisées pour afficher des annonces
-            publicitaires.
+      .disclosure-content {
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+      }
+
+      .disclosure-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: rgba(255, 183, 3, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--space-lg);
+        font-size: 2rem;
+        color: var(--neon-gold);
+        border: 1px solid rgba(255, 183, 3, 0.2);
+      }
+
+      .disclosure-content h2 {
+        font-family: var(--font-display);
+        font-size: var(--text-2xl);
+        margin-bottom: var(--space-lg);
+      }
+
+      .disclosure-alert {
+        background: rgba(255, 183, 3, 0.06);
+        border: 1px solid rgba(255, 183, 3, 0.15);
+        border-left: 4px solid var(--neon-gold);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        margin-bottom: var(--space-lg);
+        text-align: left;
+      }
+
+      .disclosure-alert p {
+        font-size: var(--text-sm);
+        line-height: 1.6;
+        color: var(--text-secondary);
+      }
+
+      .disclosure-note {
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-bottom: var(--space-xl);
+      }
+
+      .disclosure-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+      }
+
+      /* ─── Responsive Adjustments ────────────────────────────── */
+      @media (max-width: 768px) {
+        .hero { padding: 120px 16px 60px; min-height: auto; }
+        .hero h1 { font-size: 2.2rem; }
+        .hero .subtitle { font-size: var(--text-base); }
+        .hero-stats { gap: var(--space-lg); flex-wrap: wrap; justify-content: center; }
+        .hero-stat .value { font-size: var(--text-2xl); }
+        .hero-sublinks { flex-direction: column; align-items: center; gap: var(--space-sm); }
+        .navbar-actions .hide-mobile { display: none; }
+        .navbar-logo span { display: none; }
+        .founder-badge { font-size: var(--text-xs); padding: 10px 18px; }
+      }
+
+      @media (max-width: 480px) {
+        .hero-stats { gap: var(--space-md); }
+      }
+    </style>
+    <script src="js/error-tracking.js?v=1009000"></script>
+  </head>
+  <body>
+    <!-- PROMINENT DISCLOSURE BACKGROUND LOCATION (GOOGLE PLAY COMPLIANCE) -->
+    <div id="prominent-disclosure-modal">
+      <div class="disclosure-content">
+        <div class="disclosure-icon">
+          <i class="fa-solid fa-location-dot"></i>
+        </div>
+        <h2>Utilisation de votre position</h2>
+
+        <div class="disclosure-alert">
+          <p>
+            <strong>L'application mon 50cc et moi collecte et utilise vos données de
+            localisation en arrière-plan</strong> pour permettre la détection automatique
+            de chute (Guardian Angel), la navigation GPS étape par étape, et le
+            signalement de dangers routiers. Ces données sont collectées
+            <strong>même lorsque l'application est fermée ou qu'elle n'est pas utilisée.</strong>
+            Elles ne sont pas utilisées pour afficher des annonces publicitaires.
           </p>
         </div>
 
-        <p
-          style="
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: #aaa;
-            margin-bottom: 24px;
-            text-align: center;
-          "
-        >
-          Ces données sont utilisées uniquement pour assurer votre sécurité et
-          vous guider. Elles ne sont jamais vendues à des tiers.<br /><br />
-          <a
-            href="privacy.html"
-            target="_blank"
-            rel="noopener"
-            style="
-              color: #ffb703;
-              text-decoration: underline;
-              font-weight: bold;
-            "
-          >
+        <p class="disclosure-note">
+          Ces données sont utilisées uniquement pour assurer votre sécurité et vous guider.
+          Elles ne sont jamais vendues à des tiers.<br /><br />
+          <a href="privacy.html" target="_blank" rel="noopener" style="color: var(--neon-gold); font-weight: 600;">
             Consulter notre Politique de Confidentialité
           </a>
         </p>
 
-        <button
-          id="btn-accept-disclosure"
-          style="
-            width: 100%;
-            padding: 16px;
-            background: #ffb703;
-            color: #000;
-            border: none;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 12px;
-            cursor: pointer;
-          "
-        >
-          J'accepte
-        </button>
-
-        <button
-          id="btn-refuse-disclosure"
-          style="
-            width: 100%;
-            padding: 14px;
-            background: transparent;
-            border: 1px solid #444;
-            border-radius: 30px;
-            color: #aaa;
-            font-size: 0.9rem;
-            cursor: pointer;
-          "
-        >
-          Refuser
-        </button>
+        <div class="disclosure-actions">
+          <button id="btn-accept-disclosure" class="btn btn-cta" style="width: 100%;">
+            J'accepte
+          </button>
+          <button id="btn-refuse-disclosure" class="btn btn-ghost" style="width: 100%;">
+            Refuser
+          </button>
+        </div>
       </div>
     </div>
+    <!-- END PROMINENT DISCLOSURE -->
+
     <script>
       function checkProminentDisclosure() {
         if (localStorage.getItem("location_consent_accepted") !== "true") {
-          document.getElementById("prominent-disclosure-modal").style.display =
-            "flex";
+          document.getElementById("prominent-disclosure-modal").style.display = "flex";
         }
       }
       document.addEventListener("DOMContentLoaded", function () {
         checkProminentDisclosure();
-        document
-          .getElementById("btn-accept-disclosure")
-          .addEventListener("click", function () {
-            localStorage.setItem("location_consent_accepted", "true");
-            document.getElementById(
-              "prominent-disclosure-modal",
-            ).style.display = "none";
-          });
-        document
-          .getElementById("btn-refuse-disclosure")
-          .addEventListener("click", function () {
-            document.getElementById(
-              "prominent-disclosure-modal",
-            ).style.display = "none";
-            alert(
-              "L'application nécessite l'accès à votre position pour fonctionner correctement.",
-            );
-          });
+        document.getElementById("btn-accept-disclosure").addEventListener("click", function () {
+          localStorage.setItem("location_consent_accepted", "true");
+          document.getElementById("prominent-disclosure-modal").style.display = "none";
+        });
+        document.getElementById("btn-refuse-disclosure").addEventListener("click", function () {
+          document.getElementById("prominent-disclosure-modal").style.display = "none";
+          alert("L'application nécessite l'accès à votre position pour fonctionner correctement.");
+        });
       });
-      if (
-        document.readyState === "complete" ||
-        document.readyState === "interactive"
-      )
+      if (document.readyState === "complete" || document.readyState === "interactive")
         checkProminentDisclosure();
     </script>
-    <!-- END PROMINENT DISCLOSURE -->
 
-    <header>
-      <a href="#" class="logo">
-        <i class="fa-solid fa-motorcycle"></i> <span>mon50cc</span>
+    <!-- Background Grid Pattern -->
+    <div class="bg-grid"></div>
+
+    <!-- ─── NAVBAR ─────────────────────────────────────────── -->
+    <header class="navbar" id="main-navbar">
+      <a href="#" class="navbar-logo">
+        <i class="fa-solid fa-motorcycle"></i>
+        <span>mon50cc</span>
       </a>
-      <div style="display: flex; gap: 15px; align-items: center">
-        <a
-          href="login.html?mode=garage"
-          class="btn-login"
-          style="border-color: #f39c12; color: #f39c12"
-          ><i class="fa-solid fa-wrench"></i> Espace Garage Pro</a
-        >
-        <a
-          href="assureur.html"
-          class="btn-login"
-          style="border-color: #ff0055; color: #ff0055"
-          ><i class="fa-solid fa-building-shield"></i> Espace Assureur</a
-        >
-        <a href="login.html" class="btn-login">Espace Pilote</a>
-      </div>
+      <nav class="navbar-actions">
+        <a href="login.html?mode=garage" class="btn btn-ghost btn-sm hide-mobile" style="border-color: rgba(255, 183, 3, 0.3); color: var(--neon-gold);">
+          <i class="fa-solid fa-wrench"></i> Espace Garage
+        </a>
+        <a href="assureur.html" class="btn btn-ghost btn-sm hide-mobile" style="border-color: rgba(255, 0, 85, 0.3); color: var(--neon-red);">
+          <i class="fa-solid fa-building-shield"></i> Assureur
+        </a>
+        <a href="login.html" class="btn btn-primary btn-sm">
+          Espace Pilote
+        </a>
+      </nav>
     </header>
 
+    <!-- ─── HERO SECTION ───────────────────────────────────── -->
     <section class="hero">
-      <div class="badge-update">
-        <i class="fa-solid fa-bolt"></i> Nouveau : Certificats Batterie
-        Disponibles
+      <!-- Glow Orbs -->
+      <div class="glow-orb glow-orb-cyan hero-glow-1"></div>
+      <div class="glow-orb glow-orb-purple hero-glow-2"></div>
+
+      <div class="badge badge-green animate-fade-in" style="margin-bottom: var(--space-lg);">
+        <i class="fa-solid fa-bolt"></i> Nouveau : Certificats Batterie Disponibles
       </div>
-      <h1>Le copilote intelligent pour<br /><span>50cc et VSP</span></h1>
-      <p>
+
+      <h1 class="heading-hero animate-fade-in" style="animation-delay: 0.1s;">
+        Le copilote intelligent pour<br />
+        <span class="highlight">50cc et VSP</span>
+      </h1>
+
+      <p class="subtitle">
         L'application indispensable qui transforme votre téléphone en véritable
         tableau de bord. GPS sans autoroute, détection de chute, et diagnostic
         batterie intégré.
       </p>
 
-      <div
-        style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 15px;
-          margin-top: 10px;
-        "
-      >
-        <a
-          href="login.html#register"
-          class="btn-cta"
-          style="
-            background: linear-gradient(135deg, #ffaa00, #ff5500);
-            box-shadow: 0 10px 30px rgba(255, 170, 0, 0.4);
-          "
-          ><i class="fa-solid fa-user-plus"></i> Créer mon compte gratuit</a
-        >
+      <div class="hero-actions">
+        <a href="login.html#register" class="btn btn-cta btn-lg">
+          <i class="fa-solid fa-user-plus"></i> Créer mon compte gratuit
+        </a>
 
-        <div
-          style="
-            color: #a0a0a0;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          "
-        >
-          <i
-            class="fa-brands fa-android"
-            style="color: #3ddc84; font-size: 1.2rem"
-          ></i>
+        <div class="hero-platform-info">
+          <i class="fa-brands fa-android"></i>
           Bêta fermée exclusive sur Android (iOS prévu pour 2028)
         </div>
 
-        <div
-          style="
-            background: rgba(255, 170, 0, 0.1);
-            border: 1px solid rgba(255, 170, 0, 0.3);
-            color: #ffaa00;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-top: 5px;
-          "
-        >
-          🎁 Offre Fondateur : Compte GOLD gratuit à vie si inscrit avant 2032
-          (au lieu de 29€/an) !
+        <div class="founder-badge">
+          🎁 Offre Fondateur : Compte GOLD gratuit à vie si inscrit avant 2032 (au lieu de 29€/an) !
         </div>
 
-        <div
-          style="margin-top: 15px; display: flex; gap: 20px; font-size: 0.9rem"
-        >
-          <a
-            href="login.html"
-            style="color: var(--text-muted); text-decoration: none"
-            ><i class="fa-solid fa-right-to-bracket"></i> Déjà membre ? Se
-            connecter</a
-          >
-          <span style="color: #444">|</span>
-          <a
-            href="javascript:void(0)"
-            onclick="loginAsGuest()"
-            style="color: var(--text-muted); text-decoration: none"
-            ><i class="fa-solid fa-user-astronaut"></i> Mode Invité (Sans
-            sauvegarde)</a
-          >
+        <div class="hero-sublinks">
+          <a href="login.html">
+            <i class="fa-solid fa-right-to-bracket"></i> Déjà membre ? Se connecter
+          </a>
+          <span style="color: var(--glass-border);">|</span>
+          <a href="javascript:void(0)" onclick="loginAsGuest()">
+            <i class="fa-solid fa-user-astronaut"></i> Mode Invité
+          </a>
+        </div>
+      </div>
+
+      <!-- Animated Stats -->
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="value text-gradient-cyan" data-count="2847">0</div>
+          <div class="label">Pilotes Actifs</div>
+        </div>
+        <div class="hero-stat">
+          <div class="value text-gradient-gold" data-count="156420">0</div>
+          <div class="label">Km Parcourus</div>
+        </div>
+        <div class="hero-stat">
+          <div class="value text-gradient-cyan" data-count="342">0</div>
+          <div class="label">Dangers Signalés</div>
         </div>
       </div>
     </section>
 
-    <section class="features">
-      <h2 class="section-title">Une technologie conçue pour vous.</h2>
-      <div class="grid">
-        <div class="card">
-          <i class="fa-solid fa-map-location-dot"></i>
+    <!-- ─── FEATURES SECTION ───────────────────────────────── -->
+    <section class="features section-spacing" id="features">
+      <div class="section-header reveal">
+        <div class="badge badge-cyan" style="margin-bottom: var(--space-md);">
+          <i class="fa-solid fa-microchip"></i> Technologie
+        </div>
+        <h2 class="heading-2">Une technologie conçue pour vous.</h2>
+        <p>Chaque fonctionnalité a été pensée pour votre sécurité et votre tranquillité d'esprit.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="glass-card feature-card reveal delay-1">
+          <div class="feature-icon icon-cyan">
+            <i class="fa-solid fa-map-location-dot"></i>
+          </div>
           <h3>Navigation 100% Adaptée</h3>
           <p>
             Oubliez les détours imprévus sur voies rapides. Notre GPS calcule
@@ -643,8 +635,10 @@
           </p>
         </div>
 
-        <div class="card">
-          <i class="fa-solid fa-heart-pulse"></i>
+        <div class="glass-card feature-card reveal delay-2">
+          <div class="feature-icon icon-red">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
           <h3>Ange Gardien IA</h3>
           <p>
             Roulez l'esprit tranquille. En cas de détection de chute,
@@ -653,8 +647,10 @@
           </p>
         </div>
 
-        <div class="card">
-          <i class="fa-solid fa-battery-full"></i>
+        <div class="glass-card feature-card reveal delay-3">
+          <div class="feature-icon icon-green">
+            <i class="fa-solid fa-battery-full"></i>
+          </div>
           <h3>Diagnostic Batterie (SOH)</h3>
           <p>
             Propriétaire d'un véhicule électrique ? Évaluez l'état de santé de
@@ -663,8 +659,10 @@
           </p>
         </div>
 
-        <div class="card">
-          <i class="fa-solid fa-building-shield"></i>
+        <div class="glass-card feature-card reveal delay-4">
+          <div class="feature-icon icon-purple">
+            <i class="fa-solid fa-building-shield"></i>
+          </div>
           <h3>Portail Assurance B2B</h3>
           <p>
             En cas de litige, notre intelligence artificielle génère un rapport
@@ -673,8 +671,10 @@
           </p>
         </div>
 
-        <div class="card">
-          <i class="fa-solid fa-users-viewfinder"></i>
+        <div class="glass-card feature-card reveal delay-5">
+          <div class="feature-icon icon-gold">
+            <i class="fa-solid fa-users-viewfinder"></i>
+          </div>
           <h3>Communauté & Squad Link</h3>
           <p>
             Connectez-vous avec d'autres pilotes, partagez des alertes en temps
@@ -683,8 +683,10 @@
           </p>
         </div>
 
-        <div class="card">
-          <i class="fa-solid fa-lock"></i>
+        <div class="glass-card feature-card reveal delay-6">
+          <div class="feature-icon icon-blue">
+            <i class="fa-solid fa-lock"></i>
+          </div>
           <h3>Sécurité & Vie Privée</h3>
           <p>
             Vos données vous appartiennent. Système conforme RGPD avec Droit à
@@ -695,16 +697,129 @@
       </div>
     </section>
 
-    <footer>
-      <div class="logo" style="justify-content: center; margin-bottom: 20px">
-        <i class="fa-solid fa-motorcycle"></i> mon50ccetmoi
+    <!-- ─── TESTIMONIALS SECTION ───────────────────────────── -->
+    <section class="testimonials section-spacing">
+      <div class="section-header reveal">
+        <div class="badge badge-gold" style="margin-bottom: var(--space-md);">
+          <i class="fa-solid fa-star"></i> Témoignages
+        </div>
+        <h2 class="heading-2">Ils roulent avec nous.</h2>
+        <p>Découvrez ce que notre communauté dit de l'application.</p>
       </div>
-      <p>&copy; 2026 mon50ccetmoi. Tous droits réservés.</p>
-      <div class="footer-links">
-        <a href="mentions-legales.html">Mentions Légales</a>
-        <a href="privacy.html">Confidentialité</a>
-        <a href="cookies.html">Cookies</a>
-        <a href="mailto:contact@mon50ccetmoi.com">Contact</a>
+
+      <div class="grid-3">
+        <div class="glass-card testimonial-card reveal delay-1">
+          <div class="stars">
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <blockquote>
+            "Depuis que j'ai l'appli, ma mère est rassurée quand je pars en scooter.
+            L'Ange Gardien c'est vraiment la fonctionnalité qui change tout."
+          </blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">LM</div>
+            <div>
+              <div class="testimonial-name">Lucas M.</div>
+              <div class="testimonial-role">Peugeot Kisbee • Lyon</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card testimonial-card reveal delay-2">
+          <div class="stars">
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <blockquote>
+            "Le GPS qui évite les autoroutes c'est exactement ce qu'il me fallait
+            pour mon Ami Citroën. Plus de stress en navigation !"
+          </blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background: linear-gradient(135deg, var(--neon-gold), var(--neon-red));">SD</div>
+            <div>
+              <div class="testimonial-name">Sarah D.</div>
+              <div class="testimonial-role">Citroën Ami • Paris</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card testimonial-card reveal delay-3">
+          <div class="stars">
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-solid fa-star"></i>
+            <i class="fa-regular fa-star"></i>
+          </div>
+          <blockquote>
+            "En tant qu'assureur, le portail B2B est un game changer. Les rapports
+            de la boîte noire nous font gagner un temps fou sur les litiges."
+          </blockquote>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar" style="background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));">PG</div>
+            <div>
+              <div class="testimonial-name">Philippe G.</div>
+              <div class="testimonial-role">Courtier Assurance • Bordeaux</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── CTA SECTION ────────────────────────────────────── -->
+    <section class="cta-section">
+      <div class="cta-box reveal">
+        <h2 class="heading-2">Prêt à rouler en sécurité ?</h2>
+        <p>
+          Rejoignez la communauté mon50ccetmoi et profitez de l'offre fondateur :
+          un compte GOLD gratuit à vie.
+        </p>
+        <a href="login.html#register" class="btn btn-cta btn-lg">
+          <i class="fa-solid fa-rocket"></i> Rejoindre gratuitement
+        </a>
+      </div>
+    </section>
+
+    <!-- ─── FOOTER ─────────────────────────────────────────── -->
+    <footer class="footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="navbar-logo">
+            <i class="fa-solid fa-motorcycle"></i> mon50ccetmoi
+          </a>
+          <p>Le copilote IA de référence pour les conducteurs de scooters 50cc et Voitures Sans Permis.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Produit</h4>
+          <a href="#features">Fonctionnalités</a>
+          <a href="marketplace.html">Marketplace</a>
+          <a href="beta.html">Programme Bêta</a>
+          <a href="partenaires.html">Partenaires</a>
+        </div>
+        <div class="footer-col">
+          <h4>Légal</h4>
+          <a href="mentions-legales.html">Mentions Légales</a>
+          <a href="privacy.html">Confidentialité</a>
+          <a href="cookies.html">Cookies</a>
+          <a href="cgv.html">CGV</a>
+          <a href="terms.html">CGU</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <a href="mailto:contact@mon50ccetmoi.com">Email</a>
+          <a href="assureur.html">Portail Assureur</a>
+          <a href="login.html?mode=garage">Espace Garage</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 mon50ccetmoi. Tous droits réservés.</p>
       </div>
     </footer>
 
@@ -716,9 +831,7 @@
       </h2>
       <p>
         Que vous rouliez en
-        <strong
-          >Aixam, Ligier, Microcar, Citroën Ami, Chatenet, Casalini</strong
-        >
+        <strong>Aixam, Ligier, Microcar, Citroën Ami, Chatenet, Casalini</strong>
         ou en scooter comme le
         <strong>Peugeot Kisbee, Yamaha Neo's, Piaggio Zip, Sym, Kymco</strong>,
         mon50ccetmoi est l'application GPS et sécurité de référence.
@@ -730,7 +843,7 @@
       </p>
     </div>
 
-    <!-- Scripts pour l'authentification Invité -->
+    <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
@@ -740,5 +853,78 @@
     </script>
     <script src="js/crypto-native.js" charset="utf-8"></script>
     <script src="js/auth.js" charset="utf-8"></script>
+
+    <script>
+      // ─── Navbar Scroll Effect ───────────────────────────────
+      const navbar = document.getElementById('main-navbar');
+      let lastScroll = 0;
+      window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        if (scrollY > 50) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+        lastScroll = scrollY;
+      }, { passive: true });
+
+      // ─── Counter Animation ──────────────────────────────────
+      function animateCounters() {
+        const counters = document.querySelectorAll('[data-count]');
+        counters.forEach(counter => {
+          const target = parseInt(counter.dataset.count);
+          const duration = 2000;
+          const startTime = performance.now();
+
+          function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Easing: ease-out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(eased * target);
+
+            if (target >= 1000) {
+              counter.textContent = current.toLocaleString('fr-FR');
+            } else {
+              counter.textContent = current;
+            }
+
+            if (progress < 1) {
+              requestAnimationFrame(update);
+            }
+          }
+          requestAnimationFrame(update);
+        });
+      }
+
+      // ─── Intersection Observer for Scroll Animations ────────
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Reveal animations
+        document.querySelectorAll('.reveal').forEach(el => {
+          revealObserver.observe(el);
+        });
+
+        // Start counters when hero stats are visible
+        const statsSection = document.querySelector('.hero-stats');
+        if (statsSection) {
+          const statsObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+              animateCounters();
+              statsObserver.disconnect();
+            }
+          }, { threshold: 0.5 });
+          statsObserver.observe(statsSection);
+        }
+      });
+    </script>
   </body>
 </html>

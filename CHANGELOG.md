@@ -6,7 +6,7 @@ Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/)
 
 ---
 
-## [106.00.00] - 2026-08-17 - 🐛 Résolution de Bugs et Améliorations UI
+## [109.00.00] - 2026-08-17 - 🐛 Résolution de Bugs et Améliorations UI
 
 ### Corrigé
 - **Avocat de Poche (UI)** : Correction d'un bug d'affichage (texte tronqué) sur l'avertissement de l'IA.

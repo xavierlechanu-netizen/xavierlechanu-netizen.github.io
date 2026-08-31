@@ -25,9 +25,8 @@ let updatedFiles = 0;
 for (const file of files) {
   let content = fs.readFileSync(file, 'utf8');
   let newContent = content
-    .replace(/100\.00-GOLD/g, '106.00.00')
-    .replace(/100\.80\.00/g, '106.00.00')
-    .replace(/"version":\s*"107\.00\.00"/g, '"version": "106.00.00"');
+    .replace(/108\.00\.00/g, '109.00.00')
+    .replace(/"version":\s*"108\.00\.00"/g, '"version": "109.00.00"');
 
   if (content !== newContent) {
     fs.writeFileSync(file, newContent, 'utf8');
