@@ -31,6 +31,7 @@ export default defineConfig({
         mentions: resolve(__dirname, 'mentions-legales.html'),
         profile: resolve(__dirname, 'profile.html'),
         moderation: resolve(__dirname, 'moderation.html'),
+        garage: resolve(__dirname, 'garage.html'),
         p404: resolve(__dirname, '404.html')
       }
     }
