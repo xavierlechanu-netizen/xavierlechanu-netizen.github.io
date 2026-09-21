@@ -1,5 +1,6 @@
-import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
+import { db, auth, CONFIG, secureGetItem, secureSetItem, firebase } from './config.js';
 import { registerAction } from './actionRegistry.js';
+
 
 function toggleForm(formType) {
         document.getElementById("login-form").classList.add("hidden");
@@ -7,19 +8,29 @@ function toggleForm(formType) {
         document.getElementById(formType + "-form").classList.remove("hidden");
       }
 
-      function doLogin() {
-        login(
-          document.getElementById("login-user").value,
-          document.getElementById("login-pass").value,
-        );
+function doLogin() {
+        const u = document.getElementById("login-user")?.value || "";
+        const p = document.getElementById("login-pass")?.value || "";
+        if (typeof window.login === 'function') {
+          window.login(u, p);
+        } else if (typeof login === 'function') {
+          login(u, p);
+        } else {
+          console.error("Fonction login non disponible.");
+        }
       }
       function doRegister() {
-        register(
-          document.getElementById("reg-user").value,
-          document.getElementById("reg-pass").value,
-          document.getElementById("reg-brand").value,
-          document.getElementById("reg-model").value,
-        );
+        const u = document.getElementById("reg-user")?.value || "";
+        const p = document.getElementById("reg-pass")?.value || "";
+        const b = document.getElementById("reg-brand")?.value || "";
+        const m = document.getElementById("reg-model")?.value || "";
+        if (typeof window.register === 'function') {
+          window.register(u, p, b, m);
+        } else if (typeof register === 'function') {
+          register(u, p, b, m);
+        } else {
+          console.error("Fonction register non disponible.");
+        }
       }
 
       // --- NEW: URL Hash Routing ---
@@ -32,6 +43,10 @@ function toggleForm(formType) {
       // --- NEW: Google Login Callback via Firebase ---
       async function handleCredentialResponse(response) {
         console.log("Tentative de connexion Google via Firebase...");
+        if (!response || !response.credential) {
+          console.warn("Credential Google manquant.");
+          return;
+        }
         const credential = firebase.auth.GoogleAuthProvider.credential(
           response.credential,
         );
@@ -74,6 +89,15 @@ function toggleForm(formType) {
         }
       }
 
+      // Attacher le callback Google réel
+      if (typeof window !== 'undefined') {
+        window._handleCredentialResponseReal = handleCredentialResponse;
+        window.handleCredentialResponse = handleCredentialResponse;
+        window.doLogin = doLogin;
+        window.doRegister = doRegister;
+        window.toggleForm = toggleForm;
+      }
+
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
@@ -82,5 +106,10 @@ function toggleForm(formType) {
             .catch((err) => console.log("Échec Service Worker: ", err));
         });
       }
+
 // --- Action Registry (ESM) ---
 registerAction('toggleForm', toggleForm);
+registerAction('doLogin', doLogin);
+registerAction('doRegister', doRegister);
+registerAction('handleCredentialResponse', handleCredentialResponse);
+

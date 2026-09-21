@@ -72,6 +72,15 @@ if (!firebase.apps.length) {
 }
 export const db = firebase.firestore();
 export const auth = firebase.auth();
+export { firebase };
+
+if (typeof window !== 'undefined') {
+  window.firebase = firebase;
+  window.db = db;
+  window.auth = auth;
+  window.CONFIG = CONFIG;
+}
+
 
 // --- HYBRID INDEXEDDB / LOCALSTORAGE LAYER (Phase 5) ---
 // Initialize localforage for scalable, non-blocking asynchronous storage

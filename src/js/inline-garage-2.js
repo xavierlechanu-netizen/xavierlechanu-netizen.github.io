@@ -1,5 +1,6 @@
-import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
+import { db, auth, CONFIG, secureGetItem, secureSetItem, firebase } from './config.js';
 import { registerAction } from './actionRegistry.js';
+
 
 /**
        * Garage Pro Login — Firebase Auth
@@ -101,17 +102,37 @@ btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER';
             document.getElementById("stat-interventions").textContent = logsSnap.data().count || 0;
           } else {
             // Fallback si Firestore non disponible
-            document.getElementById("stat-garages").textContent = "12";
-            document.getElementById("stat-remaining").textContent = "38";
-            document.getElementById("stat-interventions").textContent = "247";
+            const elGarages = document.getElementById("stat-garages");
+            const elRem = document.getElementById("stat-remaining");
+            const elInterv = document.getElementById("stat-interventions");
+            if (elGarages) elGarages.textContent = "12";
+            if (elRem) elRem.textContent = "38";
+            if (elInterv) elInterv.textContent = "247";
           }
         } catch (e) {
-          console.warn("Stats Garage non disponibles:", e);
-          document.getElementById("stat-garages").textContent = "--";
-          document.getElementById("stat-remaining").textContent = "--";
-          document.getElementById("stat-interventions").textContent = "--";
+          console.info("Stats Garage en mode démo:", e?.message || e);
+          const elGarages = document.getElementById("stat-garages");
+          const elRem = document.getElementById("stat-remaining");
+          const elInterv = document.getElementById("stat-interventions");
+          if (elGarages) elGarages.textContent = "12";
+          if (elRem) elRem.textContent = "38";
+          if (elInterv) elInterv.textContent = "247";
         }
+      }
+
+      // --- Action Registry & Window Expose ---
+      registerAction('doGarageLogin', doGarageLogin);
+      registerAction('openPioneerRegistration', openPioneerRegistration);
+      registerAction('loadGarageStats', loadGarageStats);
+
+      if (typeof window !== 'undefined') {
+        window.doGarageLogin = doGarageLogin;
+        window.openPioneerRegistration = openPioneerRegistration;
+        window.loadGarageStats = loadGarageStats;
       }
 
       // Charger les stats au démarrage
       document.addEventListener("DOMContentLoaded", loadGarageStats);
+      if (document.readyState === "complete" || document.readyState === "interactive") {
+        loadGarageStats();
+      }

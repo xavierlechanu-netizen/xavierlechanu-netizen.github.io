@@ -13,7 +13,30 @@ document.addEventListener('click', function(event) {
     const actionString = actionElement.getAttribute('data-action');
     if (!actionString) return;
 
-    const match = actionString.match(/^([a-zA-Z0-9_$.]+)(?:\((.*)\))?$/);
+    const trimmed = actionString.trim();
+
+    // 1.1 Support direct pour les redirections d'URL (ex: window.location.href = 'assureur.html' ou location.href='...')
+    const navMatch = trimmed.match(/^(?:window\.)?location(?:\.href)?\s*=\s*['"]([^'"]+)['"]\s*;?$/);
+    if (navMatch) {
+        if (actionElement.tagName === 'A') event.preventDefault();
+        window.location.href = navMatch[1];
+        return;
+    }
+
+    // 1.2 Support pour les instructions simples d'historique ou rechargement
+    if (trimmed === 'history.back()' || trimmed === 'window.history.back()') {
+        if (actionElement.tagName === 'A') event.preventDefault();
+        window.history.back();
+        return;
+    }
+    if (trimmed === 'location.reload()' || trimmed === 'window.location.reload()') {
+        if (actionElement.tagName === 'A') event.preventDefault();
+        window.location.reload();
+        return;
+    }
+
+    // 1.3 Regex pour extraire fonction et arguments (ex: doLogin(), toggleForm('register'), alert('...'))
+    const match = trimmed.match(/^([a-zA-Z0-9_$.]+)(?:\((.*)\))?;?$/);
     
     if (match) {
         const functionPath = match[1];
@@ -22,27 +45,48 @@ document.addEventListener('click', function(event) {
         let fn = getAction(functionPath);
 
         if (typeof fn === 'function') {
-            if (actionElement.tagName === 'A' && actionElement.getAttribute('href') === '#') {
+            if (actionElement.tagName === 'A' && (actionElement.getAttribute('href') === '#' || !actionElement.getAttribute('href'))) {
                 event.preventDefault();
             }
 
             let parsedArgs = [];
-            if (rawArgs) {
-                // Remove 'event' literal if passed manually as string
+            if (rawArgs && rawArgs.trim().length > 0) {
+                // Remplacer 'event' par null si passé explicitement
                 rawArgs = rawArgs.replace(/\bevent\b/g, 'null');
                 try {
-                    parsedArgs = new Function(`return [${rawArgs}]`)();
+                    parsedArgs = new Function('currentElement', `return (function(){ return [${rawArgs}]; }).call(currentElement);`)(actionElement);
                 } catch (e) {
-                    console.warn(`[Event Delegator] Impossible de parser les arguments: ${rawArgs}`);
+                    try {
+                        parsedArgs = new Function(`return [${rawArgs}]`)();
+                    } catch (err) {
+                        console.warn(`[Event Delegator] Impossible de parser les arguments: ${rawArgs}`);
+                    }
                 }
             }
             
-            // Si le premier argument attendu est un string et non l'event, on décale. 
-            // Pour faire simple, on passe les arguments originaux.
-            fn.apply(null, parsedArgs);
+            try {
+                fn.apply(actionElement, parsedArgs);
+            } catch (err) {
+                console.error(`[Event Delegator] Erreur lors de l'exécution de ${functionPath}:`, err);
+            }
         } else {
             console.warn(`[Event Delegator] Action non trouvée: ${functionPath}`);
         }
+    } else {
+        // 1.4 Support pour les actions conditionnelles (ex: "if(window.GaragePro) GaragePro.initRegistration()")
+        const condMatch = trimmed.match(/^if\s*\([^)]+\)\s*([a-zA-Z0-9_$.]+)\((.*)\);?$/);
+        if (condMatch) {
+            const func = getAction(condMatch[1]);
+            if (typeof func === 'function') {
+                try {
+                    func.call(actionElement);
+                } catch (e) {
+                    console.error(`[Event Delegator] Erreur action conditionnelle:`, e);
+                }
+                return;
+            }
+        }
+        console.warn(`[Event Delegator] Action non trouvée: ${trimmed}`);
     }
 });
 

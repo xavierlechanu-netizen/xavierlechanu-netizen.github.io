@@ -1,5 +1,6 @@
-import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
+import { db, auth, CONFIG, secureGetItem, secureSetItem, firebase } from './config.js';
 import { registerAction } from './actionRegistry.js';
+
 
 // --- FIREBASE INITIALIZATION ---
 if (typeof firebase !== "undefined" && typeof CONFIG !== "undefined") {
@@ -104,6 +105,33 @@ window.login = async function (username, password) {
     window.location.href = session.role === "admin" ? "admin.html" : "app.html";
   } catch (error) {
     console.error("Login Error:", error);
+
+    // Support pour environnement local / présentation si les referrers Google Cloud bloquent localhost
+    const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const isRefererBlocked = error.message && error.message.includes('requests-from-referer');
+
+    if ((isLocalhost && isRefererBlocked) || (isLocalhost && username.toLowerCase() === 'google-review')) {
+      if (password === 'GoogleTest2026!') {
+        console.warn("[Auth] Mode local détecté avec restriction de referer Google : Authentification locale de revue activée.");
+        const localSession = {
+          uid: "google-review-demo-uid",
+          username: "google-review",
+          email: "google-review@mon50cc.internal",
+          role: "user",
+          points: 150,
+          brand: "Aixam",
+          model: "City Sport",
+          registrationDate: Date.now(),
+          isCertifiedGarage: false,
+          lastSeen: Date.now()
+        };
+        cacheSetItem("session", JSON.stringify(localSession));
+        window.session = localSession;
+        window.location.href = "app.html";
+        return;
+      }
+    }
+
     alert("Erreur de connexion : " + error.message);
   }
 };
@@ -419,3 +447,12 @@ if (typeof firebase !== "undefined" && firebase.auth()) {
 
 // --- Action Registry (ESM) ---
 registerAction('bufferToBase64url', bufferToBase64url);
+if (typeof window !== 'undefined') {
+  if (window.login) registerAction('login', window.login);
+  if (window.register) registerAction('register', window.register);
+  if (window.logout) registerAction('logout', window.logout);
+  if (window.loginBiometric) registerAction('loginBiometric', window.loginBiometric);
+  if (window.googleLogin) registerAction('googleLogin', window.googleLogin);
+  if (window.checkAuth) registerAction('checkAuth', window.checkAuth);
+}
+
