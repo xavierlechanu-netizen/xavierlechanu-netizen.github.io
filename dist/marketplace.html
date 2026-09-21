@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr-FR" dir="ltr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>Marketplace 50cc - mon50ccetmoi</title>
@@ -11,7 +14,7 @@
     <meta property="og:url" content="https://mon50ccetmoi.com/marketplace" />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://mon50ccetmoi.com/marketplace" />
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
 
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -310,7 +313,10 @@
         .toolbar-filters { flex-direction: column; }
       }
     </style>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
+    <script type="module" crossorigin src="/assets/marketplace-CAS21qLG.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
+    <link rel="modulepreload" crossorigin href="/assets/exchange-kHZfIjRC.js">
     <link rel="stylesheet" crossorigin href="/assets/design-system-2q-fbcwT.css">
   </head>
   <body>
@@ -321,7 +327,7 @@
       <!-- ─── HEADER ───────────────────────────────────────── -->
       <header class="market-header animate-fade-in-up">
         <div class="market-title-group">
-          <button class="btn-icon" onclick="history.back()" aria-label="Retour">
+          <button class="btn-icon" data-action="history.back()" aria-label="Retour">
             <i class="fa-solid fa-arrow-left"></i>
           </button>
           <h1 class="market-title"><i class="fa-solid fa-store"></i> Marketplace</h1>
@@ -369,25 +375,25 @@
 
       <!-- ─── CATEGORY TABS ────────────────────────────────── -->
       <div class="cat-tabs animate-fade-in-up delay-2">
-        <button class="cat-btn active" onclick="ExchangeMarket.setCategory('all', this)">
+        <button class="cat-btn active" data-action="ExchangeMarket.setCategory('all', this)">
           <i class="fa-solid fa-border-all"></i> Toutes
         </button>
-        <button class="cat-btn" onclick="ExchangeMarket.setCategory('mecanique', this)">
+        <button class="cat-btn" data-action="ExchangeMarket.setCategory('mecanique', this)">
           <i class="fa-solid fa-gears"></i> Galets & Variateurs
         </button>
-        <button class="cat-btn" onclick="ExchangeMarket.setCategory('pot', this)">
+        <button class="cat-btn" data-action="ExchangeMarket.setCategory('pot', this)">
           <i class="fa-solid fa-wind"></i> Échappements
         </button>
-        <button class="cat-btn" onclick="ExchangeMarket.setCategory('carenage', this)">
+        <button class="cat-btn" data-action="ExchangeMarket.setCategory('carenage', this)">
           <i class="fa-solid fa-shield-halved"></i> Carénages
         </button>
-        <button class="cat-btn" onclick="ExchangeMarket.setCategory('pneus', this)">
+        <button class="cat-btn" data-action="ExchangeMarket.setCategory('pneus', this)">
           <i class="fa-solid fa-circle-dot"></i> Pneus & Freins
         </button>
-        <button class="cat-btn" onclick="ExchangeMarket.setCategory('equipement', this)">
+        <button class="cat-btn" data-action="ExchangeMarket.setCategory('equipement', this)">
           <i class="fa-solid fa-helmet-safety"></i> Équipements
         </button>
-        <button class="cat-btn" onclick="ExchangeMarket.setCategory('services', this)" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">
+        <button class="cat-btn" data-action="ExchangeMarket.setCategory('services', this)" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">
           <i class="fa-solid fa-bolt"></i> Recharge & Services
         </button>
       </div>
@@ -398,7 +404,7 @@
           <h2 class="heading-3 text-gradient-cyan">
             <i class="fa-solid fa-arrows-rotate"></i> Annonces Communautaires
           </h2>
-          <button class="btn btn-primary" onclick="if (window.ExchangeMarket) ExchangeMarket.openPublishForm();">
+          <button class="btn btn-primary" data-action="if (window.ExchangeMarket) ExchangeMarket.openPublishForm();">
             <i class="fa-solid fa-plus"></i> Publier
           </button>
         </div>
@@ -427,7 +433,7 @@
               <span class="price-main">350 BVC</span>
               <span class="price-old">14.99 €</span>
             </div>
-            <button class="btn btn-primary w-100" style="width: 100%;" onclick="alert('Achat validé ! Livraison estimée: 48h')">
+            <button class="btn btn-primary w-100" style="width: 100%;" data-action="alert('Achat validé ! Livraison estimée: 48h')">
               Échanger
             </button>
           </div>
@@ -453,7 +459,7 @@
               <span class="price-main">500 BVC</span>
               <span class="price-old">25.00 €</span>
             </div>
-            <button class="btn btn-primary" style="width: 100%;" onclick="alert('Achat validé ! Livraison estimée: 48h')">
+            <button class="btn btn-primary" style="width: 100%;" data-action="alert('Achat validé ! Livraison estimée: 48h')">
               Échanger
             </button>
           </div>
@@ -475,7 +481,7 @@
             <div class="product-price-row">
               <span class="price-main">Gratuit</span>
             </div>
-            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="setVoiceMode('standard')">
+            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" data-action="setVoiceMode('standard')">
               Activer
             </button>
           </div>
@@ -486,7 +492,7 @@
             <div class="product-price-row">
               <span class="price-main">100 BVC</span>
             </div>
-            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="buyVoiceMode('cyberpunk', 100)">
+            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" data-action="buyVoiceMode('cyberpunk', 100)">
               Débloquer
             </button>
           </div>
@@ -497,7 +503,7 @@
             <div class="product-price-row">
               <span class="price-main">150 BVC</span>
             </div>
-            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="buyVoiceMode('rally', 150)">
+            <button class="btn" style="width: 100%; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" data-action="buyVoiceMode('rally', 150)">
               Débloquer
             </button>
           </div>
@@ -528,7 +534,7 @@
           <!-- Boîte Noire V1 (Unitaire) -->
           <div class="glass-card product-card card-gold" id="bb-card-unit">
             <div class="badge product-badge" style="background: linear-gradient(135deg, var(--neon-gold), #ff6600); color: black;">Officiel</div>
-            <div class="product-img" style="background: url('/assets/blackbox-DZHaHrSH.jpg') center/cover no-repeat, linear-gradient(160deg, #1a1a1a, #000);">
+            <div class="product-img" style="background: url('assets/ui/blackbox.jpg') center/cover no-repeat, linear-gradient(160deg, #1a1a1a, #000);">
               <i class="fa-solid fa-microchip" style="position: absolute; opacity: 0.1; font-size: 5rem; z-index: 0;"></i>
               <div style="position: absolute; bottom: 8px; right: 10px; font-family: var(--font-mono); font-size: 0.65rem; color: rgba(255,255,255,0.5); z-index: 1;">WIRELESS & SEALED</div>
             </div>
@@ -561,7 +567,7 @@
               <span class="price-main">49,99 €</span>
               <span class="price-old" style="text-decoration: none;">Livraison offerte 🇫🇷</span>
             </div>
-            <button class="btn btn-cta" style="width: 100%;" id="bb-buy-unit-btn" onclick="BlackBoxShop.buyUnit()">
+            <button class="btn btn-cta" style="width: 100%;" id="bb-buy-unit-btn" data-action="BlackBoxShop.buyUnit()">
               <i class="fa-solid fa-cart-shopping"></i> Commander (49,99 €)
             </button>
           </div>
@@ -589,7 +595,7 @@
                 <span class="price-main">161,98 €</span>
                 <span class="price-old">179,98 €</span>
               </div>
-              <button class="btn btn-cta" style="width: 100%; padding: 12px;" onclick="BlackBoxShop.buyPack(2)">
+              <button class="btn btn-cta" style="width: 100%; padding: 12px;" data-action="BlackBoxShop.buyPack(2)">
                 <i class="fa-solid fa-cart-shopping"></i> Commander Pack
               </button>
             </div>
@@ -615,7 +621,7 @@
                 <span class="price-main">4,99 € <span style="font-size: var(--text-sm); font-weight: normal;">/mois</span></span>
                 <span class="price-old" style="text-decoration: none;">Sans engagement</span>
               </div>
-              <button class="btn" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" onclick="BlackBoxShop.subscribePremium()">
+              <button class="btn" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--neon-purple), #8a2be2); color: white;" data-action="BlackBoxShop.subscribePremium()">
                 <i class="fa-solid fa-rocket"></i> S'abonner
               </button>
             </div>
@@ -671,49 +677,6 @@
     </nav>
 
     <!-- Firebase SDK & Scripts -->
-    <script type="module" src="/js/infallible.js" charset="utf-8"></script>
-    <script type="module" src="/js/config.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script>
-      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
-        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
-        window.db = firebase.firestore();
-      }
-      // Session fallback
-      try {
-        const rawSession = localStorage.getItem("session");
-        if (rawSession && rawSession.startsWith("{")) {
-          window.session = JSON.parse(rawSession);
-        } else {
-          window.session = { username: "Invité", isGuest: true };
-        }
-      } catch (e) {
-        window.session = { username: "Invité", isGuest: true };
-      }
-    </script>
-    <script type="module" src="/js/exchange.js" charset="utf-8"></script>
-    <script type="module" src="/js/blackbox-shop.js" charset="utf-8"></script>
     
-    <script>
-      function setVoiceMode(mode) {
-        localStorage.setItem("nexus-atlasVoiceMode", mode);
-        alert(`Skin Vocal [${mode}] activé avec succès.`);
-      }
-
-      function buyVoiceMode(mode, cost) {
-        let currentBVC = parseInt(localStorage.getItem("bvc_points")) || 0;
-        if (currentBVC >= cost) {
-          currentBVC -= cost;
-          localStorage.setItem("bvc_points", currentBVC);
-          const el = document.getElementById("user-bvc-balance");
-          if (el) el.textContent = `${currentBVC.toLocaleString("fr-FR")} BVC`;
-          setVoiceMode(mode);
-        } else {
-          alert(`Fonds insuffisants. Il vous manque ${cost - currentBVC} BVC pour débloquer cette voix.`);
-        }
-      }
-    </script>
   </body>
 </html>

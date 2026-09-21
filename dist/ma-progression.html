@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr-FR" dir="ltr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Ma Progression — mon50ccetmoi</title>
@@ -11,16 +14,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script>
-      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
-        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
-        window.db = firebase.firestore();
-        window.auth = firebase.auth();
-      }
-    </script>
 
     <style>
       :root {
@@ -217,8 +210,9 @@
         .quick-actions { grid-template-columns: repeat(3,1fr); }
       }
     </style>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
-    <script type="module" crossorigin src="/assets/config-S5ZR84_b.js"></script>
+    <script type="module" crossorigin src="/assets/ma-progression-UC8Zsqkw.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
   </head>
   <body>
     <div class="top-bar">
@@ -232,6 +226,5 @@
       </div>
     </div>
 
-    <script type="module" src="/js/ma-progression.js" defer></script>
   </body>
 </html>

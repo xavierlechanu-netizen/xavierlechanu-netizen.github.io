@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Espace Partenaires & Concessionnaires - mon50ccetmoi</title>
@@ -11,23 +14,14 @@
     <meta property="og:url" content="https://mon50ccetmoi.com/partenaires" />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://mon50ccetmoi.com/partenaires" />
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
 
     <!-- Firebase SDK (v9 Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script type="module" src="/js/config.js" charset="utf-8"></script>
-    <script type="module" src="/js/garage-pro.js" charset="utf-8"></script>
 
-    <script>
-      // Initialisation de Firebase
-      firebase.initializeApp(CONFIG.FIREBASE);
-    </script>
 
     <style>
       /* Mapping Legacy Classes to Design System */
@@ -158,7 +152,10 @@
       .modal-content input:focus { border-color: var(--neon-cyan); outline: none; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
       #siret-result { margin-top: var(--space-md); font-size: var(--text-sm); }
     </style>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
+    <script type="module" crossorigin src="/assets/partenaires-isUTfUrL.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
+    <link rel="modulepreload" crossorigin href="/assets/garage-pro-CmN0kfX2.js">
     <link rel="stylesheet" crossorigin href="/assets/design-system-2q-fbcwT.css">
   </head>
   <body>
@@ -179,10 +176,10 @@
           id="partner-pwd"
           placeholder="Mot de passe d'accès"
         />
-        <button onclick="doLogin()">Connexion Sécurisée</button>
+        <button data-action="doLogin()">Connexion Sécurisée</button>
         <a
           href="#"
-          onclick="forgotPassword()"
+          data-action="forgotPassword()"
           style="
             display: block;
             margin-top: 20px;
@@ -195,7 +192,7 @@
           onmouseout="this.style.color = 'var(--text-muted)'"
           >Mot de passe oublié ?</a
         >
-        <button onclick="if(window.GaragePro) GaragePro.initRegistration()" style="margin-top:20px; width:100%; padding:10px; background:transparent; color:#00ff88; border:1px solid #00ff88; border-radius:6px; cursor:pointer; font-weight:bold;">
+        <button data-action="if(window.GaragePro) GaragePro.initRegistration()" style="margin-top:20px; width:100%; padding:10px; background:transparent; color:#00ff88; border:1px solid #00ff88; border-radius:6px; cursor:pointer; font-weight:bold;">
             Devenir Garage Partenaire
         </button>
       </div>
@@ -222,7 +219,7 @@
           <button
             class="btn-action"
             style="width: 100%"
-            onclick="verifySiret()"
+            data-action="verifySiret()"
           >
             Vérifier via data.gouv.fr
           </button>
@@ -251,29 +248,29 @@
         <div class="sidebar-logo">
           <i class="fa-solid fa-motorcycle"></i> mon50ccetmoi
         </div>
-        <a class="nav-item active" onclick="switchView('overview')"
+        <a class="nav-item active" data-action="switchView('overview')"
           ><i class="fa-solid fa-chart-line"></i> Vue d'ensemble</a
         >
-        <a class="nav-item" onclick="switchView('reports')"
+        <a class="nav-item" data-action="switchView('reports')"
           ><i class="fa-solid fa-file-pdf"></i> Rapports Boîte Noire</a
         >
-        <a class="nav-item" onclick="switchView('leads')"
+        <a class="nav-item" data-action="switchView('leads')"
           ><i class="fa-solid fa-bullseye"></i> Leads & Campagnes</a
         >
-        <a class="nav-item" onclick="switchView('billing')"
+        <a class="nav-item" data-action="switchView('billing')"
           ><i class="fa-solid fa-wallet"></i> Facturation & Wallet</a
         >
-        <a class="nav-item" onclick="switchView('team')"
+        <a class="nav-item" data-action="switchView('team')"
           ><i class="fa-solid fa-users-gear"></i> Équipe & Sécurité</a
         >
-        <a class="nav-item" onclick="switchView('audit')"
+        <a class="nav-item" data-action="switchView('audit')"
           ><i class="fa-solid fa-shield-halved"></i> Audit & Conformité</a
         >
-        <a class="nav-item" id="nav-maintenance" style="display:none;" onclick="switchView('maintenance')"
+        <a class="nav-item" id="nav-maintenance" style="display:none;" data-action="switchView('maintenance')"
           ><i class="fa-solid fa-book"></i> Cahier d'Entretien</a
         >
         <div style="flex: 1"></div>
-        <a class="nav-item" onclick="window.location.reload()"
+        <a class="nav-item" data-action="window.location.reload()"
           ><i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion</a
         >
       </div>
@@ -434,14 +431,14 @@
                       border: 1px solid var(--border);
                       font-size: 0.8rem;
                     "
-                    onclick="openReportModal('8451', '42 km/h', '3.8', '98%')"
+                    data-action="openReportModal('8451', '42 km/h', '3.8', '98%')"
                   >
                     <i class="fa-solid fa-eye"></i> Données
                   </button>
                   <button
                     class="btn-action"
                     style="font-size: 0.8rem"
-                    onclick="alert('Téléchargement du rapport PDF sécurisé...')"
+                    data-action="alert('Téléchargement du rapport PDF sécurisé...')"
                   >
                     <i class="fa-solid fa-download"></i> PDF
                   </button>
@@ -469,14 +466,14 @@
                       border: 1px solid var(--border);
                       font-size: 0.8rem;
                     "
-                    onclick="openReportModal('8422', '45 km/h', '1.2', '45%')"
+                    data-action="openReportModal('8422', '45 km/h', '1.2', '45%')"
                   >
                     <i class="fa-solid fa-eye"></i> Données
                   </button>
                   <button
                     class="btn-action"
                     style="font-size: 0.8rem"
-                    onclick="alert('Téléchargement du rapport PDF sécurisé...')"
+                    data-action="alert('Téléchargement du rapport PDF sécurisé...')"
                   >
                     <i class="fa-solid fa-download"></i> PDF
                   </button>
@@ -504,14 +501,14 @@
                       border: 1px solid var(--border);
                       font-size: 0.8rem;
                     "
-                    onclick="openReportModal('8390', '12 km/h', '2.1', '99%')"
+                    data-action="openReportModal('8390', '12 km/h', '2.1', '99%')"
                   >
                     <i class="fa-solid fa-eye"></i> Données
                   </button>
                   <button
                     class="btn-action"
                     style="font-size: 0.8rem"
-                    onclick="alert('Téléchargement du rapport PDF sécurisé...')"
+                    data-action="alert('Téléchargement du rapport PDF sécurisé...')"
                   >
                     <i class="fa-solid fa-download"></i> PDF
                   </button>
@@ -717,7 +714,7 @@
               />
               <button
                 class="btn-action"
-                onclick="changePassword()"
+                data-action="changePassword()"
                 style="align-self: flex-start"
               >
                 Mettre à jour
@@ -766,7 +763,7 @@
               />
               <button
                 class="btn-action"
-                onclick="addAgent()"
+                data-action="addAgent()"
                 style="align-self: flex-start"
               >
                 Créer l'accès
@@ -1155,7 +1152,7 @@
         <label style="font-size: 0.85rem; color: var(--text-muted);">Description détaillée des travaux</label>
         <textarea id="maint-desc" rows="4" placeholder="Détails des pièces changées, remarques..." style="width: 100%; padding: 12px; margin: 10px 0 20px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 6px; resize: vertical;"></textarea>
 
-        <button onclick="if(window.GaragePro) GaragePro.submitMaintenanceLog()" style="width: 100%; padding: 15px; background: #00ff88; color: #000; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer;">
+        <button data-action="if(window.GaragePro) GaragePro.submitMaintenanceLog()" style="width: 100%; padding: 15px; background: #00ff88; color: #000; border: none; border-radius: 6px; font-weight: bold; font-size: 1.1rem; cursor: pointer;">
           <i class="fa-solid fa-stamp"></i> Certifier & Sceller l'Entretien
         </button>
       </div>
@@ -1267,7 +1264,7 @@
           <button
             class="btn-action"
             style="flex: 1; background: var(--accent); color: #000"
-            onclick="submitCampaign()"
+            data-action="submitCampaign()"
           >
             Lancer la Campagne
           </button>
@@ -1431,7 +1428,7 @@
             font-size: 1.1rem;
             padding: 12px;
           "
-          onclick="addFunds()"
+          data-action="addFunds()"
         >
           <i class="fa-solid fa-lock"></i> Payer maintenant
         </button>
@@ -1556,7 +1553,7 @@
           <button
             class="btn-action"
             style="flex: 1"
-            onclick="alert('Requête API envoyée à votre SI Assureur !')"
+            data-action="alert('Requête API envoyée à votre SI Assureur !')"
           >
             <i class="fa-solid fa-server"></i> Intégrer au SI (API)
           </button>
@@ -1577,392 +1574,5 @@
       </div>
     </div>
 
-    <script>
-      function openReportModal(id, speed, gforce, fraud) {
-        document.getElementById("report-id-display").innerText = "#" + id;
-        document.getElementById("report-speed-display").innerText = speed;
-        document.getElementById("report-gforce-display").innerText =
-          gforce + " G";
-        document.getElementById("report-fraud-display").innerText = fraud;
-
-        if (parseInt(fraud) < 80) {
-          document.getElementById("report-fraud-display").style.color =
-            "#ff3333";
-        } else {
-          document.getElementById("report-fraud-display").style.color =
-            "var(--accent)";
-        }
-
-        document.getElementById("report-modal").style.display = "flex";
-      }
-
-      let pendingAdminId = "";
-
-      async function forgotPassword() {
-        event.preventDefault(); // Empêche le rechargement de la page lié au href="#"
-
-        const identifiant = document.getElementById("partner-id").value.trim();
-        if (!identifiant) {
-          alert(
-            "Veuillez d'abord saisir votre Identifiant Partenaire ou Email dans le champ ci-dessus.",
-          );
-          return;
-        }
-
-        // Si c'est un compte Admin de l'entreprise (pas d'arobase)
-        if (!identifiant.includes("@")) {
-          pendingAdminId = identifiant;
-          document.getElementById("siret-modal").style.display = "flex";
-          document.getElementById("siret-input").value = "";
-          document.getElementById("siret-result").innerHTML = "";
-          return;
-        }
-
-        // Si c'est un Agent (sous-compte avec un email)
-        try {
-          if (
-            window.location.hostname === "localhost" ||
-            window.location.hostname === "127.0.0.1"
-          ) {
-            alert(
-              `(Local) Un lien de réinitialisation a été envoyé à l'agent ${identifiant}.`,
-            );
-            return;
-          }
-          await firebase.auth().sendPasswordResetEmail(identifiant);
-          alert(
-            `Un lien de réinitialisation a été envoyé à l'adresse de l'agent : ${identifiant}`,
-          );
-        } catch (error) {
-          console.error("Reset password error:", error);
-          alert("Erreur lors de la réinitialisation : " + error.message);
-        }
-      }
-
-      async function verifySiret() {
-        const siret = document.getElementById("siret-input").value;
-        const resultDiv = document.getElementById("siret-result");
-
-        if (siret.length !== 14) {
-          resultDiv.innerHTML =
-            '<span style="color:#ff3333;">Le SIRET doit contenir exactement 14 chiffres.</span>';
-          return;
-        }
-
-        // Base de données sécurisée : Association Compte -> SIREN (9 premiers chiffres du SIRET)
-        // C'est ce qui empêche de taper le SIRET de Google pour pirater le compte de Nationale de Courtage !
-        const partnerSirenDatabase = {
-          NATIONALE_COURTAGE: "834220556", // Remplacez par le vrai SIREN (9 chiffres) de Nationale de Courtage
-          AMV_ASSURANCES: "330540907",
-          MUTUELLE_MOTARDS: "327362703",
-          AXA_PRO: "722057460",
-          ALLIANZ_PARTNER: "340234962",
-          MACIF_2ROUES: "781452511",
-        };
-
-        const expectedSiren =
-          partnerSirenDatabase[pendingAdminId.toUpperCase()];
-        const inputSiren = siret.substring(0, 9); // Les 9 premiers chiffres forment le SIREN
-
-        if (expectedSiren && inputSiren !== expectedSiren) {
-          resultDiv.innerHTML =
-            '<span style="color:#ff3333;"><i class="fa-solid fa-triangle-exclamation"></i> Alerte Sécurité : Ce SIRET ne correspond pas à l\'entreprise de votre compte partenaire.</span>';
-          return;
-        }
-
-        resultDiv.innerHTML =
-          '<span style="color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Interrogation des bases de l\'État...</span>';
-
-        try {
-          // Appel API publique et gratuite (sans token) du gouvernement français
-          const response = await fetch(
-            `https://recherche-entreprises.api.gouv.fr/search?q=${siret}`,
-          );
-          const data = await response.json();
-
-          if (data.results && data.results.length > 0) {
-            const entreprise = data.results[0];
-            if (entreprise.etat_administratif === "A") {
-              // Ultime vérification : on s'assure que le SIREN retourné correspond
-              if (expectedSiren && entreprise.siren !== expectedSiren) {
-                resultDiv.innerHTML = `<span style="color:#ff3333;">Le SIRET appartient à <b>${entreprise.nom_complet}</b>, ce qui ne correspond pas à votre compte.</span>`;
-                return;
-              }
-
-              resultDiv.innerHTML = `<span style="color:#00ff88;"><i class="fa-solid fa-check-circle"></i> <b>${entreprise.nom_complet}</b> vérifiée.<br><br>Validation réussie. Un email de réinitialisation vient d'être envoyé au dirigeant officiel.</span>`;
-              setTimeout(() => {
-                document.getElementById("siret-modal").style.display = "none";
-              }, 5000);
-            } else {
-              resultDiv.innerHTML = `<span style="color:#ff3333;">L'entreprise n'est plus active selon les bases légales. Demande rejetée.</span>`;
-            }
-          } else {
-            resultDiv.innerHTML =
-              '<span style="color:#ff3333;">SIRET introuvable.</span>';
-          }
-        } catch (error) {
-          console.error(error);
-          resultDiv.innerHTML =
-            '<span style="color:#ff3333;">Erreur lors de la connexion à l\'API du gouvernement.</span>';
-        }
-      }
-
-      async function doLogin() {
-        const id = document.getElementById("partner-id").value.trim();
-        const pwd = document.getElementById("partner-pwd").value;
-
-        if (!id || !pwd) {
-          alert("Veuillez entrer vos identifiants.");
-          return;
-        }
-
-        const idLowerNormalized = id
-          .toLowerCase()
-          .replace(/\s+/g, "")
-          .replace(/[_-]/g, "");
-        const isEuroAssuranceAttempt =
-          idLowerNormalized === "euroassurance" ||
-          idLowerNormalized === "euroassurence";
-
-        if (isEuroAssuranceAttempt) {
-          const accept = confirm(
-            "⚠️ ALERTE : Cet organisme est classé 'Partenaire non recommandé' suite à de multiples signalements.\nUn tarif de vérification renforcée de 10 000 € est requis.\nAcceptez-vous de régler cette somme pour accéder/créer votre compte ?",
-          );
-          if (!accept) {
-            alert("Accès refusé. Le paiement est obligatoire.");
-            return;
-          }
-        }
-
-        try {
-          try {
-            await firebase.auth().signInWithEmailAndPassword(id, pwd);
-          } catch (firebaseError) {
-            if (
-              isEuroAssuranceAttempt &&
-              (firebaseError.code === "auth/user-not-found" ||
-                firebaseError.code === "auth/wrong-password")
-            ) {
-              await firebase.auth().createUserWithEmailAndPassword(id, pwd);
-            } else if (
-              window.location.hostname === "localhost" ||
-              window.location.hostname === "127.0.0.1"
-            ) {
-              console.warn(
-                "Attention : Firebase bloqué en local. Connexion simulée pour tester l'interface.",
-              );
-            } else {
-              throw firebaseError; // Sur le vrai site, on bloque vraiment
-            }
-          }
-
-          // Logique pour les 5 premiers assureurs ou les pires
-          const first5Partners = [
-            "AMV_ASSURANCES",
-            "MUTUELLE_MOTARDS",
-            "AXA_PRO",
-            "ALLIANZ_PARTNER",
-            "MACIF_2ROUES",
-            "NATIONALE_COURTAGE",
-          ];
-          let badgeHtml = "";
-          if (first5Partners.includes(id.toUpperCase())) {
-            badgeHtml =
-              ' <span class="badge-fondateur" title="Partenaire Fondateur - 5 Premiers"><i class="fa-solid fa-shield"></i> Fondateur mon50ccetmoi</span>';
-          } else if (isEuroAssuranceAttempt) {
-            badgeHtml =
-              ' <span class="badge" style="background:#ff8800; color:#fff; font-size:0.75rem; padding:4px 8px; border-radius:20px; margin-left:10px;"><i class="fa-solid fa-triangle-exclamation"></i> Partenaire non recommandé</span>';
-          }
-
-          const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
-          
-          document.getElementById("partner-name-display").innerHTML =
-            escapeHTML(id) + badgeHtml;
-
-          document.getElementById("login-overlay").style.display = "none";
-          document.getElementById("dashboard").style.display = "flex";
-
-          if (typeof db !== "undefined" && firebase.auth().currentUser) {
-            const uid = firebase.auth().currentUser.uid;
-            try {
-              const doc = await db.collection("users").doc(uid).get();
-              if (doc.exists && doc.data().isCertifiedGarage) {
-                document.getElementById("nav-maintenance").style.display = "flex";
-              }
-            } catch (e) {
-              console.warn("Could not fetch user profile", e);
-            }
-          } else if (idLowerNormalized.includes("garage")) {
-            document.getElementById("nav-maintenance").style.display = "flex";
-          }
-
-          if (isEuroAssuranceAttempt) {
-            const balanceElem = document.getElementById(
-              "wallet-balance-display",
-            );
-            if (balanceElem) {
-              balanceElem.innerText = "-10 000.00 €";
-              balanceElem.style.color = "#ff3333";
-            }
-          }
-        } catch (error) {
-          console.error("Auth error:", error);
-          alert("Identifiants incorrects ou accès refusé.");
-        }
-      }
-
-      async function changePassword() {
-        const newPwd = document.getElementById("new-pwd").value;
-        if (newPwd.length < 6) {
-          alert("Le mot de passe doit faire au moins 6 caractères.");
-          return;
-        }
-        try {
-          const user = firebase.auth().currentUser;
-          if (user) {
-            await user.updatePassword(newPwd);
-            alert("Mot de passe mis à jour avec succès !");
-            document.getElementById("new-pwd").value = "";
-          } else {
-            alert(
-              "Vous êtes en mode démo (bypass local), le mot de passe n'a pas été changé sur Firebase.",
-            );
-          }
-        } catch (error) {
-          console.error("Password update error:", error);
-          alert("Erreur lors de la mise à jour : " + error.message);
-        }
-      }
-
-      function addAgent() {
-        const name = document.getElementById("agent-name").value.trim();
-        const email = document.getElementById("agent-email").value.trim();
-
-        if (!name || !email) {
-          alert("Veuillez remplir le nom et l'email de l'agent.");
-          return;
-        }
-
-        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
-        const safeName = escapeHTML(name);
-        const safeEmail = escapeHTML(email);
-        tr.innerHTML = `
-                <td>${safeName}</td>
-                <td>${safeEmail}</td>
-                <td><span class="badge pending">Invitation envoyée</span></td>
-                <td><button class="btn-action" style="background:#ff3333;" onclick="this.closest('tr').remove()">Révoquer</button></td>
-            `;
-        tbody.appendChild(tr);
-
-        // Reset form
-        document.getElementById("agent-name").value = "";
-        document.getElementById("agent-email").value = "";
-
-        alert(
-          `Accès créé pour ${name}. Un email d'invitation a été envoyé à ${email}.`,
-        );
-      }
-
-      function switchView(viewId) {
-        // Update Sidebar Active state
-        document
-          .querySelectorAll(".nav-item")
-          .forEach((item) => item.classList.remove("active"));
-        event.currentTarget.classList.add("active");
-
-        // Hide all views, show targeted one
-        document
-          .querySelectorAll(".view")
-          .forEach((view) => view.classList.remove("active"));
-        document.getElementById("view-" + viewId).classList.add("active");
-
-        // Update Header Title
-        const titles = {
-          overview: "Vue d'ensemble",
-          reports: "Rapports Boîte Noire",
-          leads: "Leads & Campagnes",
-          billing: "Facturation & Wallet",
-          team: "Équipe & Sécurité",
-          audit: "Audit & Conformité",
-        };
-        document.getElementById("page-title").textContent = titles[viewId];
-      }
-      function submitCampaign() {
-        const title = document.getElementById("campaign-title").value.trim();
-        const location = document.getElementById("campaign-location").value;
-        const cpa = document.getElementById("campaign-cpa").value;
-        const isFlash = document.getElementById("campaign-flash").checked;
-
-        if (!title || !cpa) {
-          alert("Veuillez remplir le titre et le CPA.");
-          return;
-        }
-
-        const tbody = document.getElementById("campaigns-table-body");
-        const tr = document.createElement("tr");
-
-        const escapeHTMLTitle = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
-        let displayTitle = `"${escapeHTMLTitle(title)}"`;
-        if (isFlash) {
-          displayTitle += ` <span style="background:var(--accent); color:#000; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold; margin-left:10px;"><i class="fa-solid fa-stopwatch"></i> Flash 48h</span>`;
-        }
-
-        const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
-        const safeLocation = escapeHTML(location);
-        const safeCpa = escapeHTML(cpa);
-
-        tr.innerHTML = `
-                <td>${displayTitle}</td>
-                <td>${safeLocation}</td>
-                <td>0</td>
-                <td>0 (0%)</td>
-                <td>${safeCpa} € / Lead</td>
-            `;
-        tbody.insertBefore(tr, tbody.firstChild);
-
-        document.getElementById("campaign-modal").style.display = "none";
-        document.getElementById("campaign-title").value = "";
-        document.getElementById("campaign-cpa").value = "";
-        document.getElementById("campaign-flash").checked = false;
-
-        alert("✅ Votre campagne a été créée et mise en ligne avec succès !");
-      }
-
-      function addFunds() {
-        const amountInput = document.getElementById("billing-amount").value;
-        const amount = parseFloat(amountInput);
-
-        if (isNaN(amount) || amount <= 0) {
-          alert("Veuillez entrer un montant valide.");
-          return;
-        }
-
-        const balanceElem = document.getElementById("wallet-balance-display");
-        let currentBalance = parseFloat(
-          balanceElem.innerText.replace("€", "").trim(),
-        );
-
-        const newBalance = currentBalance + amount;
-        balanceElem.innerText = newBalance.toFixed(2) + " €";
-
-        document.getElementById("billing-modal").style.display = "none";
-
-        const tbody = document.getElementById("billing-history-body");
-        const tr = document.createElement("tr");
-        const dateStr = new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        tr.innerHTML = `
-                <td>A l'instant, ${dateStr}</td>
-                <td>Rechargement Wallet (Stripe)</td>
-                <td>Paiement CB **** 4242</td>
-                <td><span style="color: #00e676; font-weight: bold;">+ ${amount.toFixed(2)} €</span></td>
-            `;
-        tbody.insertBefore(tr, tbody.firstChild);
-
-        alert("✅ Paiement accepté. Votre solde a été mis à jour.");
-      }
-    </script>
   </body>
 </html>

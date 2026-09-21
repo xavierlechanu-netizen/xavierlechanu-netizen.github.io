@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr-FR" dir="ltr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>Examinateur IA - mon50ccetmoi</title>
@@ -12,21 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <!-- Firebase SDK (Mocked or Real based on config) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
-    <script type="module" src="/js/config.js"></script>
-    <script>
-      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
-        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
-        window.db = firebase.firestore();
-        window.auth = firebase.auth();
-      }
-    </script>
-    
-    <script type="module" src="/js/crypto-native.js" charset="utf-8"></script>
-    <script type="module" src="/js/code-de-la-route.js" defer></script>
 
     <style>
       :root {
@@ -319,7 +308,10 @@
       ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
       ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
     </style>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
+    <script type="module" crossorigin src="/assets/code-de-la-route-HN1DOxIH.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
+    <link rel="modulepreload" crossorigin href="/assets/crypto-native-xdhgFtr8.js">
   </head>
   <body>
     <!-- AI Act Compliance -->
@@ -338,13 +330,13 @@
         </div>
       </div>
       <div class="header-controls">
-        <button id="btn-voice" class="btn-voice" onclick="toggleVoice(this)" title="Activer la voix IA">
+        <button id="btn-voice" class="btn-voice" data-action="toggleVoice(this)" title="Activer la voix IA">
           <i class="fa-solid fa-volume-xmark"></i>
         </button>
-        <button id="btn-mic" class="btn-mic" onclick="toggleMic(this)" title="Parler à Nexus Atlas">
+        <button id="btn-mic" class="btn-mic" data-action="toggleMic(this)" title="Parler à Nexus Atlas">
           <i class="fa-solid fa-microphone"></i>
         </button>
-        <button class="btn-close" onclick="window.location.href='app.html'"><i class="fa-solid fa-xmark"></i></button>
+        <button class="btn-close" data-action="window.location.href='app.html'"><i class="fa-solid fa-xmark"></i></button>
       </div>
     </header>
 
@@ -370,7 +362,7 @@
       <div id="reward-box" style="display:none; font-size:1.5rem; color: var(--nexus-gold); border: 1px solid var(--nexus-gold); padding: 10px 20px; border-radius: 8px;">
         <i class="fa-solid fa-coins"></i> +5 BVC Points
       </div>
-      <button class="btn-return" onclick="window.location.href='app.html'">RETOURNER A LA BASE</button>
+      <button class="btn-return" data-action="window.location.href='app.html'">RETOURNER A LA BASE</button>
     </div>
 
   </body>

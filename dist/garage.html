@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr-FR" dir="ltr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>Espace Garage Pro - mon50ccetmoi</title>
@@ -11,7 +14,7 @@
     <meta property="og:url" content="https://mon50ccetmoi.com/garage" />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://mon50ccetmoi.com/garage" />
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,16 +22,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <!-- Firebase SDK (v9 Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script type="module" src="/js/config.js" charset="utf-8"></script>
-    <script type="module" src="/js/database.js" charset="utf-8"></script>
-    <script>
-      firebase.initializeApp(CONFIG.FIREBASE);
-      initDatabase();
-    </script>
-    <script type="module" src="/js/crypto-native.js" charset="utf-8"></script>
 
 
     <style>
@@ -409,8 +402,13 @@
         .stats-bar { flex-direction: column; }
       }
     </style>
-    <script type="module" src="/js/error-tracking.js?v=1009000"></script>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
+    <script type="module" crossorigin src="/assets/garage-CXsxyAkB.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
+    <link rel="modulepreload" crossorigin href="/assets/crypto-native-xdhgFtr8.js">
+    <link rel="modulepreload" crossorigin href="/assets/database-DXTKjV4B.js">
+    <link rel="modulepreload" crossorigin href="/assets/error-tracking-R69_nH0X.js">
+    <link rel="modulepreload" crossorigin href="/assets/garage-pro-CmN0kfX2.js">
     <link rel="stylesheet" crossorigin href="/assets/design-system-2q-fbcwT.css">
   </head>
   <body>
@@ -457,7 +455,7 @@
             />
           </div>
 
-          <button onclick="doGarageLogin()" class="btn-garage-login" id="btn-garage-login">
+          <button data-action="doGarageLogin()" class="btn-garage-login" id="btn-garage-login">
             <i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER
           </button>
 
@@ -470,7 +468,7 @@
 
           <div class="auth-divider">OU</div>
 
-          <button onclick="openPioneerRegistration()" class="btn-pioneer" id="btn-pioneer-join">
+          <button data-action="openPioneerRegistration()" class="btn-pioneer" id="btn-pioneer-join">
             <i class="fa-solid fa-rocket"></i> Rejoindre le réseau (Offre Pionnier)
           </button>
 
@@ -541,120 +539,6 @@
     </div>
 
     <!-- Load garage-pro.js for registration modal -->
-    <script type="module" src="/js/garage-pro.js"></script>
 
-    <script>
-      /**
-       * Garage Pro Login — Firebase Auth
-       * Vérifie que l'utilisateur est bien un garage certifié (isCertifiedGarage === true)
-       */
-      async function doGarageLogin() {
-        const email = document.getElementById("garage-email").value.trim();
-        const pass = document.getElementById("garage-pass").value;
-        const errorBox = document.getElementById("login-error");
-        const btn = document.getElementById("btn-garage-login");
-
-        errorBox.style.display = "none";
-
-        if (!email || !pass) {
-          errorBox.textContent = "Veuillez remplir tous les champs.";
-          errorBox.style.display = "block";
-          return;
-        }
-
-        // UI loading state
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion en cours...';
-
-        try {
-          const userCredential = await firebase.auth().signInWithEmailAndPassword(email, pass);
-          const uid = userCredential.user.uid;
-
-          // Vérifier le statut garage certifié dans Firestore
-          const doc = await firebase.firestore().collection("users").doc(uid).get();
-
-          if (!doc.exists || !doc.data().isCertifiedGarage) {
-            // L'utilisateur existe mais n'est pas un garage certifié
-            await firebase.auth().signOut();
-            errorBox.textContent = "Ce compte n'est pas un compte Garage Pro certifié. Utilisez l'accès Pilote ou inscrivez votre garage.";
-            errorBox.style.display = "block";
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER';
-            return;
-          }
-
-          // Succès — Stocker la session et rediriger vers app.html
-          const profile = doc.data();
-          profile.uid = uid;
-          if (typeof secureSetItem === "function") {
-            await secureSetItem("session", JSON.stringify(profile));
-          } else {
-            localStorage.setItem("session", JSON.stringify(profile));
-          }
-
-          window.location.href = "garage-dashboard.html";
-
-        } catch (error) {
-          console.error("Erreur connexion Garage:", error);
-          let msg = "Erreur d'authentification.";
-          if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
-            msg = "Identifiants incorrects. Vérifiez votre email et mot de passe.";
-          } else if (error.code === "auth/too-many-requests") {
-            msg = "Trop de tentatives. Veuillez réessayer dans quelques minutes.";
-          } else if (error.code === "auth/invalid-email") {
-            msg = "Format d'email invalide.";
-          }
-          errorBox.textContent = msg;
-          errorBox.style.display = "block";
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> SE CONNECTER';
-        }
-      }
-
-      /**
-       * Ouvre la modale d'inscription Offre Pionnier via garage-pro.js
-       */
-      function openPioneerRegistration() {
-        if (window.GaragePro) {
-          GaragePro.initRegistration();
-        } else {
-          alert("Module d'inscription en cours de chargement. Veuillez réessayer.");
-        }
-      }
-
-      /**
-       * Charge les statistiques depuis Firestore
-       */
-      async function loadGarageStats() {
-        try {
-          if (typeof db !== "undefined") {
-            // Nombre de garages inscrits
-            const statsDoc = await db.collection("stats").doc("garage_registrations").get();
-            const count = statsDoc.exists ? (statsDoc.data().count || 0) : 0;
-            const remaining = Math.max(0, 50 - count);
-
-            document.getElementById("stat-garages").textContent = count;
-            document.getElementById("stat-remaining").textContent = remaining;
-
-            // Nombre d'interventions
-            const logsSnap = await db.collection("maintenance_logs").count().get();
-            document.getElementById("stat-interventions").textContent = logsSnap.data().count || 0;
-          } else {
-            // Fallback si Firestore non disponible
-            document.getElementById("stat-garages").textContent = "12";
-            document.getElementById("stat-remaining").textContent = "38";
-            document.getElementById("stat-interventions").textContent = "247";
-          }
-        } catch (e) {
-          console.warn("Stats Garage non disponibles:", e);
-          document.getElementById("stat-garages").textContent = "--";
-          document.getElementById("stat-remaining").textContent = "--";
-          document.getElementById("stat-interventions").textContent = "--";
-        }
-      }
-
-      // Charger les stats au démarrage
-      document.addEventListener("DOMContentLoaded", loadGarageStats);
-    </script>
   </body>
 </html>

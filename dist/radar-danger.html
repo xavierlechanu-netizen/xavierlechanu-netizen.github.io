@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr-FR" dir="ltr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Radar de Danger — mon50ccetmoi</title>
@@ -11,16 +14,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
     <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script>
-      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
-        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
-        window.db = firebase.firestore();
-        window.auth = firebase.auth();
-      }
-    </script>
 
     <style>
       :root {
@@ -686,15 +679,16 @@
         .speed-number { font-size: 2rem; }
       }
     </style>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
-    <script type="module" crossorigin src="/assets/config-S5ZR84_b.js"></script>
+    <script type="module" crossorigin src="/assets/radar-danger-BLQ6xKyv.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
   </head>
   <body>
     <div class="top-bar">
       <a href="app.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i></a>
       <div class="top-title">Radar <span>Danger & GPS</span></div>
       <span id="gps-status">⏳ Localisation...</span>
-      <button class="btn-signal-header" onclick="openPanelSignal()">
+      <button class="btn-signal-header" data-action="openPanelSignal()">
         <i class="fa-solid fa-flag"></i> Signaler
       </button>
     </div>
@@ -705,19 +699,19 @@
         <div class="nav-input-wrapper">
           <i class="fa-solid fa-diamond-turn-right nav-icon-search"></i>
           <input type="text" id="nav-destination-input" placeholder="Où vas-tu ? (Destination 50cc)" autocomplete="off" />
-          <button class="nav-clear-btn" id="nav-clear-btn" onclick="clearNavigationSearch()" style="display:none;">
+          <button class="nav-clear-btn" id="nav-clear-btn" data-action="clearNavigationSearch()" style="display:none;">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <button class="btn-calculate-route" id="btn-calculate-route" onclick="calculateRoute()" title="Calculer l'itinéraire">
+        <button class="btn-calculate-route" id="btn-calculate-route" data-action="calculateRoute()" title="Calculer l'itinéraire">
           <i class="fa-solid fa-route"></i>
         </button>
       </div>
 
       <div class="nav-quick-chips" id="nav-quick-chips">
-        <button class="chip" onclick="quickNavSearch('Station service')"><i class="fa-solid fa-gas-pump"></i> Essence</button>
-        <button class="chip" onclick="quickNavSearch('Garage scooter')"><i class="fa-solid fa-wrench"></i> Garages</button>
-        <button class="chip" onclick="quickNavSearch('Parking deux-roues')"><i class="fa-solid fa-motorcycle"></i> Parkings</button>
+        <button class="chip" data-action="quickNavSearch('Station service')"><i class="fa-solid fa-gas-pump"></i> Essence</button>
+        <button class="chip" data-action="quickNavSearch('Garage scooter')"><i class="fa-solid fa-wrench"></i> Garages</button>
+        <button class="chip" data-action="quickNavSearch('Parking deux-roues')"><i class="fa-solid fa-motorcycle"></i> Parkings</button>
       </div>
 
       <!-- Route preview box (appears once route is calculated) -->
@@ -742,10 +736,10 @@
           <i class="fa-solid fa-shield-halved"></i> <span>Itinéraire 50cc optimisé sans autoroute ni voie rapide (Art. R421-2)</span>
         </div>
         <div class="route-preview-actions">
-          <button class="btn-start-nav" onclick="startTurnByTurnNavigation()">
+          <button class="btn-start-nav" data-action="startTurnByTurnNavigation()">
             <i class="fa-solid fa-location-arrow"></i> Démarrer le guidage
           </button>
-          <button class="btn-cancel-route" onclick="cancelRoutePreview()" title="Annuler">
+          <button class="btn-cancel-route" data-action="cancelRoutePreview()" title="Annuler">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -765,7 +759,7 @@
           <div class="turn-next-step" id="turn-next-step"></div>
         </div>
         <div class="turn-voice-ctrl">
-          <button class="btn-icon-hud" id="btn-voice-toggle" onclick="toggleVoiceGuidance()" title="Activer/Désactiver voix">
+          <button class="btn-icon-hud" id="btn-voice-toggle" data-action="toggleVoiceGuidance()" title="Activer/Désactiver voix">
             <i class="fa-solid fa-volume-high" id="voice-icon"></i>
           </button>
         </div>
@@ -805,10 +799,10 @@
         </div>
 
         <div class="nav-hud-actions">
-          <button class="btn-hud-recenter" onclick="centerOnUser()" title="Recadrer sur moi">
+          <button class="btn-hud-recenter" data-action="centerOnUser()" title="Recadrer sur moi">
             <i class="fa-solid fa-location-crosshairs"></i>
           </button>
-          <button class="btn-hud-stop" onclick="stopTurnByTurnNavigation()" title="Arrêter la navigation">
+          <button class="btn-hud-stop" data-action="stopTurnByTurnNavigation()" title="Arrêter la navigation">
             <i class="fa-solid fa-stop"></i>
           </button>
         </div>
@@ -830,7 +824,7 @@
     </div>
 
     <!-- FAB centrage GPS -->
-    <button class="fab-center" id="fab-center-btn" onclick="centerOnUser()" title="Centrer sur moi">
+    <button class="fab-center" id="fab-center-btn" data-action="centerOnUser()" title="Centrer sur moi">
       <i class="fa-solid fa-location-crosshairs"></i>
     </button>
 
@@ -845,8 +839,8 @@
         </div>
 
         <div class="panel-actions">
-          <button class="btn-cancel" onclick="closePanelSignal()">Annuler</button>
-          <button class="btn-confirm" id="btn-confirm-signal" onclick="signalerDanger()" disabled>
+          <button class="btn-cancel" data-action="closePanelSignal()">Annuler</button>
+          <button class="btn-confirm" id="btn-confirm-signal" data-action="signalerDanger()" disabled>
             <i class="fa-solid fa-flag"></i> Confirmer le signalement
           </button>
         </div>
@@ -856,40 +850,7 @@
     <div id="toast"></div>
 
     <!-- Injection des boutons de types avant le JS principal -->
-    <script>
-      // Pré-rendu des types de danger (avant l'init de la carte)
-      const TYPES_PRE = [
-        { id: 'POTHOLE',    icon: '🕳️', label: 'Nid-de-poule' },
-        { id: 'GRAVEL',     icon: '⚠️', label: 'Gravillons' },
-        { id: 'SLIPPERY',   icon: '🌧️', label: 'Glissant' },
-        { id: 'ROADWORKS',  icon: '🚧', label: 'Travaux' },
-        { id: 'ACCIDENT',   icon: '🚨', label: 'Accident' },
-        { id: 'BLIND_SPOT', icon: '🚛', label: 'Angle mort' },
-        { id: 'POLICE',     icon: '👮', label: 'Contrôle' },
-        { id: 'ANIMAL',     icon: '🦊', label: 'Animal' },
-      ];
-      const grid = document.getElementById('types-grid');
-      if (grid) {
-        grid.innerHTML = TYPES_PRE.map(t => `
-          <button class="type-btn" data-id="${t.id}" onclick="selectDangerType('${t.id}')">
-            <span class="t-icon">${t.icon}</span>
-            <span class="t-label">${t.label}</span>
-          </button>
-        `).join('');
-      }
-    </script>
 
-    <script type="module" src="/js/radar-danger.js" defer></script>
     <!-- Google Maps API avec libraries=places,geometry pour Turn-by-Turn et Autocomplete -->
-    <script>
-      function loadGoogleMaps() {
-        if (typeof CONFIG === 'undefined' || !CONFIG.MAPS) return;
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.MAPS.PC}&callback=initMap&v=beta&libraries=places,geometry`;
-        script.async = true;
-        document.head.appendChild(script);
-      }
-      document.addEventListener('DOMContentLoaded', loadGoogleMaps);
-    </script>
   </body>
 </html>

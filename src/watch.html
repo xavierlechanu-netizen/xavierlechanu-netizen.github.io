@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script type="module" src="/js/dom-security.js"></script>
+
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>Application Smartwatch - mon50ccetmoi</title>
+    <link rel="canonical" href="https://mon50ccetmoi.com/watch" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* OLED True Black Theme for battery saving */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #000000;
+        color: #ffffff;
+        font-family:
+          -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        text-align: center;
+      }
+
+      .watch-face {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+      }
+
+      /* Speedometer */
+      .speed-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .speed-val {
+        font-size: 5rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #00f2ff;
+        text-shadow: 0 0 10px #00f2ff;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .speed-unit {
+        font-size: 1rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      /* Heart Rate */
+      .heart-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.5rem;
+        color: #ff0055;
+        font-weight: bold;
+      }
+
+      .heart-icon {
+        animation: pulse 1s infinite alternate;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.8;
+        }
+        100% {
+          transform: scale(1.2);
+          opacity: 1;
+          text-shadow: 0 0 10px #ff0055;
+        }
+      }
+
+      /* SOS Button */
+      .btn-sos {
+        background-color: #ff0055;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 10px 30px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        box-shadow: 0 0 15px rgba(255, 0, 85, 0.5);
+        cursor: pointer;
+        outline: none;
+      }
+
+      .btn-sos:active {
+        transform: scale(0.95);
+        background-color: #cc0044;
+      }
+
+      /* Time */
+      .time-display {
+        font-size: 0.9rem;
+        color: #aaa;
+        position: absolute;
+        top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="watch-face">
+      <div class="time-display" id="watch-time">00:00</div>
+
+      <div class="speed-container">
+        <div class="speed-val" id="watch-speed">0</div>
+        <div class="speed-unit">km/h</div>
+      </div>
+
+      <div class="heart-container">
+        <i class="fa-solid fa-heart heart-icon"></i>
+        <span id="watch-bpm">72</span> bpm
+      </div>
+
+      <div class="crew-container" style="font-size: 1.2rem; color: #00d2ff; margin-bottom: 10px; font-weight: bold;">
+        <i class="fa-solid fa-users"></i> Crew: <span id="watch-crew">0</span>
+      </div>
+
+      <button class="btn-sos" data-action="triggerWatchSOS()">SOS</button>
+    </div>
+
+    <script type="module" src="/js/inline-watch-1.js"></script>
+  </body>
+</html>

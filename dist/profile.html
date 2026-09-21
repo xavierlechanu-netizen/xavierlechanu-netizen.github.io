@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -9,7 +12,7 @@
     <title>Mon Profil - mon50ccetmoi</title>
     <meta name="description" content="Gérez votre profil, véhicules, badges et paramètres sur mon50ccetmoi." />
     <link rel="canonical" href="https://mon50ccetmoi.com/profile" />
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
 
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -443,7 +446,9 @@
         .bvc-amount { font-size: var(--text-2xl); }
       }
     </style>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
+    <script type="module" crossorigin src="/assets/profile-DqCheo15.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
     <link rel="stylesheet" crossorigin href="/assets/design-system-2q-fbcwT.css">
   </head>
   <body>
@@ -524,7 +529,7 @@
           Faites analyser votre contrat d'assurance par l'IA Nexus Atlas pour savoir ce qui est réellement couvert.
         </p>
 
-        <div class="contract-upload-zone" id="contract-upload-zone" onclick="if(window.InsuranceScanner) window.InsuranceScanner.startScan()">
+        <div class="contract-upload-zone" id="contract-upload-zone" data-action="if(window.InsuranceScanner) window.InsuranceScanner.startScan()">
           <i class="fa-solid fa-file-pdf"></i>
           <div style="font-weight: 600;">Scanner mon contrat (PDF)</div>
           <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: 4px;">Nexus Atlas AI Document Scanner</div>
@@ -605,15 +610,15 @@
       <div class="glass-card section-card animate-fade-in-up delay-6">
         <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Sécurité & Données</div>
         <ul class="settings-list">
-          <li onclick="window.location.href='privacy.html'">
+          <li data-action="window.location.href='privacy.html'">
             <span><i class="fa-solid fa-user-lock"></i> Confidentialité (RGPD)</span>
             <i class="fa-solid fa-chevron-right"></i>
           </li>
-          <li onclick="alert('Configuration FIDO2 en développement.');">
+          <li data-action="alert('Configuration FIDO2 en développement.');">
             <span><i class="fa-solid fa-fingerprint"></i> Auth Biométrique (FIDO2)</span>
             <i class="fa-solid fa-chevron-right"></i>
           </li>
-          <li onclick="window.location.href='cgv.html'">
+          <li data-action="window.location.href='cgv.html'">
             <span><i class="fa-solid fa-file-contract"></i> Conditions Générales</span>
             <i class="fa-solid fa-chevron-right"></i>
           </li>
@@ -622,7 +627,7 @@
 
       <!-- ─── LOGOUT ───────────────────────────────────────── -->
       <div class="logout-section">
-        <button onclick="logout()" class="btn btn-logout">
+        <button data-action="logout()" class="btn btn-logout">
           <i class="fa-solid fa-right-from-bracket"></i> Se déconnecter
         </button>
       </div>
@@ -649,34 +654,6 @@
     </nav>
 
     <!-- Firebase & Scripts -->
-    <script type="module" src="/js/config.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script>
-      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
-        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
-        window.db = firebase.firestore();
-        window.auth = firebase.auth();
-      }
-    </script>
-    <script type="module" src="/js/profile.js" charset="utf-8"></script>
-    <script type="module" src="/js/nexus-atlas-gemini.js" charset="utf-8"></script>
-    <script type="module" src="/js/insurance-scanner.js" charset="utf-8"></script>
 
-    <script>
-      function logout() {
-        if (window.auth) {
-          window.auth.signOut().then(() => {
-            window.location.href = "login.html";
-          });
-        }
-      }
-
-      // Host toggle visibility
-      document.getElementById('host-toggle').addEventListener('change', function() {
-        document.getElementById('host-settings').style.display = this.checked ? 'flex' : 'none';
-      });
-    </script>
   </body>
 </html>

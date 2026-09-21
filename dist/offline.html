@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -9,7 +12,7 @@
     <title>Mode Hors Ligne - mon50ccetmoi</title>
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#000000" />
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
@@ -219,6 +222,9 @@
         z-index: 10;
       }
     </style>
+    <script type="module" crossorigin src="/assets/offline-DJ_AQgb6.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
   </head>
   <body>
     <div class="scanline"></div>
@@ -239,65 +245,10 @@
         <span id="ping-text">Recherche de réseau...</span>
       </div>
 
-      <button class="btn-retry" onclick="manualRetry()">
+      <button class="btn-retry" data-action="manualRetry()">
         <i class="fa-solid fa-rotate-right"></i> Forcer la reconnexion
       </button>
     </div>
 
-    <script>
-      let checkInterval;
-      const pingText = document.getElementById("ping-text");
-      const pingBadge = document.getElementById("ping-badge");
-
-      // Check connection by pinging a tiny reliable file
-      async function checkConnection() {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-          // Ping favicon to avoid CORS and caching issues (adding timestamp)
-          const res = await fetch(
-            "/assets/icons/icon-192x192.png?ping=" + Date.now(),
-            {
-              method: "HEAD",
-              signal: controller.signal,
-            },
-          );
-
-          clearTimeout(timeoutId);
-
-          if (res.ok) {
-            clearInterval(checkInterval);
-            pingText.textContent = "Signal rétabli ! Reconnexion...";
-            pingBadge.style.color = "#00e676";
-            pingBadge.style.borderColor = "#00e676";
-            pingBadge.style.background = "rgba(0, 230, 118, 0.1)";
-            document.querySelector(".radar").style.borderColor = "#00e676";
-
-            // Small delay to let the user see the success state
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
-          }
-        } catch (error) {
-          // Still offline
-          console.log("Toujours hors ligne...");
-        }
-      }
-
-      function manualRetry() {
-        pingText.textContent = "Tentative manuelle...";
-        checkConnection();
-      }
-
-      // Auto-check every 3 seconds
-      checkInterval = setInterval(checkConnection, 3000);
-
-      // Also listen to browser online event for instant reaction
-      window.addEventListener("online", () => {
-        pingText.textContent = "Réseau détecté ! Vérification...";
-        checkConnection();
-      });
-    </script>
   </body>
 </html>

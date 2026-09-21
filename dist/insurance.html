@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -12,7 +15,6 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.min.css" />
     <style>
       body {
         background-color: #060913;
@@ -106,11 +108,13 @@
         vertical-align: middle;
       }
     </style>
+    <script type="module" crossorigin src="/assets/dom-security-CwTUWoNZ.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/admin-CbdnBYsD.css">
   </head>
   <body>
     <div class="header-ins">
       <button
-        onclick="history.back()"
+        data-action="history.back()"
         style="
           background: none;
           border: none;

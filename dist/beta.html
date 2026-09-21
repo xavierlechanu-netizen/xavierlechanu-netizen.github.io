@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -9,7 +12,7 @@
     <title>Programme Bêta - mon50ccetmoi</title>
     <link rel="canonical" href="https://mon50ccetmoi.com/beta" />
     <meta name="theme-color" content="#000000" />
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
@@ -21,9 +24,6 @@
     />
 
     <!-- Firebase SDK (v9 Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script type="module" src="/js/config.js" charset="utf-8"></script>
 
     <style>
       * {
@@ -234,7 +234,9 @@
         justify-content: space-between;
       }
     </style>
-    <script type="module" crossorigin src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
+    <script type="module" crossorigin src="/assets/beta-BiSjWuwQ.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
   </head>
   <body>
     <div class="container">
@@ -320,77 +322,5 @@
       </div>
     </div>
 
-    <script>
-      // Check slots availability on load
-      async function checkSpots() {
-        try {
-          const db = firebase.firestore();
-          const snapshot = await db.collection("beta_testers").get();
-          const count = snapshot.size;
-          const totalSpots = 20;
-          let remaining = totalSpots - count;
-
-          if (remaining <= 0) remaining = 0;
-
-          document.getElementById("spots-text").textContent =
-            `${remaining} / ${totalSpots}`;
-          const fillPercent = ((totalSpots - remaining) / totalSpots) * 100;
-          document.getElementById("progress-fill").style.width =
-            `${fillPercent}%`;
-
-          if (remaining === 0) {
-            document.getElementById("betaForm").innerHTML = `
-                        <div style="background: rgba(255,0,85,0.1); border: 1px solid #ff0055; padding: 15px; border-radius: 10px; color: #ff0055;">
-                            La Beta est malheureusement complète !
-                        </div>`;
-          }
-        } catch (e) {
-          console.error("Erreur lecture places:", e);
-          document.getElementById("spots-text").textContent = "Places limitées";
-        }
-      }
-
-      // Initialize and check spots
-      if (typeof firebase !== "undefined") {
-        checkSpots();
-      }
-
-      // Handle form submission
-      document
-        .getElementById("betaForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const btn = document.getElementById("submitBtn");
-          const emailInput = document.getElementById("email");
-          const email = emailInput.value.trim().toLowerCase();
-
-          if (!email) return;
-
-          btn.disabled = true;
-          btn.innerHTML =
-            '<i class="fa-solid fa-spinner fa-spin"></i> Traitement...';
-
-          try {
-            const db = firebase.firestore();
-
-            // Add to firestore with timestamp
-            await db.collection("beta_testers").add({
-              email: email,
-              registeredAt: firebase.firestore.FieldValue.serverTimestamp(),
-              userAgent: navigator.userAgent,
-            });
-
-            // Show success UI
-            document.getElementById("betaForm").style.display = "none";
-            document.getElementById("success-message").style.display = "block";
-          } catch (error) {
-            console.error("Erreur :", error);
-            alert("Une erreur est survenue. Veuillez réessayer.");
-            btn.disabled = false;
-            btn.innerHTML =
-              '<i class="fa-solid fa-rocket"></i> Demander l\'accès';
-          }
-        });
-    </script>
   </body>
 </html>

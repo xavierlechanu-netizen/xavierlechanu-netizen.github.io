@@ -1,4 +1,7 @@
 <!DOCTYPE html><html lang="fr-FR" dir="ltr"><head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https: wss:; worker-src 'self' blob:; child-src 'self' blob: https:;">
     <meta name="google-site-verification" content="lVQWTEJtveSbj_Vl3jvAlN1KKGH7-PJQf744AsBAjNQ">
@@ -8,21 +11,14 @@
     <meta name="apple-mobile-web-app-title" content="mon 50cc et moi">
 
     <!-- WATCHDOG ANTI-CRASH -->
-    <script type="module" src="/js/infallible.js" charset="utf-8"></script>
     <!-- Phase 3 : Scripts centralisés -->
-    <script src="/js/store.js" charset="utf-8"></script>
-    <script src="/js/event-manager.js" charset="utf-8"></script>
-    <script src="/js/app-init.js" charset="utf-8"></script>
-    <script src="/js/screen-manager.js" charset="utf-8"></script>
-    <script src="/js/dock.js" charset="utf-8"></script>
     <!-- Premium CSS -->
-    <link rel="stylesheet" href="css/premium.css">
 
     <!-- Android Retrocompatibility & PWA -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/assets/icon-192x192-CsrcJCmh.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
     <!-- SEO & Social Sharing (Open Graph) -->
     <meta name="description" content="La premiÃ¨re communautÃ© de scooters 50cc. Navigation sans autoroute, alertes radars et dÃ©tection de chute.">
@@ -74,191 +70,11 @@
     </script>
 
     <!-- Firebase SDK (v9 Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-appcheck-compat.js" charset="utf-8"></script>
-    
     <!-- Firebase Analytics -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js" charset="utf-8"></script>
-
     <link rel="manifest" href="manifest.json">
     <title>mon 50cc et moi | v110.00.00</title>
     <!-- Config chargÃ© via config.js -->
-    <script type="module" src="/js/config.js?v=60019"></script>
-    <script defer="" src="/js/mon50cc-bundle.js" charset="utf-8"></script>
-    <script type="module" src="/js/error-tracking.js?v=1008000"></script>
-    
-    <script type="module" src="/js/oracle-voice.js?v=60019"></script>
     <!-- Chargeur Dynamique Google Maps avec Gestion d'Erreur -->
-    <script>
-      window.mapsSDKLoaded = false;
-
-      window.initMap = function () {
-        console.log("mon50cc Maps : SDK chargÃ© avec succÃ¨s.");
-        window.mapsSDKLoaded = true;
-        if (typeof window.initMapController === "function") {
-          window.initMapController();
-        }
-      };
-
-      function loadMapsSDK() {
-        const isAndroid = /Android/i.test(navigator.userAgent);
-        const selectedKey =
-          typeof CONFIG !== "undefined" && CONFIG.MAPS
-            ? isAndroid
-              ? CONFIG.MAPS.ANDROID
-              : CONFIG.MAPS.PC
-            : "";
-
-        if (!selectedKey) {
-          console.error("mon50cc Loader : ClÃ© API Maps manquante !");
-          forceStartApp("ERREUR_CONFIG_API");
-          return;
-        }
-
-        const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${selectedKey}&libraries=geometry,places,marker&v=beta&callback=initMap&loading=async`;
-        script.async = true;
-        script.defer = true;
-        script.onerror = function () {
-          console.error(
-            "mon50cc Loader : Ã‰chec critique du chargement Maps SDK.",
-          );
-          forceStartApp("Ã‰CHEC_RÃ‰SEAU_SDK");
-        };
-        document.head.appendChild(script);
-      }
-
-      function initFallbackMap() {
-        try {
-          if (window.fallbackMapInitialized) return;
-          if (typeof L === "undefined") return;
-          window.fallbackMapInitialized = true;
-          const mapEl = document.getElementById("map");
-          if (!mapEl) return;
-
-          mapEl.innerHTML = "";
-          const leafletMap = L.map("map", {
-            zoomControl: false,
-            attributionControl: false,
-          }).setView([48.8566, 2.3522], 14);
-          window.leafletMap = leafletMap; // Rendre accessible globalement pour le suivi GPS
-
-          L.tileLayer(
-            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-            {
-              maxZoom: 19,
-            },
-          ).addTo(leafletMap);
-
-          const neonIcon = L.divIcon({
-            html: '<div style="width:16px;height:16px;background:#00d2ff;border-radius:50%;box-shadow:0 0 10px #00d2ff, 0 0 20px #00d2ff;border:2px solid #fff;"></div>',
-            className: "",
-            iconSize: [16, 16],
-          });
-          window.leafletUserMarker = L.marker([48.8566, 2.3522], {
-            icon: neonIcon,
-          }).addTo(leafletMap);
-
-          // Fonction de mise Ã  jour GPS pour la carte Leaflet
-          window.updatePositionLeaflet = function (lat, lng) {
-            if (window.leafletMap) {
-              window.leafletMap.panTo([lat, lng]);
-            }
-            if (window.leafletUserMarker) {
-              window.leafletUserMarker.setLatLng([lat, lng]);
-            }
-          };
-
-          console.log(
-            "mon50cc : Fallback Leaflet Map Initialized (GPS-linked)",
-          );
-        } catch (e) {
-          console.error("mon50cc : Leaflet Fallback failed", e);
-        }
-      }
-
-      function forceStartApp(reason) {
-        console.warn("mon50cc : DÃ©marrage forcÃ© (" + reason + ")");
-        const statusEl = document.getElementById("loader-status");
-        if (statusEl) statusEl.textContent = "Lancement (Mode DÃ©gradÃ©)...";
-
-        // On s'assure que checkAuth est dÃ©fini (fail-safe)
-        if (typeof window.checkAuth !== "function") {
-          window.checkAuth = () => {
-            return { username: "Pilote", isGuest: true };
-          };
-        }
-
-        setTimeout(initFallbackMap, 500);
-
-        setTimeout(() => {
-          if (typeof window.startApp === "function") window.startApp();
-        }, 800);
-      }
-
-      // --- CORE NAVIGATION (ULTIMATE BYPASS) ---
-      window.toggleMenu = function () {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-        if (sidebar) {
-          sidebar.classList.toggle("active");
-          if (overlay) overlay.classList.toggle("active");
-          console.log("mon50cc : Menu Toggle (Bypass Mode)");
-        }
-      };
-
-      // --- CACHE PURGE FORCE ---
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (let registration of registrations) {
-            if (window.location.search.includes("purge=true")) {
-              registration.unregister();
-              console.log("mon50cc : Service Worker Unregistered (Purge Mode)");
-            }
-          }
-        });
-      }
-
-      // On lance le chargement dÃ¨s que config.js est lÃ 
-      window.addEventListener("load", () => {
-        // Pattern Promise : charger Maps avec fallback propre (plus de race conditions setTimeout)
-        const mapsReady = new Promise((resolve) => {
-          loadMapsSDK();
-          // VÃ©rifier pÃ©riodiquement si Maps est chargÃ©
-          const check = setInterval(() => {
-            if (window.mapsSDKLoaded) { clearInterval(check); resolve('maps'); }
-          }, 200);
-        });
-
-        const timeout = new Promise((resolve) => {
-          setTimeout(() => resolve('timeout'), 5000);
-        });
-
-        Promise.race([mapsReady, timeout]).then((winner) => {
-          if (winner === 'timeout' && !window.mapsSDKLoaded) {
-            console.warn("mon50cc : Google Maps trop long, fallback sur Leaflet");
-            forceStartApp("TIMEOUT_SDK");
-          }
-        });
-
-        // DÃ©marrage de l'app une fois les modules chargÃ©s
-        Promise.resolve().then(() => {
-          if (typeof window.startApp === "function") window.startApp();
-        });
-
-        // Masquer le loader aprÃ¨s un dÃ©lai raisonnable
-        setTimeout(() => {
-          const loader = document.getElementById("app-loader");
-          if (loader && loader.style.visibility !== "hidden") {
-            console.warn("mon50cc : Hiding Loader");
-            loader.style.opacity = "0";
-            setTimeout(() => (loader.style.visibility = "hidden"), 800);
-          }
-        }, 2000);
-      });
-    </script>
 
     <!-- DOMPurify â€” Sanitization XSS pour tout HTML dynamique (OWASP ASVS v5.0.0-1.3.1) -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
@@ -271,19 +87,19 @@
     <!-- Leaflet CSS & JS (Cartes Hors Ligne) -->
     <link id="leaflet-css" rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" charset="utf-8"></script>
-    <link rel="stylesheet" href="css/style.min.css?v=1008000">
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png">
 
     <!-- Revolut Merchant SDK : chargÃ© Ã  la demande via app-init.js -->
-    
-    
-    
-    
-    
 
     <!-- GAMIFICATION HUD -->
-      <script type="module" crossorigin="" src="/assets/modulepreload-polyfill-Dezn_h7o.js"></script>
-      <link rel="stylesheet" crossorigin="" href="/assets/app-CCOT8qIB.css">
+      <script type="module" crossorigin src="/assets/app-B4b0UMjy.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+      <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
+      <link rel="modulepreload" crossorigin href="/assets/error-tracking-Smxz7q5U.js">
+      <link rel="modulepreload" crossorigin href="/assets/exchange-kHZfIjRC.js">
+      <link rel="modulepreload" crossorigin href="/assets/auth-B4Jh2UiT.js">
+      <link rel="modulepreload" crossorigin href="/assets/database-DXTKjV4B.js">
+      <link rel="stylesheet" crossorigin href="/assets/app-BpbfaszR.css">
     </head><body style="margin: 0; padding: 0; background: #000; overflow: hidden"><div id="gamification-hud" class="gami-hud-cyber">
         <div>
             <i id="gami-icon" class="fa-solid fa-motorcycle gami-icon" style="color: #a0a0a0;"></i>
@@ -301,10 +117,10 @@
 
     <!-- SOCIAL RADAR & ROADBOOKS BUTTONS -->
     <div style="position: fixed; top: 110px; right: 15px; z-index: 1000; display: flex; flex-direction: column; gap: 10px;">
-        <button id="btn-ghost-mode" onclick="window.RadarSocial.toggleGhostMode()" style="background: rgba(0,0,0,0.8); color: white; border: 1px solid #00f0ff; padding: 10px; border-radius: 5px; font-family: monospace; cursor: pointer;">
+        <button id="btn-ghost-mode" data-action="window.RadarSocial.toggleGhostMode()" style="background: rgba(0,0,0,0.8); color: white; border: 1px solid #00f0ff; padding: 10px; border-radius: 5px; font-family: monospace; cursor: pointer;">
             <i class="fa-solid fa-ghost"></i> Ghost Mode
         </button>
-        <button id="btn-roadbook-record" onclick="window.Roadbooks.toggleRecording()" style="background: rgba(0,0,0,0.8); color: white; border: 1px solid #00ff00; padding: 10px; border-radius: 5px; font-family: monospace; cursor: pointer;">
+        <button id="btn-roadbook-record" data-action="window.Roadbooks.toggleRecording()" style="background: rgba(0,0,0,0.8); color: white; border: 1px solid #00ff00; padding: 10px; border-radius: 5px; font-family: monospace; cursor: pointer;">
             <i class="fa-solid fa-route"></i> Rec Roadbook
         </button>
     </div>
@@ -312,16 +128,6 @@
     <!-- FUN MODE / SENSATION BUTTON -->
 
     <!-- MODULES ADDITIONNELS (defer = chargÃ©s aprÃ¨s le DOM) -->
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     <!-- Session init : dÃ©sormais dans app-init.js -->
   
   
@@ -388,7 +194,7 @@
         border-left: 4px solid #ffd700;
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         cursor: pointer;
-      " onclick="if(window.WeatherAssistant) window.WeatherAssistant.hide()">
+      " data-action="if(window.WeatherAssistant) window.WeatherAssistant.hide()">
       <div id="weather-icon" style="font-size: 2rem; color: #ffd700;">
         <i class="fa-solid fa-sun"></i>
       </div>
@@ -490,27 +296,6 @@
     <!-- OBD-II HUD OVERLAY -->
     <!-- LAZY LOADED: obd-hud-screen -->
 
-    <script>
-      window.triggerHUDGlitch = function () {
-        const hud = document.getElementById("obd-hud-screen");
-        if (hud && !hud.classList.contains("hidden")) {
-          hud.classList.add("hud-glitch-danger");
-          setTimeout(() => {
-            hud.classList.remove("hud-glitch-danger");
-          }, 1500);
-        }
-      };
-      // Overwrite triggerFallAlert to also trigger glitch
-      setTimeout(() => {
-        if (window.triggerFallAlert) {
-          const originalFall = window.triggerFallAlert;
-          window.triggerFallAlert = function (isManual) {
-            window.triggerHUDGlitch();
-            originalFall(isManual);
-          };
-        }
-      }, 2000);
-    </script>
 
     <!-- OBD-II CONNECTION STATUS -->
     <div id="obd-status-indicator" class="hidden" style="
@@ -529,7 +314,7 @@
         pointer-events: auto;
         cursor: pointer;
         backdrop-filter: blur(5px);
-      " onclick="if (window.obdManager) window.obdManager.disconnect();">
+      " data-action="if (window.obdManager) window.obdManager.disconnect();">
       <i class="fa-solid fa-circle-notch fa-spin"></i> Connexion OBD...
     </div>
 
@@ -538,7 +323,6 @@
 
     <!-- LAZY LOADED: tim-cook-eco-screen -->
 
-    
 
     <!-- INSURER PORTAL SCREEN (B2B) -->
     <!-- LAZY LOADED: insurer-portal-screen -->
@@ -868,35 +652,8 @@
     <!-- LAZY LOADED: ai-diagnostic-modal -->
 
     <!-- CORE APP (chargÃ© en premier, sans defer) -->
-    
-    
-    
-    
-    
-    
-    
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     <!-- Nouveaux modules InsurTech & SÃ©curitÃ© -->
-    
-    
-    
-    
 
     <!-- MECA-WIZARD MODAL -->
     <!-- LAZY LOADED: meca-result-modal -->
@@ -915,96 +672,8 @@
       "></div>
 
     <!-- CORE MODULES -->
-    
-    
-    
-    
 
-    <script>
-      // INIT APEX SENTINEL
-      window.addEventListener("load", () => {
-        if (window.QuantumCrypto) window.QuantumCrypto.init();
-        if (window.ZeroTrust) window.ZeroTrust.init();
 
-        // Firebase Analytics â€” Track user engagement
-        try {
-          if (typeof firebase !== "undefined" && firebase.analytics) {
-            window.mon50Analytics = firebase.analytics();
-            if (
-              window.mon50Analytics &&
-              typeof window.mon50Analytics.logEvent === "function"
-            ) {
-              window.mon50Analytics.logEvent("app_open", {
-                version: "110.00.00",
-              });
-            }
-            console.log("mon50cc : Firebase Analytics initialisÃ©.");
-          }
-        } catch (e) {
-          console.warn("Analytics init skipped:", e.message);
-        }
-
-        // WebGL / Canvas Holographic Effect (Simplified for performance)
-        const canvas = document.getElementById("quantum-bg");
-        if (canvas) {
-          const ctx = canvas.getContext("2d");
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-          let particles = [];
-          let animationId = null;
-          for (let i = 0; i < 50; i++) {
-            particles.push({
-              x: Math.random() * canvas.width,
-              y: Math.random() * canvas.height,
-              vx: (Math.random() - 0.5) * 0.5,
-              vy: (Math.random() - 0.5) * 0.5,
-            });
-          }
-          function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "rgba(0, 255, 204, 0.5)";
-            particles.forEach((p) => {
-              p.x += p.vx;
-              p.y += p.vy;
-              if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-              if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-              ctx.beginPath();
-              ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-              ctx.fill();
-            });
-            animationId = requestAnimationFrame(draw);
-          }
-          draw();
-
-          // PERFORMANCE : Pauser l'animation quand l'onglet n'est pas visible (batterie)
-          document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-              if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
-            } else {
-              if (!animationId) draw();
-            }
-          });
-        }
-      });
-    </script>
-
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("sw.js?v=1090000").then(
-            (registration) => {
-              console.log(
-                "ServiceWorker registration successful with scope: ",
-                registration.scope,
-              );
-            },
-            (err) => {
-              console.log("ServiceWorker registration failed: ", err);
-            },
-          );
-        });
-      }
-    </script>
 
     <!-- Search Tool (Top) -->
     <div id="search-container" style="
@@ -1027,7 +696,7 @@
           padding: 5px 15px;
           border: 1px solid #ffb703;
         ">
-        <button onclick="window.getLocationGPS()" title="Utiliser ma position GPS" style="
+        <button data-action="window.getLocationGPS()" title="Utiliser ma position GPS" style="
             background: none;
             border: none;
             color: #ffb703;
@@ -1055,7 +724,7 @@
           padding: 5px 15px;
           border: 1px solid rgba(255, 255, 255, 0.2);
         ">
-        <button onclick="toggleManualStart()" title="DÃ©part manuel/GPS" style="
+        <button data-action="toggleManualStart()" title="DÃ©part manuel/GPS" style="
             background: none;
             border: none;
             color: #00d2ff;
@@ -1072,7 +741,7 @@
             outline: none;
             margin: 0 10px;
           ">
-        <button onclick="searchDestination()" style="
+        <button data-action="searchDestination()" style="
             background: #00d2ff;
             border: none;
             border-radius: 50%;
@@ -1082,7 +751,7 @@
           ">
           <i class="fa-solid fa-location-arrow" style="color: black"></i>
         </button>
-        <button id="btn-cancel-route" class="hidden" onclick="cancelRoute()" style="
+        <button id="btn-cancel-route" class="hidden" data-action="cancelRoute()" style="
             background: #ff4d4d;
             border: none;
             border-radius: 50%;
@@ -1156,7 +825,7 @@
           -- min
         </div>
       </div>
-      <button id="btn-go-native" onclick="window.launchNativeGPS()" style="
+      <button id="btn-go-native" data-action="window.launchNativeGPS()" style="
           background: #00d2ff;
           color: #000;
           border: none;
@@ -1183,7 +852,7 @@
         gap: 15px;
       ">
       <!-- BOUTON LITE MODE -->
-      <button id="btn-lite-toggle" onclick="if (window.toggleLiteMode) window.toggleLiteMode();" style="
+      <button id="btn-lite-toggle" data-action="if (window.toggleLiteMode) window.toggleLiteMode();" style="
           background: #555;
           border: none;
           border-radius: 50%;
@@ -1199,7 +868,7 @@
       </button>
       <!-- BOUTON SIGNALEMENT MANUEL -->
       <div style="position: relative">
-        <button id="btn-hazard-quick" onclick="if (window.toggleHazardMenu) window.toggleHazardMenu();" style="
+        <button id="btn-hazard-quick" data-action="if (window.toggleHazardMenu) window.toggleHazardMenu();" style="
             background: #f1c40f;
             border: none;
             border-radius: 50%;
@@ -1226,7 +895,7 @@
             gap: 10px;
             width: 160px;
           ">
-          <button onclick="if (window.saveHazard) window.saveHazard('Police');" style="
+          <button data-action="if (window.saveHazard) window.saveHazard('Police');" style="
               background: #00d2ff;
               color: black;
               border: none;
@@ -1258,7 +927,7 @@
             ">
             <i class="fa-solid fa-road-circle-exclamation"></i> Route
           </button>
-          <button onclick="if (window.saveHazard) window.saveHazard('animal');" style="
+          <button data-action="if (window.saveHazard) window.saveHazard('animal');" style="
               background: #e67e22;
               color: white;
               border: none;
@@ -1293,7 +962,7 @@
         </div>
       </div>
 
-      <button id="btn-stop-nav" class="hidden" onclick="cancelRoute()" style="
+      <button id="btn-stop-nav" class="hidden" data-action="cancelRoute()" style="
           background: #ff4d4d;
           border: none;
           border-radius: 50%;
@@ -1305,7 +974,7 @@
         ">
         <i class="fa-solid fa-stop"></i>
       </button>
-      <button id="btn-reroute" class="hidden" onclick="searchDestination()" style="
+      <button id="btn-reroute" class="hidden" data-action="searchDestination()" style="
           background: #b700ff;
           border: none;
           border-radius: 50%;
@@ -1472,36 +1141,6 @@
     <!-- VEHICLE CONFIG SCREEN (GARAGE VIRTUEL B2C) -->
     <!-- LAZY LOADED: vehicle-config-screen -->
 
-    <script>
-      function updateHoloVehicle(type) {
-        const icon = document.getElementById("holo-vehicle-icon");
-        if (!icon) return;
-
-        // Add glitch effect
-        icon.style.opacity = "0";
-        icon.style.transform = "scale(0.8)";
-
-        setTimeout(() => {
-          let html = "";
-          if (type === "vsp") {
-            html = '<i class="fa-solid fa-car-side"></i>';
-            icon.style.color = "#ff0055";
-            icon.style.filter = "drop-shadow(0 0 15px #ff0055)";
-          } else if (type === "moto") {
-            html = '<i class="fa-solid fa-motorcycle"></i>';
-            icon.style.color = "#b700ff";
-            icon.style.filter = "drop-shadow(0 0 15px #b700ff)";
-          } else {
-            html = '<i class="fa-solid fa-motorcycle"></i>';
-            icon.style.color = "#00d2ff";
-            icon.style.filter = "drop-shadow(0 0 15px #00d2ff)";
-          }
-          icon.innerHTML = html;
-          icon.style.opacity = "1";
-          icon.style.transform = "scale(1)";
-        }, 200);
-      }
-    </script>
     <style>
       @keyframes scanline {
         0% {
@@ -1513,82 +1152,12 @@
       }
     </style>
 
-    
-    
-    
-    
-    
-    
-    
-    
 
     <!-- Nexus Atlas Security: Masquage OBD-II pour les US (ConformitÃ© matÃ©rielle) -->
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        if (
-          Intl.DateTimeFormat()
-            .resolvedOptions()
-            .timeZone.startsWith("America/")
-        ) {
-          const obdBtn = document.getElementById("dock-btn-obd");
-          if (obdBtn) {
-            obdBtn.style.display = "none";
-            console.log(
-              "[Nexus Atlas Security] OBD-II module hidden for US region.",
-            );
-          }
-        }
-      });
-    </script>
 
     <!-- UI Panel BoÃ®te Noire -->
     <!-- LAZY LOADED: blackbox-ui-panel -->
 
-    
-    <script>
-      // Binding UI pour la BoÃ®te Noire
-      document.addEventListener('DOMContentLoaded', () => {
-        if (!window.BlackBox) return;
-
-        window.BlackBox.onConnectionChange = (connected) => {
-          const btn = document.getElementById('bb-connect-btn');
-          const exportBtn = document.getElementById('bb-export-btn');
-          if (connected) {
-            btn.innerHTML = '<i class="fa-solid fa-unlink"></i> DÃ©connecter';
-            btn.style.background = 'linear-gradient(135deg, #555, #333)';
-            btn.onclick = () => window.BlackBox.disconnect();
-            exportBtn.style.display = 'block';
-          } else {
-            btn.innerHTML = '<i class="fa-brands fa-bluetooth"></i> Connecter';
-            btn.style.background = 'linear-gradient(135deg, #ff3333, #aa0000)';
-            btn.onclick = () => window.BlackBox.connect();
-            exportBtn.style.display = 'none';
-            document.getElementById('bb-batt').innerText = '-- mV';
-            document.getElementById('bb-tamper').innerText = 'Intact';
-            document.getElementById('bb-tamper').style.color = '#fff';
-          }
-        };
-
-        window.BlackBox.onDiagnosticUpdate = (diag) => {
-          document.getElementById('bb-batt').innerText = diag.battery_mv + ' mV';
-          const tamperEl = document.getElementById('bb-tamper');
-          if (diag.tamper_state === 1) {
-            tamperEl.innerText = 'EFFRACTION!';
-            tamperEl.style.color = '#ff0055';
-          } else {
-            tamperEl.innerText = 'Intact';
-            tamperEl.style.color = '#fff';
-          }
-        };
-
-        window.BlackBox.onTelemetryData = (data) => {
-          // Flash visuel pour indiquer la rÃ©ception
-          const panel = document.getElementById('blackbox-ui-panel');
-          panel.style.boxShadow = '0 0 50px rgba(0, 255, 136, 0.5)';
-          setTimeout(() => { panel.style.boxShadow = '0 0 30px rgba(255, 51, 51, 0.2)'; }, 200);
-        };
-      });
-    </script>
   
 
 <div id="screen-container" class="hidden"></div>

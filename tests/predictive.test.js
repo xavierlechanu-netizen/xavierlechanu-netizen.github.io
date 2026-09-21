@@ -1,4 +1,17 @@
-const { analyzeClientMaintenance } = require('../js/garage-dashboard.js');
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const code = fs.readFileSync(path.resolve(__dirname, '../src/js/garage-dashboard.js'), 'utf8');
+const context = {};
+vm.createContext(context);
+
+// Extract the analyzeClientMaintenance function from the source file
+const fnMatch = code.match(/function analyzeClientMaintenance[\s\S]*?\n\}/);
+if (fnMatch) {
+  vm.runInContext(fnMatch[0], context);
+}
+const analyzeClientMaintenance = context.analyzeClientMaintenance;
 
 describe('Algorithme de Maintenance Prédictive (IA Act Compliant)', () => {
 

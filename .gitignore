@@ -80,3 +80,9 @@ publish_*.bat
 # Temp deploy dirs
 temp_v11_deploy/
 archives/
+
+# Duplicate and build folders
+public/
+dist/
+android-app/www/
+

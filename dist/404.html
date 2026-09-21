@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="fr">
   <head>
+    <!-- Phase 3 : Zero-Trust DOM Security -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <meta charset="UTF-8" />
     <meta
       name="viewport"
@@ -12,7 +15,7 @@
       name="description"
       content="Cette page n'existe pas. Retournez à l'application mon50ccetmoi."
     />
-    <link rel="icon" type="image/png" href="/assets/icon-192x192-CsrcJCmh.png" />
+    <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
@@ -154,6 +157,9 @@
         z-index: 1;
       }
     </style>
+    <script type="module" crossorigin src="/assets/404-CHXNp2Wx.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/dom-security-CwTUWoNZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/config-CQ4GpV1z.js">
   </head>
   <body>
     <canvas class="particles" id="particles"></canvas>
@@ -175,45 +181,5 @@
         <a href="terms.html">CGU</a>
       </div>
     </div>
-    <script>
-      const canvas = document.getElementById("particles");
-      const ctx = canvas.getContext("2d");
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      const particles = [];
-      for (let i = 0; i < 40; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4,
-          r: Math.random() * 2 + 1,
-          color: [
-            "rgba(255,183,3,0.3)",
-            "rgba(0,210,255,0.3)",
-            "rgba(255,0,85,0.2)",
-          ][Math.floor(Math.random() * 3)],
-        });
-      }
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach((p) => {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = p.color;
-          ctx.fill();
-        });
-        requestAnimationFrame(draw);
-      }
-      draw();
-      window.addEventListener("resize", () => {
-        canvas.width = innerWidth;
-        canvas.height = innerHeight;
-      });
-    </script>
   </body>
 </html>

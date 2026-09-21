@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-// Charger le contenu du script esg-telemetry.js
-const scriptContent = fs.readFileSync(path.resolve(__dirname, '../public/js/esg-telemetry.js'), 'utf8');
+// Charger le contenu du script esg-telemetry.js depuis src/js
+const rawContent = fs.readFileSync(path.resolve(__dirname, '../src/js/esg-telemetry.js'), 'utf8');
+const scriptContent = rawContent.replace(/^import\s+.*?;?\s*$/gm, '').replace(/registerAction\([^)]*\);?/g, '');
 
 describe('ESGTelemetryManager (Fruggr & ESG IT)', () => {
   beforeEach(() => {
