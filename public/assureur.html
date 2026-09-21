@@ -26,8 +26,12 @@
     <script src="js/database.js" charset="utf-8"></script>
     <script>
       // Initialiser Firebase et la base de données (db)
-      firebase.initializeApp(CONFIG.FIREBASE);
-      initDatabase();
+      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
+        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
+        if (typeof initDatabase === "function") initDatabase();
+      } else {
+        console.error("[Nexus Atlas] CONFIG non chargé — Firebase ne peut pas démarrer.");
+      }
     </script>
 
     <style>

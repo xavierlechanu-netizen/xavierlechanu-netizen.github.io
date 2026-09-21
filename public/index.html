@@ -755,7 +755,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
     <script src="js/config.js" charset="utf-8"></script>
     <script>
-      firebase.initializeApp(CONFIG.FIREBASE);
+      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
+        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
+      } else {
+        console.error("[Nexus Atlas] CONFIG non chargé — Firebase ne peut pas démarrer.");
+      }
     </script>
     <script src="js/crypto-native.js" charset="utf-8"></script>
     <script src="js/auth.js" charset="utf-8"></script>

@@ -12,39 +12,46 @@ function escapeHtml(str) {
 
 if (typeof document !== 'undefined') {
   document.addEventListener("DOMContentLoaded", async () => {
-    let sessionStr = null;
+    // H-3 FIX : Vérification Firebase Auth server-side (OWASP ASVS v5.0.0-2.2.2)
+    // Le localStorage est un CACHE, PAS un contrôle de sécurité.
     
-    if (typeof secureGetItem === "function") {
-      sessionStr = await secureGetItem("session");
+    // Étape 1 : Vérifier que Firebase Auth est chargé et que l'utilisateur est connecté
+    if (typeof firebase !== "undefined" && firebase.auth) {
+      firebase.auth().onAuthStateChanged(async (firebaseUser) => {
+        if (!firebaseUser) {
+          // Pas connecté Firebase → redirection
+          window.location.href = "garage.html";
+          return;
+        }
+
+        // Étape 2 : Charger le profil depuis Firestore (source de vérité serveur)
+        try {
+          const userDoc = await firebase.firestore().collection("users").doc(firebaseUser.uid).get();
+          if (!userDoc.exists || !userDoc.data().isCertifiedGarage) {
+            alert("Accès refusé. Réservé aux Garages Pros certifiés.");
+            window.location.href = "app.html";
+            return;
+          }
+
+          currentUser = userDoc.data();
+          currentUser.uid = firebaseUser.uid;
+
+          document.getElementById("garage-name").textContent = `Bienvenue, ${currentUser.username || 'Garage Partenaire'}`;
+
+          if (typeof db !== "undefined") {
+            loadGarageData();
+          } else {
+            setTimeout(loadGarageData, 500);
+          }
+        } catch (e) {
+          console.error("[Garage Dashboard] Erreur vérification profil:", e);
+          window.location.href = "garage.html";
+        }
+      });
     } else {
-      sessionStr = localStorage.getItem("session");
-    }
-
-    if (!sessionStr) {
+      // Firebase non chargé — fallback sécurisé → redirection
+      console.error("[Garage Dashboard] Firebase Auth non disponible.");
       window.location.href = "garage.html";
-      return;
-    }
-
-    try {
-      currentUser = JSON.parse(sessionStr);
-    } catch (e) {
-      console.error("Session corrompue", e);
-      window.location.href = "garage.html";
-      return;
-    }
-
-    if (!currentUser.isCertifiedGarage) {
-      alert("Accès refusé. Réservé aux Garages Pros.");
-      window.location.href = "app.html";
-      return;
-    }
-
-    document.getElementById("garage-name").textContent = `Bienvenue, ${currentUser.username || 'Garage Partenaire'}`;
-
-    if (typeof db !== "undefined") {
-      loadGarageData();
-    } else {
-      setTimeout(loadGarageData, 500);
     }
   });
 }

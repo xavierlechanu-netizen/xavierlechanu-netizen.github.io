@@ -276,18 +276,22 @@ exports.revolutWebhook = onRequest(
         // ── Vérification HMAC de la signature Revolut ────────────────────
         const signature = req.headers["revolut-signature"];
         const webhookSecret = REVOLUT_WEBHOOK_SECRET.value();
-        if (webhookSecret && signature) {
-            const expectedSig = crypto
-                .createHmac("sha256", webhookSecret)
-                .update(JSON.stringify(req.body))
-                .digest("hex");
-            if (signature !== expectedSig) {
-                console.error("[Revolut Webhook] Signature HMAC invalide. Requête rejetée.");
-                return res.status(401).send("Signature invalide");
-            }
-        } else if (webhookSecret && !signature) {
+        // SÉCURITÉ H-4 : le secret webhook DOIT être configuré (OWASP ASVS v5.0.0-3.5.1)
+        if (!webhookSecret) {
+            console.error("[Revolut Webhook] CRITIQUE : REVOLUT_WEBHOOK_SECRET non configuré. Requête rejetée.");
+            return res.status(500).send("Webhook secret not configured");
+        }
+        if (!signature) {
             console.error("[Revolut Webhook] Header Revolut-Signature manquant. Requête rejetée.");
             return res.status(401).send("Signature manquante");
+        }
+        const expectedSig = crypto
+            .createHmac("sha256", webhookSecret)
+            .update(JSON.stringify(req.body))
+            .digest("hex");
+        if (signature !== expectedSig) {
+            console.error("[Revolut Webhook] Signature HMAC invalide. Requête rejetée.");
+            return res.status(401).send("Signature invalide");
         }
 
         const event = req.body;
@@ -562,12 +566,19 @@ exports.deleteUserAccount = onRequest(
                 { coll: "presence", field: "userId" },
             ];
 
+            // M-3 : Boucle de purge exhaustive (RGPD Art. 17 — pas de limite à 500)
             for (const q of queries) {
-                const snapshot = await db.collection(q.coll).where(q.field, "==", user_id).limit(500).get();
-                if (!snapshot.empty) {
-                    const qBatch = db.batch();
-                    snapshot.forEach(doc => qBatch.delete(doc.ref));
-                    await qBatch.commit();
+                let hasMore = true;
+                while (hasMore) {
+                    const snapshot = await db.collection(q.coll).where(q.field, "==", user_id).limit(500).get();
+                    if (snapshot.empty) {
+                        hasMore = false;
+                    } else {
+                        const qBatch = db.batch();
+                        snapshot.forEach(doc => qBatch.delete(doc.ref));
+                        await qBatch.commit();
+                        if (snapshot.size < 500) hasMore = false;
+                    }
                 }
             }
             
@@ -649,7 +660,7 @@ exports.checkPaymentStatus = onRequest(
 
         } catch (err) {
             console.error("[checkPaymentStatus] Erreur :", err);
-            return res.status(500).json({ error: err.message });
+            return res.status(500).json({ error: "Erreur interne lors de la vérification du paiement." });
         }
     }
 );
@@ -745,7 +756,7 @@ exports.sendWelcomeEmail = onDocumentCreated(
 
         try {
             await transporter.sendMail(mailOptions);
-            console.log(`Welcome email sent to ${email}`);
+            console.log(`[Email] Welcome email sent to ${email ? email.substring(0, 3) + '***' : 'unknown'}`);
         } catch (error) {
             console.error("Error sending email:", error);
         }
@@ -937,6 +948,12 @@ exports.getVigilanceMeteo = onRequest(
         setCorsHeaders(res);
         if (req.method === "OPTIONS") return res.status(204).send("");
 
+        // H-7 : Authentification requise pour éviter l'abus de l'API Météo-France (OWASP A01)
+        const authUser = await verifyAuthToken(req);
+        if (!authUser) {
+            return res.status(401).json({ error: "Authentification requise." });
+        }
+
         try {
             const token = METEO_FRANCE_API_KEY.value();
             const response = await fetch("https://public-api.meteofrance.fr/public/DPVigilance/v1/cartevigilance/encours", {
@@ -1048,8 +1065,18 @@ exports.fidoVerifyRegistration = onCall({ region: "europe-west1" }, async (reque
 });
 
 exports.fidoGenerateAuthentication = onCall({ region: "europe-west1" }, async (request) => {
+    // C-5 : L'authentification N'EST PAS requise ici car c'est un flow pré-auth (l'utilisateur
+    // n'est pas encore connecté, il VEUT se connecter via FIDO). Cependant, le UID doit être
+    // validé côté serveur pour s'assurer qu'il existe réellement.
     const { uid, rpId } = request.data;
     if (!uid) throw new HttpsError('invalid-argument', 'UID required.');
+
+    // C-5 FIX : Vérifier que le UID correspond à un utilisateur Firebase Auth existant
+    try {
+        await admin.auth().getUser(uid);
+    } catch (e) {
+        throw new HttpsError('not-found', 'Utilisateur introuvable.');
+    }
 
     const credsSnapshot = await db.collection("users").doc(uid).collection("fido_credentials").get();
     if (credsSnapshot.empty) {
@@ -1080,6 +1107,13 @@ exports.fidoGenerateAuthentication = onCall({ region: "europe-west1" }, async (r
 exports.fidoVerifyAuthentication = onCall({ region: "europe-west1" }, async (request) => {
     const { uid, response, rpId, origin } = request.data;
     if (!uid) throw new HttpsError('invalid-argument', 'UID required.');
+
+    // C-6 FIX : Vérifier que le UID correspond à un utilisateur Firebase Auth existant
+    try {
+        await admin.auth().getUser(uid);
+    } catch (e) {
+        throw new HttpsError('not-found', 'Utilisateur introuvable.');
+    }
 
     const challengeDoc = await db.collection("fido_challenges").doc(uid).get();
     if (!challengeDoc.exists) throw new HttpsError('failed-precondition', 'No challenge found.');
@@ -1136,6 +1170,12 @@ exports.iotFdoRendezvous = onRequest({ region: "europe-west1" }, async (req, res
     setCorsHeaders(res);
     if (req.method === "OPTIONS") return res.status(204).send("");
     if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
+
+    // H-6 FIX : Authentification requise (OWASP A01)
+    const authUser = await verifyAuthToken(req);
+    if (!authUser) {
+        return res.status(401).json({ error: "Authentification requise pour l'onboarding IoT." });
+    }
 
     // Expecting Ownership Voucher { hardware_id, signature, fdo_version }
     const { hardware_id, signature } = req.body;
@@ -1355,6 +1395,92 @@ exports.uploadBlackboxTelemetry = onCall(
         } catch (error) {
             console.error("[Telemetry] Erreur upload télémétrie:", error);
             throw new HttpsError("internal", "Erreur lors du traitement de la télémétrie.");
+        }
+    }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// M-4 FIX : Rate Limiting Serveur pour les Signalements de Dangers (Hazards)
+// Max 5 signalements par utilisateur par fenêtre de 5 minutes.
+// Empêche le spam de signalements (OWASP ASVS v5.0.0-2.4.1)
+// ─────────────────────────────────────────────────────────────────────────────
+exports.createHazardReport = onCall(
+    { region: "europe-west1" },
+    async (request) => {
+        // Authentification obligatoire
+        if (!request.auth || !request.auth.uid) {
+            throw new HttpsError("unauthenticated", "Authentification requise.");
+        }
+
+        const uid = request.auth.uid;
+        const { type, lat, lng, description } = request.data || {};
+
+        // Validation d'entrée (ASVS v5.0.0-2.2.1)
+        if (!type || !lat || !lng) {
+            throw new HttpsError("invalid-argument", "Type, latitude et longitude requis.");
+        }
+        const allowedTypes = ["pothole", "accident", "police", "roadwork", "obstacle", "weather", "other"];
+        if (!allowedTypes.includes(type)) {
+            throw new HttpsError("invalid-argument", "Type de danger non reconnu.");
+        }
+        if (typeof lat !== "number" || typeof lng !== "number" || 
+            lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            throw new HttpsError("invalid-argument", "Coordonnées GPS invalides.");
+        }
+
+        // Rate limiting serveur (Firestore-based)
+        const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+        const RATE_LIMIT_MAX = 5;
+        const rateLimitRef = db.collection("rate_limits").doc(`hazard_${uid}`);
+
+        try {
+            const rateLimitDoc = await rateLimitRef.get();
+            const now = Date.now();
+
+            if (rateLimitDoc.exists) {
+                const data = rateLimitDoc.data();
+                const windowStart = data.windowStart || 0;
+                const count = data.count || 0;
+
+                if (now - windowStart < RATE_LIMIT_WINDOW_MS && count >= RATE_LIMIT_MAX) {
+                    throw new HttpsError(
+                        "resource-exhausted",
+                        `Limite atteinte : maximum ${RATE_LIMIT_MAX} signalements par ${RATE_LIMIT_WINDOW_MS / 60000} minutes.`
+                    );
+                }
+
+                if (now - windowStart >= RATE_LIMIT_WINDOW_MS) {
+                    // Nouvelle fenêtre
+                    await rateLimitRef.set({ windowStart: now, count: 1 });
+                } else {
+                    // Même fenêtre, incrémenter
+                    await rateLimitRef.update({ count: admin.firestore.FieldValue.increment(1) });
+                }
+            } else {
+                // Première requête
+                await rateLimitRef.set({ windowStart: now, count: 1 });
+            }
+
+            // Créer le signalement
+            const hazardData = {
+                type,
+                lat,
+                lng,
+                description: typeof description === "string" ? description.substring(0, 500) : "",
+                userId: uid,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                votes: 0,
+                active: true
+            };
+
+            const docRef = await db.collection("hazards").add(hazardData);
+            console.log(`[Hazard] Signalement ${type} créé par ${uid.substring(0, 6)}... (${docRef.id})`);
+
+            return { success: true, hazardId: docRef.id };
+        } catch (error) {
+            if (error instanceof HttpsError) throw error;
+            console.error("[Hazard] Erreur création signalement:", error);
+            throw new HttpsError("internal", "Erreur lors de la création du signalement.");
         }
     }
 );

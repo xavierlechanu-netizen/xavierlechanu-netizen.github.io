@@ -21,11 +21,15 @@
     <script src="https://merchant.revolut.com/embed.js" async charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script type="module" src="/js/config.js" charset="utf-8"></script>
-    <script type="module" src="/js/database.js" charset="utf-8"></script>
+    <script src="/js/config.js" charset="utf-8"></script>
+    <script src="/js/database.js" charset="utf-8"></script>
     <script>
-      firebase.initializeApp(CONFIG.FIREBASE);
-      initDatabase();
+      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
+        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
+        if (typeof initDatabase === "function") initDatabase();
+      } else {
+        console.error("[Nexus Atlas] CONFIG non chargé — Firebase ne peut pas démarrer.");
+      }
     </script>
 
     <link rel="stylesheet" href="css/design-system.css" />

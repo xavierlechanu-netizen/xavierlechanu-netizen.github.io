@@ -21,12 +21,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js" charset="utf-8"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js" charset="utf-8"></script>
-    <script type="module" src="/js/config.js" charset="utf-8"></script>
-    <script type="module" src="/js/garage-pro.js" charset="utf-8"></script>
+    <script src="/js/config.js" charset="utf-8"></script>
+    <script src="/js/garage-pro.js" charset="utf-8"></script>
 
     <script>
       // Initialisation de Firebase
-      firebase.initializeApp(CONFIG.FIREBASE);
+      if (typeof CONFIG !== "undefined" && CONFIG.FIREBASE) {
+        if (!firebase.apps.length) firebase.initializeApp(CONFIG.FIREBASE);
+      } else {
+        console.error("[Nexus Atlas] CONFIG non chargé — Firebase ne peut pas démarrer.");
+      }
     </script>
 
     <link rel="stylesheet" href="css/design-system.css" />

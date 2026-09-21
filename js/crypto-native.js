@@ -1,24 +1,55 @@
 /**
  * Module de Sécurisation LocalStorage (Web Crypto API)
  * Protège contre la lecture en clair du profil utilisateur en cas de faille XSS simple.
+ * C-1 FIX : La clé est désormais générée aléatoirement par session navigateur
+ * et stockée dans sessionStorage (nettoyé à la fermeture de l'onglet).
+ * OWASP ASVS v5.0.0-11.x : Clé unique par session, jamais hardcodée.
  */
 
-const ENCRYPTION_KEY_MATERIAL = "mon50cc_secure_session_key_v1";
+// Génère ou récupère la clé de session (unique par onglet/session navigateur)
+function getSessionKeyMaterial() {
+  let keyB64 = sessionStorage.getItem("_nxa_km");
+  if (!keyB64) {
+    const keyBytes = crypto.getRandomValues(new Uint8Array(32));
+    keyB64 = btoa(String.fromCharCode.apply(null, keyBytes));
+    sessionStorage.setItem("_nxa_km", keyB64);
+  }
+  const binaryString = atob(keyB64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
 
 async function getDerivedKey() {
-  const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(ENCRYPTION_KEY_MATERIAL),
+    getSessionKeyMaterial(),
     "PBKDF2",
     false,
     ["deriveKey"]
   );
 
+  // Salt aléatoire stocké dans sessionStorage pour pouvoir déchiffrer dans la même session
+  let saltB64 = sessionStorage.getItem("_nxa_salt");
+  let salt;
+  if (!saltB64) {
+    salt = crypto.getRandomValues(new Uint8Array(16));
+    saltB64 = btoa(String.fromCharCode.apply(null, salt));
+    sessionStorage.setItem("_nxa_salt", saltB64);
+  } else {
+    const binaryString = atob(saltB64);
+    salt = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      salt[i] = binaryString.charCodeAt(i);
+    }
+  }
+
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: encoder.encode("nexus_atlas_salt_2026"),
+      salt: salt,
       iterations: 100000,
       hash: "SHA-256"
     },

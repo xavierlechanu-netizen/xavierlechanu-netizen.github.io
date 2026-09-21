@@ -87,6 +87,18 @@ void setupBLE() {
   // Initialisation du BLE
   BLEDevice::init(DEVICE_NAME); // Nom visible lors du scan Web Bluetooth
   
+  // H-5 FIX : Activation du BLE Secure Connections (OWASP ASVS v5.0.0-12.x)
+  // Bonding + MITM Protection + Secure Connections (LE SC)
+  BLEDevice::setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_MITM);
+  BLEDevice::setSecurityAuth(true, true, true); // bonding, MITM, Secure Connections
+  
+  // Clé d'appairage statique (6 chiffres) — l'utilisateur la saisira sur le smartphone
+  // En production, utiliser un PIN unique par device, imprimé sur le boîtier
+  uint32_t passkey = 503050; // PIN par défaut — À REMPLACER par un PIN unique/device
+  esp_ble_gap_set_security_param(ESP_BLE_SM_SET_STATIC_PASSKEY, &passkey, sizeof(uint32_t));
+  esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, 
+    (uint8_t[]){ESP_LE_AUTH_REQ_SC_MITM_BOND}, sizeof(uint8_t));
+  
   // Récupération de l'adresse MAC (utilisé comme Identifiant Unique / IMEI / FIDO)
   deviceMAC = BLEDevice::getAddress().toString().c_str();
   
@@ -100,6 +112,8 @@ void setupBLE() {
                       BLECharacteristic::PROPERTY_NOTIFY
                     );
   pCharacteristic->addDescriptor(new BLE2902());
+  // Exiger l'authentification pour la notification télémétrie
+  pCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENC_MITM);
   pService->start();
 
   // --- Création du Service Diagnostic ---
@@ -109,6 +123,7 @@ void setupBLE() {
                       BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY
                     );
   pBatteryCharacteristic->addDescriptor(new BLE2902());
+  pBatteryCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENC_MITM);
   pDiagService->start();
 
   // Démarrage du Broadcast (Advertising)
@@ -118,7 +133,7 @@ void setupBLE() {
   pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(0x0);
   BLEDevice::startAdvertising();
-  Serial.println("✅ Boîte Noire BLE Prête ! En attente du smartphone...");
+  Serial.println("✅ Boîte Noire BLE Prête (Secure Connections activé) ! En attente du smartphone...");
 }
 
 void setupGPS() {

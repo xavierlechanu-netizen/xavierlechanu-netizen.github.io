@@ -58,14 +58,17 @@ const ScreenManager = {
       }
 
       // Sécurité XSS : Sanitizer le HTML chargé (ASVS v5.0.0-1.3.1)
-      const safeHtml =
-        typeof DOMPurify !== 'undefined'
-          ? DOMPurify.sanitize(this.cache[screenId], {
-              ADD_TAGS: ['input', 'select', 'textarea', 'button', 'form', 'canvas', 'video'],
-              ADD_ATTR: ['onclick', 'onchange', 'onkeypress', 'onsubmit', 'oninput', 'aria-label', 'role', 'placeholder', 'type', 'id', 'for'],
-              ALLOW_DATA_ATTR: true,
-            })
-          : this.cache[screenId];
+      if (typeof DOMPurify === 'undefined') {
+        console.error('[ScreenManager] DOMPurify non chargé — injection HTML refusée (ASVS v5.0.0-1.3.1)');
+        container.textContent = 'Erreur de sécurité : module de sanitization manquant.';
+        return;
+      }
+
+      const safeHtml = DOMPurify.sanitize(this.cache[screenId], {
+        ADD_TAGS: ['input', 'select', 'textarea', 'button', 'form', 'canvas', 'video'],
+        ADD_ATTR: ['onclick', 'onchange', 'onkeypress', 'onsubmit', 'oninput', 'aria-label', 'role', 'placeholder', 'type', 'id', 'for'],
+        ALLOW_DATA_ATTR: true,
+      });
 
       container.innerHTML = safeHtml;
 
