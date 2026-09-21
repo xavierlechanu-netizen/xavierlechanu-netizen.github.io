@@ -36,7 +36,7 @@ const METEO_FRANCE_API_KEY = defineSecret("METEO_FRANCE_API_KEY");
 const PISTE_CLIENT_ID = defineSecret("PISTE_CLIENT_ID");
 const PISTE_CLIENT_SECRET = defineSecret("PISTE_CLIENT_SECRET");
 const PISTE_API_KEY = defineSecret("PISTE_API_KEY");
-const PENNYLANE_API_KEY = defineSecret("PENNYLANE_API_KEY");
+// const PENNYLANE_API_KEY = defineSecret("PENNYLANE_API_KEY"); // Désactivé temporairement pour le déploiement
 
 // ─── Constantes API Revolut ─────────────────────────────────────────────────
 // PRODUCTION : merchant.revolut.com (anciennement sandbox-merchant.revolut.com)
@@ -74,7 +74,7 @@ async function verifyAuthToken(req) {
 // Pennylane API Helper - Comptabilité et Facturation
 // ─────────────────────────────────────────────────────────────────────────────
 async function createPennylaneInvoice(orderData, userEmail, userName) {
-    const apiKey = PENNYLANE_API_KEY.value();
+    const apiKey = null; // PENNYLANE_API_KEY.value(); désactivé temporairement
     if (!apiKey) {
         console.warn("[Pennylane] Clé API non configurée. Impossible de générer la facture.");
         return;
