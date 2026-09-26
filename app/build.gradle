@@ -77,10 +77,10 @@ android {
 
     defaultConfig {
         applicationId "com.mon50ccetmoi.twa"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 36
-        versionCode 1110000
-        versionName "111.00.00"
+        versionCode 1110001
+        versionName "111.00.01"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name

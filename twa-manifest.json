@@ -20,8 +20,8 @@
     "path": "./new-upload-keystore.jks",
     "alias": "upload"
   },
-  "appVersionName": "111.00.00",
-  "appVersionCode": 1110000,
+  "appVersionName": "111.00.01",
+  "appVersionCode": 1110001,
   "shortcuts": [
     {
       "name": "Navigation GPS",
@@ -49,7 +49,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "minSdkVersion": 23,
+  "minSdkVersion": 24,
   "orientation": "any",
   "fingerprints": [
     "0E:54:6F:A5:5C:AC:0B:8B:C1:C3:25:E5:FF:11:B1:73:EA:84:85:24:AC:93:89:6A:56:F5:D8:34:DA:A4:4B:81",
