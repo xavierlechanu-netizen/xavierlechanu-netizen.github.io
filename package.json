@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/sanitize-encoding.js",
     "build": "vite build",
     "preview": "vite preview",
     "test": "jest --testPathIgnorePatterns=firestore.rules.test.js",

@@ -80,17 +80,25 @@ window.startPremiumNavigation = function (leg) {
   const nextStep = leg.steps[0];
   const tempDiv = document.createElement("div");
   // eslint-disable-next-line no-restricted-syntax
-tempDiv.innerHTML = nextStep.instructions;
-  const instructionText = tempDiv.textContent || tempDiv.innerText || ""; // Strip HTML tags
+  tempDiv.innerHTML = nextStep.instructions || nextStep.navigationInstruction?.instructions || "";
+  const instructionText = tempDiv.textContent || tempDiv.innerText || "Continuer";
 
   const navInstruction = document.getElementById("nav-instruction");
+  const nextStepName = document.getElementById("next-step-name");
+  const nextStepDist = document.getElementById("next-step-dist");
   const navDistance = document.getElementById("nav-distance");
-  const navIcon = document.getElementById("nav-turn-icon");
+  const navIcon = document.getElementById("nav-turn-icon") || document.querySelector(".nav-icon i");
 
-  if (navInstruction) navInstruction.textContent = instructionText;
-  if (navDistance) navDistance.textContent = nextStep.distance.text;
+  if (navInstruction) navInstruction.classList.remove("hidden");
+  if (nextStepName) {
+    nextStepName.textContent = instructionText;
+  }
+  
+  const distText = nextStep.distance?.text || (nextStep.distanceMeters ? (nextStep.distanceMeters >= 1000 ? (nextStep.distanceMeters / 1000).toFixed(1) + " km" : nextStep.distanceMeters + " m") : "");
+  if (nextStepDist) nextStepDist.textContent = distText;
+  if (navDistance) navDistance.textContent = distText;
 
-  // Icon logic based on text (very basic for demo)
+  // Icon logic based on text
   if (navIcon) {
     const lowerInst = instructionText.toLowerCase();
     if (lowerInst.includes("gauche")) {
@@ -110,15 +118,18 @@ tempDiv.innerHTML = nextStep.instructions;
 
   // Update Stats Tray
   const etaEl = document.getElementById("nav-eta");
-  const distEl = document.getElementById("nav-total-dist");
+  const distEl = document.getElementById("nav-total-dist") || document.getElementById("nav-dist");
   const arrEl = document.getElementById("nav-arrival-time");
 
-  if (etaEl) etaEl.textContent = leg.duration.text;
-  if (distEl) distEl.textContent = leg.distance.text;
+  const durText = leg.duration?.text || (leg.durationSec ? Math.round(leg.durationSec / 60) + " min" : "--");
+  const legDistText = leg.distance?.text || (leg.distanceMeters ? (leg.distanceMeters >= 1000 ? (leg.distanceMeters / 1000).toFixed(1) + " km" : leg.distanceMeters + " m") : "--");
+
+  if (etaEl) etaEl.textContent = durText;
+  if (distEl) distEl.textContent = legDistText;
 
   if (arrEl) {
     const now = new Date();
-    const durationSecs = leg.duration.value;
+    const durationSecs = leg.duration?.value || leg.durationSec || 0;
     now.setSeconds(now.getSeconds() + durationSecs);
     const hours = now.getHours().toString().padStart(2, "0");
     const mins = now.getMinutes().toString().padStart(2, "0");
@@ -129,7 +140,7 @@ tempDiv.innerHTML = nextStep.instructions;
   if (typeof speak === "function") {
     speak(
       "Itinéraire calculé. Dans " +
-        nextStep.distance.text +
+        (distText || "quelques mètres") +
         ", " +
         instructionText,
     );

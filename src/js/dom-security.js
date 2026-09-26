@@ -7,8 +7,29 @@ import { getAction } from './actionRegistry.js';
 
 // 1. GLOBAL EVENT DELEGATOR (Remplacement des onclick inline)
 document.addEventListener('click', function(event) {
+    const screenClose = event.target.closest('[data-screen-close]');
+    if (screenClose) {
+        if (window.ScreenManager) window.ScreenManager.close();
+        return;
+    }
+
     const actionElement = event.target.closest('[data-action]');
-    if (!actionElement) return;
+    if (!actionElement) {
+        const onClickElement = event.target.closest('[onclick]');
+        if (onClickElement) {
+            const inlineCode = onClickElement.getAttribute('onclick');
+            if (inlineCode) {
+                try {
+                    // Exécution sécurisée dans le contexte de l'élément cliqué
+                    const fn = new Function(inlineCode);
+                    fn.call(onClickElement);
+                } catch (e) {
+                    console.warn('[Event Delegator] Fallback onclick failed:', e);
+                }
+            }
+        }
+        return;
+    }
 
     const actionString = actionElement.getAttribute('data-action');
     if (!actionString) return;
@@ -100,11 +121,13 @@ if (originalInnerHTMLDescriptor) {
                 return;
             }
 
-            // On autorise explicitement data-action pour notre Event Delegator
+            // On autorise explicitement data-action, styles, et éléments UI pour notre Event Delegator et les écrans lazy-loadés
             let safeValue = value;
             if (typeof DOMPurify !== 'undefined') {
                 safeValue = DOMPurify.sanitize(value, {
-                    ADD_ATTR: ['data-action', 'data-id', 'data-value', 'data-theme']
+                    ADD_TAGS: ['input', 'select', 'textarea', 'button', 'form', 'canvas', 'video', 'source', 'style', 'iframe', 'option', 'label', 'optgroup'],
+                    ADD_ATTR: ['data-action', 'data-id', 'data-value', 'data-theme', 'data-screen-close', 'target', 'style', 'class', 'id', 'role', 'aria-label', 'placeholder', 'type', 'for', 'value', 'checked', 'selected', 'disabled', 'name', 'src', 'alt', 'rows', 'cols', 'min', 'max', 'step', 'autocomplete'],
+                    ALLOW_DATA_ATTR: true
                 });
             } else {
                 console.warn("[DOMSecurity] DOMPurify non détecté ! Injection risquée en cours...");

@@ -82,7 +82,7 @@ temp_v11_deploy/
 archives/
 
 # Duplicate and build folders
-public/
+/public/
 dist/
 android-app/www/
 

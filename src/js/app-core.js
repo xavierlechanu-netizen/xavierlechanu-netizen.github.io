@@ -1,6 +1,18 @@
 import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
 import { registerAction } from './actionRegistry.js';
 
+// Synchronous session hydration to prevent guest locks for admins/logged-in riders
+try {
+  const cachedSession = (typeof window.cacheGetItem === "function" && window.cacheGetItem("session")) ||
+                        (typeof secureGetItem === "function" && secureGetItem("session")) ||
+                        localStorage.getItem("session");
+  if (cachedSession && !window.session) {
+    window.session = typeof cachedSession === "string" ? JSON.parse(cachedSession) : cachedSession;
+  }
+} catch (e) {
+  console.warn("[app-core] Synchronous session restore failed:", e);
+}
+
 // --- LITE MODE (PERFORMANCE) ---
 window.isLiteMode = localStorage.getItem("liteMode") === "true";
 
@@ -400,11 +412,14 @@ window.initMapController = async function () {
     geocoder = new google.maps.Geocoder();
     trafficLayer = new google.maps.TrafficLayer();
     trafficLayer.setMap(map);
+    if (google.maps.DirectionsService) {
+      window.directionsService = new google.maps.DirectionsService();
+    }
     try {
       const routesLib = await google.maps.importLibrary("routes");
       window.googleLibraries.routes = routesLib;
     } catch (e) {
-      console.warn("mon50cc Maps : Erreur initialisation Routes API");
+      console.info("mon50cc Maps : Routes API moderne non disponible, fallback vers DirectionsService/OSRM activé.");
     }
 
     // Autocomplete Classique pour le Départ
@@ -1206,7 +1221,10 @@ function updatePosition(position) {
   }
 
   // --- GUEST MODE LOCKS (Initial logic check) ---
-  if (!window.session) {
+  const isGuest = !window.session || window.session.isGuest;
+  const isAdmin = window.session && window.session.role === "admin";
+
+  if (isGuest && !isAdmin) {
     document.getElementById("menu-insurance")?.classList.add("locked-feature");
     document.getElementById("menu-mechanic")?.classList.add("locked-feature");
     document.getElementById("menu-garage")?.classList.add("locked-feature");
@@ -1217,10 +1235,14 @@ function updatePosition(position) {
         if (el)
           el.onclick = () =>
             alert(
-              "Veuillez créer un compte pour accéder à l'Arbitre de la Route ! ⚖️🛵",
+              "Veuillez créer un compte pour accéder à l'Arbitre de la Route ! ⚖️ 🛵",
             );
       },
     );
+  } else {
+    document.getElementById("menu-insurance")?.classList.remove("locked-feature");
+    document.getElementById("menu-mechanic")?.classList.remove("locked-feature");
+    document.getElementById("menu-garage")?.classList.remove("locked-feature");
   }
 
   // Vitesse (HUD) avec Smoothing Neural
@@ -1267,14 +1289,19 @@ function updatePosition(position) {
       currentLean,
     );
 
-    // Effet de vitesse sur le HUD
-    if (speedKmh > 40) {
+    // Effet de vitesse sur le HUD adapté à la motorisation
+    const motorType = window.session?.motor || "2t";
+    const isMicroMobility = motorType === "trottinette" || motorType === "velo";
+    const fastThreshold = isMicroMobility ? 24 : 40;
+    const warnThreshold = isMicroMobility ? 18 : 25;
+
+    if (speedKmh > fastThreshold) {
       speedEl.parentElement.classList.add("fast");
       speedEl.style.color = "var(--danger)";
       vibrate(50);
       if (window.NeuralHUD)
-        window.NeuralHUD.logToConsole("VELOCITY_ALERT: HIGH_SPEED_DETECTED");
-    } else if (speedKmh > 25) {
+        window.NeuralHUD.logToConsole(`VELOCITY_ALERT: ${isMicroMobility ? 'EDPM_SPEED_LIMIT_EXCEEDED (25 km/h)' : 'HIGH_SPEED_DETECTED'} (${speedKmh} km/h)`);
+    } else if (speedKmh > warnThreshold) {
       speedEl.parentElement.classList.remove("fast");
       speedEl.style.color = "var(--accent)";
     } else {

@@ -329,3 +329,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // --- Action Registry (ESM) ---
 registerAction('injectPrivacyBanner', injectPrivacyBanner);
+registerAction('exportMyData', () => window.exportMyData());
+registerAction('revokeAndEraseData', () => window.revokeAndEraseData());
+registerAction('closePrivacyPolicy', () => window.closePrivacyPolicy());

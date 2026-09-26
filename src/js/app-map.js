@@ -24,90 +24,251 @@ async function calculateRouteSansAutoroute(start, end) {
   currentRouteMarkers.forEach((m) => m.setMap(null));
   currentRouteMarkers = [];
 
-  if (!window.googleLibraries?.routes?.Route) {
-    speak("Le moteur de routage n'est pas disponible pour le moment.");
-    return;
-  }
-  const { Route } = window.googleLibraries.routes;
-
   const originLat = typeof start.lat === "function" ? start.lat() : start.lat;
   const originLng = typeof start.lng === "function" ? start.lng() : start.lng;
   const destLat = typeof end.lat === "function" ? end.lat() : end.lat;
   const destLng = typeof end.lng === "function" ? end.lng() : end.lng;
 
-  const request = {
-    origin: { location: { latLng: { latitude: originLat, longitude: originLng } } },
-    destination: { location: { latLng: { latitude: destLat, longitude: destLng } } },
-    travelMode: "DRIVE",
-    routeModifiers: {
-      avoidHighways: true,
-      avoidTolls: true,
-    },
-    computeAlternativeRoutes: window.isRodageActive || window.avoidCityCenters,
-    fields: [
-      "routes.distanceMeters", 
-      "routes.duration", 
-      "routes.polyline.encodedPolyline", 
-      "routes.legs.distanceMeters",
-      "routes.legs.duration",
-      "routes.legs.steps",
-    ],
-  };
+  const motorType = window.session?.motor || "2t";
+  const isBikeOrTrottinette = motorType === "trottinette" || motorType === "velo";
 
-  try {
-    const { routes } = await Route.computeRoutes(request);
-    
-    if (routes && routes.length > 0) {
-      let routeIndex = 0;
-      if (window.avoidCityCenters && routes.length > 1) {
-          // On choisit la route la plus longue en distance (qui correspond souvent à un contournement)
+  let routeResult = null;
+
+  // 1. TIER 1 : Google Maps DirectionsService (Standard, toujours actif sur clé JS)
+  if (typeof google !== "undefined" && google.maps && google.maps.DirectionsService) {
+    try {
+      const directionsService = new google.maps.DirectionsService();
+      const travelMode = isBikeOrTrottinette && google.maps.TravelMode.BICYCLING
+        ? google.maps.TravelMode.BICYCLING
+        : google.maps.TravelMode.DRIVING;
+
+      const dirRequest = {
+        origin: new google.maps.LatLng(originLat, originLng),
+        destination: new google.maps.LatLng(destLat, destLng),
+        travelMode: travelMode,
+        avoidHighways: true,
+        avoidTolls: true,
+        provideRouteAlternatives: !!(window.isRodageActive || window.avoidCityCenters)
+      };
+
+      const gResult = await new Promise((resolve, reject) => {
+        directionsService.route(dirRequest, (res, status) => {
+          if (status === google.maps.DirectionsStatus.OK && res?.routes?.length > 0) {
+            resolve(res);
+          } else {
+            reject(new Error(`DirectionsService status: ${status}`));
+          }
+        });
+      });
+
+      if (gResult && gResult.routes.length > 0) {
+        let routeIndex = 0;
+        if (window.avoidCityCenters && gResult.routes.length > 1) {
+          let maxDist = -1;
+          for (let i = 0; i < gResult.routes.length; i++) {
+            if (gResult.routes[i].legs[0].distance.value > maxDist) {
+              maxDist = gResult.routes[i].legs[0].distance.value;
+              routeIndex = i;
+            }
+          }
+        }
+        const selectedRoute = gResult.routes[routeIndex];
+        const rawLeg = selectedRoute.legs[0];
+        const path = selectedRoute.overview_path;
+
+        routeResult = {
+          path: path,
+          distanceMeters: rawLeg.distance.value,
+          durationSec: rawLeg.duration.value,
+          leg: {
+            distance: rawLeg.distance,
+            duration: rawLeg.duration,
+            distanceMeters: rawLeg.distance.value,
+            durationSec: rawLeg.duration.value,
+            steps: rawLeg.steps.map(s => ({
+              instructions: s.instructions || "",
+              navigationInstruction: { instructions: s.instructions || "" },
+              distance: s.distance,
+              distanceMeters: s.distance?.value || 0,
+              duration: s.duration,
+              durationSec: s.duration?.value || 0,
+              start_location: s.start_location,
+              end_location: s.end_location
+            }))
+          }
+        };
+      }
+    } catch (dirErr) {
+      console.warn("[app-map] DirectionsService indisponible ou échoué, essai Routes API / OSRM:", dirErr.message);
+    }
+  }
+
+  // 2. TIER 2 : Google Maps Routes API moderne (si importé et activé)
+  if (!routeResult && window.googleLibraries?.routes?.Route) {
+    try {
+      const { Route } = window.googleLibraries.routes;
+      const request = {
+        origin: { location: { latLng: { latitude: originLat, longitude: originLng } } },
+        destination: { location: { latLng: { latitude: destLat, longitude: destLng } } },
+        travelMode: isBikeOrTrottinette ? "BICYCLE" : "DRIVE",
+        routeModifiers: { avoidHighways: true, avoidTolls: true },
+        computeAlternativeRoutes: !!(window.isRodageActive || window.avoidCityCenters),
+        fields: [
+          "routes.distanceMeters",
+          "routes.duration",
+          "routes.polyline.encodedPolyline",
+          "routes.legs.distanceMeters",
+          "routes.legs.duration",
+          "routes.legs.steps"
+        ],
+      };
+      const { routes } = await Route.computeRoutes(request);
+      if (routes && routes.length > 0) {
+        let routeIndex = 0;
+        if (window.avoidCityCenters && routes.length > 1) {
           let maxDist = -1;
           for (let i = 0; i < routes.length; i++) {
-              if (routes[i].legs[0].distanceMeters > maxDist) {
-                  maxDist = routes[i].legs[0].distanceMeters;
-                  routeIndex = i;
-              }
+            if (routes[i].legs[0].distanceMeters > maxDist) {
+              maxDist = routes[i].legs[0].distanceMeters;
+              routeIndex = i;
+            }
           }
+        }
+        const selectedRoute = routes[routeIndex];
+        const rawLeg = selectedRoute.legs[0];
+        const path = google.maps.geometry.encoding.decodePath(selectedRoute.polyline.encodedPolyline);
+        const durSec = parseInt(rawLeg.duration.replace("s", ""), 10) || 0;
+        const distMet = rawLeg.distanceMeters || 0;
+        const distKmText = distMet >= 1000 ? (distMet / 1000).toFixed(1) + " km" : distMet + " m";
+        const durMinText = Math.round(durSec / 60) + " min";
+
+        routeResult = {
+          path: path,
+          distanceMeters: distMet,
+          durationSec: durSec,
+          leg: {
+            distance: { text: distKmText, value: distMet },
+            duration: { text: durMinText, value: durSec },
+            distanceMeters: distMet,
+            durationSec: durSec,
+            steps: (rawLeg.steps || []).map(s => {
+              const instr = s.navigationInstruction?.instructions || s.instructions || "";
+              const stepDist = s.distanceMeters || 0;
+              const stepDistText = stepDist >= 1000 ? (stepDist / 1000).toFixed(1) + " km" : stepDist + " m";
+              return {
+                instructions: instr,
+                navigationInstruction: { instructions: instr },
+                distance: { text: stepDistText, value: stepDist },
+                distanceMeters: stepDist,
+                duration: { text: "", value: 0 }
+              };
+            })
+          }
+        };
       }
+    } catch (routeErr) {
+      console.warn("[app-map] Routes API computeRoutes échoué:", routeErr.message);
+    }
+  }
 
-      const selectedRoute = routes[routeIndex];
-      const leg = selectedRoute.legs[0];
+  // 3. TIER 3 : Fallback OSRM (100% autonome, profil bicycle pour vélo/trottinette ou driving sans péage)
+  if (!routeResult) {
+    try {
+      const osrmProfile = isBikeOrTrottinette ? "bicycle" : "driving";
+      console.info(`[app-map] Activation du fallback OSRM (Profil : ${osrmProfile})...`);
+      const osrmUrl = `https://router.project-osrm.org/route/v1/${osrmProfile}/${originLng},${originLat};${destLng},${destLat}?overview=full&geometries=geojson&steps=true`;
+      const osrmResp = await fetch(osrmUrl);
+      if (osrmResp.ok) {
+        const osrmData = await osrmResp.json();
+        if (osrmData.code === "Ok" && osrmData.routes?.length > 0) {
+          const selectedRoute = osrmData.routes[0];
+          const rawLeg = selectedRoute.legs[0];
+          const coordinates = selectedRoute.geometry.coordinates;
+          const path = coordinates.map(c => new google.maps.LatLng(c[1], c[0]));
+          const distMet = Math.round(rawLeg.distance);
+          const durSec = Math.round(rawLeg.duration);
+          const distKmText = distMet >= 1000 ? (distMet / 1000).toFixed(1) + " km" : distMet + " m";
+          const durMinText = Math.round(durSec / 60) + " min";
 
-      // Decode polyline and draw
-      const path = google.maps.geometry.encoding.decodePath(selectedRoute.polyline.encodedPolyline);
-      const polyline = new google.maps.Polyline({
-        path: path,
-        map: map,
-        strokeColor: "#00d2ff",
-        strokeOpacity: 0.8,
-        strokeWeight: 6,
-      });
-      currentRoutePolylines.push(polyline);
-
-      // --- AJUSTEMENT DE LA VUE DE LA CARTE ---
-      const bounds = new google.maps.LatLngBounds();
-      path.forEach((p) => bounds.extend(p));
-      map.fitBounds(bounds);
-
-      const infoBar = document.getElementById("nav-info-bar");
-      if (infoBar) {
-        infoBar.style.setProperty("display", "flex", "important");
+          routeResult = {
+            path: path,
+            distanceMeters: distMet,
+            durationSec: durSec,
+            leg: {
+              distance: { text: distKmText, value: distMet },
+              duration: { text: durMinText, value: durSec },
+              distanceMeters: distMet,
+              durationSec: durSec,
+              steps: (rawLeg.steps || []).map(s => {
+                const modifier = s.maneuver?.modifier ? ` (${s.maneuver.modifier})` : "";
+                const instr = s.maneuver?.type ? `${s.name || 'Continuer'} ${modifier}` : (s.name || "Continuer tout droit");
+                const stepDist = Math.round(s.distance || 0);
+                const stepDistText = stepDist >= 1000 ? (stepDist / 1000).toFixed(1) + " km" : stepDist + " m";
+                return {
+                  instructions: instr,
+                  navigationInstruction: { instructions: instr },
+                  distance: { text: stepDistText, value: stepDist },
+                  distanceMeters: stepDist,
+                  duration: { text: Math.round((s.duration || 0) / 60) + " min", value: Math.round(s.duration || 0) }
+                };
+              })
+            }
+          };
+        }
       }
+    } catch (osrmErr) {
+      console.error("[app-map] Erreur Fallback OSRM:", osrmErr);
+    }
+  }
 
-      const btnStop = document.getElementById("btn-stop-nav");
-      if (btnStop) btnStop.classList.remove("hidden");
+  if (!routeResult) {
+    speak("Impossible de calculer l'itinéraire pour le moment. Vérifiez votre connexion.");
+    return;
+  }
 
-      const distEl = document.getElementById("nav-dist");
-      const timeEl = document.getElementById("nav-time");
-      const etaEl = document.getElementById("nav-eta");
-      if (typeof window.startPremiumNavigation === "function")
+  try {
+    const path = routeResult.path;
+    const leg = routeResult.leg;
+
+    // Tracé de la polyline sur la carte
+    const polyline = new google.maps.Polyline({
+      path: path,
+      map: map,
+      strokeColor: "#00d2ff",
+      strokeOpacity: 0.8,
+      strokeWeight: 6,
+    });
+    currentRoutePolylines.push(polyline);
+
+    // --- AJUSTEMENT DE LA VUE DE LA CARTE ---
+    const bounds = new google.maps.LatLngBounds();
+    path.forEach((p) => bounds.extend(p));
+    map.fitBounds(bounds);
+
+    const infoBar = document.getElementById("nav-info-bar");
+    if (infoBar) {
+      infoBar.style.setProperty("display", "flex", "important");
+    }
+
+    const btnStop = document.getElementById("btn-stop-nav");
+    if (btnStop) btnStop.classList.remove("hidden");
+
+    const distEl = document.getElementById("nav-dist");
+    const timeEl = document.getElementById("nav-time");
+    const etaEl = document.getElementById("nav-eta");
+    if (typeof window.startPremiumNavigation === "function") {
+      try {
         window.startPremiumNavigation(leg);
+      } catch (navErr) {
+        console.warn("[app-map] Erreur startPremiumNavigation:", navErr);
+      }
+    }
 
-      const routeDistText = leg.distanceMeters >= 1000 ? (leg.distanceMeters / 1000).toFixed(1) + " km" : leg.distanceMeters + " m";
-      if (distEl) distEl.textContent = routeDistText;
+    const routeDistText = leg.distanceMeters >= 1000 ? (leg.distanceMeters / 1000).toFixed(1) + " km" : leg.distanceMeters + " m";
+    if (distEl) distEl.textContent = routeDistText;
 
-      let durationSec = parseInt(leg.duration.replace('s', ''), 10) || 0;
-      const distanceMeters = leg.distanceMeters;
+    let durationSec = typeof leg.duration === 'string' ? (parseInt(leg.duration.replace('s', ''), 10) || 0) : (leg.duration?.value || leg.durationSec || 0);
+    const distanceMeters = leg.distanceMeters;
 
       // --- AJUSTEMENT 50cc ---
       durationSec = Math.round(durationSec * 1.2); // +20% pour scooter 50cc en ville
@@ -272,9 +433,6 @@ destIcon.innerHTML = `<i class="fa-solid fa-flag-checkered"></i>`;
         content: destIcon,
       });
       currentRouteMarkers.push(destinationMarker);
-    } else {
-      speak("Aucun itinéraire trouvé vers cette destination.");
-    }
   } catch (error) {
     console.error("Routage impossible: ", error);
     speak("Erreur de calcul d'itinéraire.");

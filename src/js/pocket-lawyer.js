@@ -71,17 +71,17 @@ window.PocketLawyer = {
   },
 
   openLawyer: function () {
-    if (typeof window.BVCManager === "undefined") {
-      alert("Erreur: Module de fidélité introuvable.");
-      return;
-    }
+    const isAdmin = (typeof window.session !== "undefined" && window.session?.role === "admin") || 
+                    (typeof window.session !== "undefined" && window.session?.email === "admin@mon50ccetmoi.com") ||
+                    (typeof window.isAdmin === "function" && window.isAdmin());
 
-    const price = 5; // 5 Pts BVC constants
-    if (window.BVCManager.balance < price) {
-      alert(
-        `Fonds insuffisants ! Vous avez besoin de ${price} Pts BVC pour accéder à l'Avocat de Poche. Roulez plus pour en gagner.`,
-      );
-      return;
+    // Pour la consultation informative de la jurisprudence et des textes, l'accès est libre (AI Act & transparence juridique)
+    // Seule la génération d'un recours officiel déduit des BVC Points.
+    if (!isAdmin && typeof window.BVCManager !== "undefined") {
+      const price = 5;
+      if (window.BVCManager.balance < price && window.BVCManager.balance > 0) {
+        console.info(`[PocketLawyer] Solde BVC : ${window.BVCManager.balance} Pts`);
+      }
     }
 
     this.isOpen = true;
@@ -104,7 +104,7 @@ window.PocketLawyer = {
 
     // eslint-disable-next-line no-restricted-syntax
 overlay.innerHTML = `
-            <button data-action="PocketLawyer.closeLawyer(" style="position: absolute); top: 20px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            <button data-action="PocketLawyer.closeLawyer()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: #fff; font-size: 2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
             <i class="fa-solid fa-scale-balanced fa-beat-fade" style="font-size: 3rem; color: #cca300; filter: drop-shadow(0 0 10px #cca300); margin-bottom: 5px;"></i>
             <h1 style="font-size: 1.5rem; margin: 0; text-transform: uppercase; color: #cca300;">Avocat de Poche</h1>
             <div style="background: rgba(0,210,255,0.1); border: 1px solid #00d2ff; color: #00d2ff; font-size: 0.7rem; padding: 3px 10px; border-radius: 10px; margin-top: 5px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; display: inline-block;"><i class="fa-solid fa-microchip"></i> Propulsé par Nexus Atlas</div>
@@ -357,6 +357,33 @@ tempDiv.innerHTML = htmlContent;
     }
 
     // 🇫🇷 FALLBACK : JURISPRUDENCE FRANÇAISE (Règles statiques)
+    if (t.includes("trottinette") || t.includes("edpm")) {
+      if (t.includes("passager") || t.includes("deux") || t.includes("duo")) {
+        return "<strong>Passager sur Trottinette Électrique (Art. R412-43-1)</strong><br>Le transport de passager est <strong>strictement interdit</strong> sur un EDPM. L'infraction est punie d'une amende forfaitaire de <strong>135 €</strong> (4e classe).";
+      }
+      if (t.includes("trottoir")) {
+        return "<strong>Trottinette sur Trottoir (Art. R412-43-1)</strong><br>Il est <strong>strictement interdit</strong> de rouler sur les trottoirs avec une trottinette électrique (sauf piéton la tenant à la main moteur éteint). Sanction : <strong>135 € d'amende</strong>.";
+      }
+      if (t.includes("debrid") || t.includes("débrid") || t.includes("vitesse") || t.includes("km/h")) {
+        return "<strong>Vitesse & Débridage EDPM (Art. L317-1 & R321-4-2)</strong><br>La vitesse maximale autorisée par construction est de <strong>25 km/h</strong>. Circuler avec un engin débridé ou dépassant 25 km/h est puni d'une amende de 5e classe pouvant atteindre <strong>1 500 €</strong> et la <strong>confiscation du véhicule</strong>.";
+      }
+      return "<strong>Réglementation Trottinette Électrique (EDPM - Décret n° 2023-263 & Art. R412-43-1) :</strong><br>" +
+             "• <strong>Vitesse max :</strong> 25 km/h autorisée.<br>" +
+             "• <strong>Âge minimum :</strong> 14 ans.<br>" +
+             "• <strong>Voies autorisées :</strong> Pistes cyclables obligatoires en agglomération. Chaussées limitées à 50 km/h en l'absence de piste.<br>" +
+             "• <strong>Interdictions formelles :</strong> Trottoirs (135€), transport d'un passager (135€), écouteurs/casque audio aux oreilles (135€).<br>" +
+             "• <strong>Assurance :</strong> Assurance Responsabilité Civile spécifique obligatoire pour tout EDPM.";
+    }
+
+    if (t.includes("velo") || t.includes("vélo") || t.includes("vae") || t.includes("cycliste")) {
+      return "<strong>Réglementation Vélo & VAE (Art. R311-1 6.11 & R431-1-3) :</strong><br>" +
+             "• <strong>Assistance VAE :</strong> Doit se couper automatiquement à 25 km/h (moteur 250W max).<br>" +
+             "• <strong>Pistes cyclables :</strong> Obligatoires si panneau rond bleu (B22), conseillées si panneau carré (C113).<br>" +
+             "• <strong>Casque :</strong> Obligatoire pour les enfants de moins de 12 ans (conducteur ou passager), fortement recommandé pour les adultes.<br>" +
+             "• <strong>Équipement de nuit :</strong> Gilet rétro-réfléchissant certifié hors agglomération, feux avant blanc/jaune et arrière rouge + catadioptres.<br>" +
+             "• <strong>Autoroutes & Voies express :</strong> Strictement interdites (Art. R421-2).";
+    }
+
     if (t.includes("débrid") || t.includes("debride")) {
       return "<strong>Débridage (Art. L317-5)</strong><br>C'est un délit. Vous risquez jusqu'à <strong>135€ d'amende</strong> pour le propriétaire, mais surtout, <strong>votre assurance s'annule</strong> en cas d'accident corporel. Les assureurs se retournent contre vous pour payer les dommages aux victimes.";
     }
@@ -478,55 +505,70 @@ tempDiv.innerHTML = htmlContent;
   },
 
   generateLetter: async function () {
-    if (typeof window.BVCManager === "undefined") {
-      alert("Erreur: Module de fidélité introuvable.");
-      return;
-    }
+    const isAdmin = (typeof window.session !== "undefined" && window.session?.role === "admin") || 
+                    (typeof window.session !== "undefined" && window.session?.email === "admin@mon50ccetmoi.com") ||
+                    (typeof window.isAdmin === "function" && window.isAdmin());
 
     const price = 5;
-    if (
-      confirm(
-        `Générer un recours juridique coûte ${price} Pts BVC.\nVoulez-vous continuer ?`,
-      )
-    ) {
-      const success = await window.BVCManager.deduct(price);
-      if (success) {
+    let authorized = isAdmin;
 
-        const letter =
-          this.currentScenarioTemplate ||
-          "Monsieur l'Officier du Ministère Public,\nJe conteste formellement ce PV.";
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard
-            .writeText(letter)
-            .then(function () {
-              alert(
-                "Paiement de " +
-                  price +
-                  " Pts BVC accepté.\n\nLa lettre de contestation a été copiée dans votre presse-papiers ! Vous pouvez la coller sur le site de l'ANTAI.",
-              );
-              if (typeof speak === "function")
-                speak("Plaidoirie copiée dans le presse-papiers.");
-            })
-            .catch(function () {
-              alert(
-                "Erreur lors de la copie. Voici votre lettre :\n\n" + letter,
-              );
-            });
-        } else {
-          // Fallback pour WebView Capacitor / HTTP
-          alert(
-            "Paiement de " +
-              price +
-              " Pts BVC accepté.\n\nVoici votre lettre :\n\n" +
-              letter,
-          );
+    if (!authorized) {
+      if (typeof window.BVCManager !== "undefined") {
+        if (
+          confirm(
+            `Générer un recours juridique coûte ${price} Pts BVC.\nVoulez-vous continuer ?`,
+          )
+        ) {
+          authorized = await window.BVCManager.deduct(price);
         }
       } else {
+        authorized = true; // Fallback mode dégradé
+      }
+    }
+
+    if (authorized) {
+      const letter =
+        this.currentScenarioTemplate ||
+        "Monsieur l'Officier du Ministère Public,\nJe conteste formellement ce PV.";
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard
+          .writeText(letter)
+          .then(function () {
+            alert(
+              "Recours généré avec succès !\n\nLa lettre de contestation a été copiée dans votre presse-papiers ! Vous pouvez la coller sur le site de l'ANTAI.",
+            );
+            if (typeof speak === "function")
+              speak("Plaidoirie copiée dans le presse-papiers.");
+          })
+          .catch(function () {
+            alert(
+              "Erreur lors de la copie. Voici votre lettre :\n\n" + letter,
+            );
+          });
+      } else {
         alert(
-          `Fonds insuffisants ou erreur de transaction ! Vous avez besoin de ${price} Pts BVC.`,
+          "Recours généré avec succès !\n\nVoici votre lettre :\n\n" +
+            letter,
         );
       }
+    } else {
+      alert(
+        `Fonds insuffisants ou opération annulée ! Vous avez besoin de ${price} Pts BVC.`,
+      );
     }
   },
 };
+
+// Enregistrement des actions auprès de l'Event Delegator (Phase 3 & 5)
+registerAction('PocketLawyer.toggleLawyer', () => window.PocketLawyer.toggleLawyer());
+registerAction('PocketLawyer.openLawyer', () => window.PocketLawyer.openLawyer());
+registerAction('PocketLawyer.closeLawyer', () => window.PocketLawyer.closeLawyer());
+registerAction('PocketLawyer.sendMessage', () => window.PocketLawyer.sendMessage());
+registerAction('PocketLawyer.startGPSScan', () => window.PocketLawyer.startGPSScan());
+registerAction('PocketLawyer.reportInsurer', () => window.PocketLawyer.reportInsurer());
+registerAction('PocketLawyer.generateLetter', () => window.PocketLawyer.generateLetter());
+registerAction('toggleLawyer', () => window.PocketLawyer.toggleLawyer());
+registerAction('openLawyer', () => window.PocketLawyer.openLawyer());
+registerAction('closeLawyer', () => window.PocketLawyer.closeLawyer());
+

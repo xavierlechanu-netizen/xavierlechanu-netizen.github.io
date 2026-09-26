@@ -132,3 +132,8 @@ container.innerHTML = '';
 
 // Exposer globalement pour les onclick des boutons du dock
 window.ScreenManager = ScreenManager;
+
+registerAction('ScreenManager.open', (screenId) => ScreenManager.open(screenId));
+registerAction('ScreenManager.close', () => ScreenManager.close());
+registerAction('openScreen', (screenId) => ScreenManager.open(screenId));
+registerAction('closeScreen', () => ScreenManager.close());

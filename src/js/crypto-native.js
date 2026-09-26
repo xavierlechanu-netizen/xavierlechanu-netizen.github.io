@@ -61,9 +61,11 @@ async function getDerivedKey() {
 }
 
 /**
- * Chiffre une valeur et la sauvegarde dans le localStorage
+ * Chiffre une valeur via AES-GCM et la sauvegarde dans le localStorage.
+ * IMPORTANT : Cette fonction est réservée aux cas nécessitant un vrai chiffrement client-side.
+ * Pour le stockage standard de session, utiliser secureSetItem de config.js.
  */
-window.secureSetItem = async function(key, value) {
+window.cryptoSecureSetItem = async function(key, value) {
   try {
     const cryptoKey = await getDerivedKey();
     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -92,9 +94,10 @@ window.secureSetItem = async function(key, value) {
 };
 
 /**
- * Récupère et déchiffre une valeur du localStorage
+ * Récupère et déchiffre une valeur AES-GCM du localStorage.
+ * IMPORTANT : Utiliser uniquement pour lire des données écrites par cryptoSecureSetItem.
  */
-window.secureGetItem = async function(key) {
+window.cryptoSecureGetItem = async function(key) {
   const item = localStorage.getItem(key);
   if (!item) return null;
 
@@ -131,3 +134,8 @@ window.secureGetItem = async function(key) {
     }
   }
 };
+
+// IMPORTANT : NE PAS écraser window.secureSetItem / window.secureGetItem ici.
+// Ces fonctions sont définies dans config.js (couche hybride IndexedDB + RAM Cache)
+// et sont la source de vérité pour le stockage de session.
+

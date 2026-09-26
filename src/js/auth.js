@@ -43,10 +43,9 @@ window.cacheRemoveItem = function (key) {
   localStorage.removeItem(key);
 };
 
-// Rétrocompatibilité — à supprimer dans une future version
-window.secureSetItem = window.cacheSetItem;
-window.secureGetItem = window.cacheGetItem;
-window.secureRemoveItem = window.cacheRemoveItem;
+// IMPORTANT : secureSetItem / secureGetItem sont déjà définis dans config.js
+// (couche hybride IndexedDB + RAM Cache). NE PAS les écraser ici.
+// Les fonctions cacheSetItem / cacheGetItem restent des utilitaires distincts.
 
 window.getSyncKey = function () {
   // Return an empty string or fixed value since we removed NeuralCrypto
@@ -452,6 +451,7 @@ if (typeof window !== 'undefined') {
   if (window.register) registerAction('register', window.register);
   if (window.logout) registerAction('logout', window.logout);
   if (window.loginBiometric) registerAction('loginBiometric', window.loginBiometric);
+  if (window.registerBiometric) registerAction('registerBiometric', window.registerBiometric);
   if (window.googleLogin) registerAction('googleLogin', window.googleLogin);
   if (window.checkAuth) registerAction('checkAuth', window.checkAuth);
 }
