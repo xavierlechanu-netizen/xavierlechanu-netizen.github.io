@@ -20,14 +20,13 @@ L'officialisation de la démarche de courtage local via l'immatriculation à l'*
 
 ## 2. STATUT JURIDIQUE & CATÉGORIE D'INTERMÉDIATION
 
-Conformément à l'**Article R. 511-2 du Code des assurances**, l'activité est positionnée dans la catégorie suivante :
+Conformément à l'**Article R. 511-2 du Code des assurances**, le projet adopte définitivement le statut de premier rang :
 
-* **Catégorie 1 : Courtier d'assurance ou de réassurance (COA)**
-  * Personne physique ou morale immatriculée au registre du commerce pour le courtage d'assurance.
-  * Agit en tant que **mandataire de l'assuré** (client final) et non de la compagnie d'assurance.
-  * Possède la liberté totale de recommander le contrat le plus adapté au besoin réel de l'assuré (indépendance capitalistique).
-
-*(Option d'étape rapide envisageable : **Catégorie 4 - MIA (Mandataire d'Intermédiaire d'Assurance)** via un accord cadre avec un courtier grossiste avant bascule définitive en COA).*
+* **Catégorie 1 : Courtier d'assurance ou de réassurance (COA) de plein exercice**
+  * **Décision validée** : Parcours direct en Courtier Indépendant (COA) sans passer par l'étape intermédiaire de mandataire (MIA).
+  * **Mandat** : Mandataire de l'assuré (le jeune conducteur / ses parents).
+  * **Liberté de placement** : Choix indépendant et multi-compagnies des meilleurs contrats 2-roues du marché.
+  * **Association professionnelle d'affiliation** : **Planète CSCA** (Syndicat et association agréée ACPR leader en France).
 
 ---
 
@@ -132,7 +131,41 @@ Ajout dans [`src/mentions-legales.html`](file:///c:/Users/xavie/.gemini/antigrav
 
 | Mois | Jalons Opérationnels |
 |---|---|
-| **M1 (Octobre 2026)** | Inscription et démarrage du stage professionnel Niveau I (150h e-learning). Constitution du dossier d'adhésion à l'association professionnelle (Planète CSCA ou ENDYA). |
-| **M2 (Novembre 2026)** | Finalisation du stage et obtention du Livret de formation Niveau I. Négociation de la police de RC Pro Courtier (sans maniement de fonds). Dépôt du dossier en ligne sur le portail ORIAS. |
+| **M1 (Octobre 2026)** | Inscription et démarrage du stage professionnel Niveau I (150h e-learning). Constitution du dossier d'adhésion à Planète CSCA. |
+| **M2 (Novembre 2026)** | Finalisation du stage et obtention du Livret de formation Niveau I. Négociation de la police de RC Pro Courtier (sans maniement de fonds). Dépôt du dossier en ligne sur le portail ORIAS via Planète CSCA. |
 | **M3 (Décembre 2026)** | Réception du numéro ORIAS définitif. Négociation des codes courtiers auprès des grossistes (April Moto, AMV, etc.). Déploiement des mentions réglementaires et du DER sur l'application `mon50ccetmoi`. |
 | **M4 (Janvier 2027)** | Lancement officiel des souscriptions de contrats d'assurance 50cc / micro-mobilité intégrés in-app avec réduction tarifaire boîtier IoT. |
+
+---
+
+## 8. ANNEXE TECHNIQUE : MODÈLE TYPE DE DOCUMENT D'ENTRÉE EN RELATION (DER)
+*Conforme aux articles L. 521-2 et R. 521-1 du Code des assurances (Distribution d'Assurances — DDA)*
+
+```markdown
+# DOCUMENT D'INFORMATIONS PRÉCONTRACTUELLES (D.E.R.)
+À remettre obligatoirement avant toute souscription ou émission de proposition d'assurance.
+
+1. IDENTIFICATION DU CABINET DE COURTAGE
+- Raison sociale : Xavier Le Chanu — Cabinet de Courtage mon50ccetmoi
+- Statut juridique : Entrepreneur Individuel (SIRET : 891 912 503 00036)
+- Immatriculation ORIAS : Courtier d'assurance (COA) sous le N° [Numéro ORIAS] (vérifiable sur www.orias.fr)
+- Autorité de tutelle : ACPR (Autorité de Contrôle Prudentiel et de Résolution) — 4 Place de Budapest, CS 92459, 75436 Paris Cedex 09.
+- Membre de l'Association Professionnelle Agréée : Planète CSCA (10 Rue de la Trémoille, 75008 Paris).
+
+2. ASSURANCE RESPONSABILITÉ CIVILE PROFESSIONNELLE
+- Police d'assurance RC Pro souscrite auprès de [Compagnie], conforme aux articles L. 512-6 et L. 512-7 du Code des assurances.
+- Attestation de non-encaissement de fonds : Le cabinet n'encaisse aucune prime pour le compte des assurés (prélèvement direct par l'assureur porteur de risque).
+
+3. NATURE DE NOTRE MISSION & INDÉPENDANCE
+- Le cabinet agit en qualité de courtier d'assurance indépendant, mandataire de l'assuré (client).
+- Absence de lien capitalistique : Le cabinet ne détient aucune participation directe ou indirecte supérieure à 10 % des droits de vote ou du capital d'une entreprise d'assurance, et aucune entreprise d'assurance ne détient de participation dans le cabinet.
+- Modalités de sélection : Notre analyse repose sur une sélection comparative objective parmi les contrats du marché partenaires (courtiers grossistes et compagnies d'assurance agréées en France).
+
+4. MODALITÉS DE RÉMUNÉRATION
+- Le cabinet est rémunéré sous forme de commission incluse dans la prime commerciale versée à l'organisme assureur, et/ou par des honoraires de courtage et d'ouverture de dossier dont le montant est clairement indiqué avant toute conclusion de contrat.
+
+5. RÉCLAMATIONS & MÉDIATION
+- Pour toute réclamation, contactez notre service réclamation : reclamation@mon50ccetmoi.com
+- En cas de désaccord persistant ou d'absence de réponse sous 2 mois, vous pouvez saisir gratuitement le Médiateur de l'Assurance :
+  La Médiation de l'Assurance (LMA) — TSA 50110, 75441 Paris Cedex 09 (https://www.mediation-assurance.org).
+```
