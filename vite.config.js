@@ -22,7 +22,20 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true,
     rollupOptions: {
-      input: inputMap
+      input: inputMap,
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('firebase')) {
+              return 'vendor-firebase';
+            }
+            if (id.includes('localforage')) {
+              return 'vendor-storage';
+            }
+            return 'vendor-libs';
+          }
+        }
+      }
     }
   }
 });

@@ -631,6 +631,24 @@ function loadHazards() {
     return true;
   });
 
+  // Filtrage par rayon de proximité (max 25 km autour du conducteur)
+  if (window.currentPos && window.currentPos.lat && window.currentPos.lng) {
+    const uLat = window.currentPos.lat;
+    const uLng = window.currentPos.lng;
+    hazards = hazards.filter((h) => {
+      const hLat = h.pos?.lat || h.lat;
+      const hLng = h.pos?.lng || h.lng;
+      if (!hLat || !hLng) return true;
+      const dLat = (hLat - uLat) * Math.PI / 180;
+      const dLon = (hLng - uLng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(uLat * Math.PI / 180) * Math.cos(hLat * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const distKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return distKm <= 25;
+    });
+  }
+
   hazardMarkers.forEach((m) => m.setMap(null));
   hazardMarkers = [];
 

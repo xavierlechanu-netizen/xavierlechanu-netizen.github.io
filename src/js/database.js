@@ -73,22 +73,34 @@ function cloudDecrypt(encryptedData) {
 function syncHazards() {
   if (!db) return;
 
-  db.collection("hazards").onSnapshot((snapshot) => {
+  // OWASP A11 & Anti-DoS: Limiter strictement aux dangers récents (4h) et max 50 documents
+  const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+
+  const processSnapshot = (snapshot) => {
     const hazards = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      // Si la donnée est chiffrée (E2EE), on la déchiffre
       if (data.payload) {
         const decrypted = cloudDecrypt(data.payload);
         if (decrypted) hazards.push(decrypted);
       } else {
-        hazards.push(data); // Legacy (Plaintext)
+        hazards.push(data);
       }
     });
 
     secureSetItem("hazards", JSON.stringify(hazards));
     if (typeof loadHazards === "function") loadHazards();
-  });
+  };
+
+  db.collection("hazards")
+    .where("timestamp", ">=", fourHoursAgo)
+    .limit(50)
+    .onSnapshot(processSnapshot, (error) => {
+      // Fallback gracieux si l'index composite n'est pas encore disponible
+      if (error && error.code === 'failed-precondition') {
+        db.collection("hazards").limit(50).onSnapshot(processSnapshot);
+      }
+    });
 }
 
 window.publishHazardCloud = async function (hazard) {

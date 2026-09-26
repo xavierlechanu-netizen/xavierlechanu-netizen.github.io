@@ -281,6 +281,7 @@ let guardianCheckInterval = null;
 let gForceThreshold = 4.5; // G force for impact detection
 let currentLeanAngle = 0;
 let maxLeanAngle = 0;
+window.maxLeanAngle = 0;
 let isTelemetryActive = false;
 
 // --- INITIALIZATION ---
@@ -2147,7 +2148,10 @@ window.addEventListener("deviceorientation", (e) => {
 
   const lean = Math.round(e.gamma); // Tilt left/right
   currentLeanAngle = Math.abs(lean);
-  if (currentLeanAngle > maxLeanAngle) maxLeanAngle = currentLeanAngle;
+  if (currentLeanAngle > maxLeanAngle) {
+    maxLeanAngle = currentLeanAngle;
+    window.maxLeanAngle = maxLeanAngle;
+  }
 
   // --- INTEGRATION: Guardian Angel Dangerous Overtake Check ---
   if (
