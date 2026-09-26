@@ -715,8 +715,12 @@ function showToast(msg) {
 }
 
 function showError(msg) {
-  document.getElementById('radar-map').innerHTML =
-    `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ff0055;font-family:Inter,sans-serif;">${msg}</div>`;
+  const mapEl = document.getElementById('radar-map');
+  if (!mapEl) return;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#ff0055;font-family:Inter,sans-serif;';
+  div.textContent = msg;
+  mapEl.replaceChildren(div);
 }
 
 function darkMapStyle() {

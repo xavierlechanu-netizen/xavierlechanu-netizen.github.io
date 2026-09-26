@@ -53,7 +53,7 @@ import { registerAction } from './actionRegistry.js';
         battery.addEventListener('levelchange', () => this.updateBatteryStatus(battery));
         battery.addEventListener('chargingchange', () => this.updateBatteryStatus(battery));
       } catch (e) {
-        console.debug('[ESG-IT] Battery API indisponible ou restreinte:', e);
+        console.warn('[ESG-IT] Battery API indisponible ou restreinte:', e);
       }
     }
 

@@ -346,7 +346,7 @@ content.innerHTML = `<div class="card-insurance" style="border: 2px solid #b700f
                 <button class="btn-insurance" style="width:100%; margin-top:10px; background: #ffb703; color: black; font-weight: bold;" data-action="showPage('insurance')">VOIR MON OFFRE ASSURANCE</button>
             </div>
 
-            <button class="btn-insurance" style="width:100%; background: linear-gradient(135deg, #b700ff, #00d2ff); color: white; font-weight: bold; border: none; padding: 15px; border-radius: 10px;" data-action="PredictiveMeca.checkAlerts(); alert('L\'IA analyse vos données de télémétrie actuelles... Aucun risque de serrage moteur détecté pour le moment. Vous roulez de manière optimale !')"><i class="fa-solid fa-bolt"></i> LANCER L'ANALYSE IA</button>
+            <button class="btn-insurance" style="width:100%; background: linear-gradient(135deg, #b700ff, #00d2ff); color: white; font-weight: bold; border: none; padding: 15px; border-radius: 10px;" data-action="PredictiveMeca.checkAlerts(); alert('L’IA analyse vos données de télémétrie actuelles... Aucun risque de serrage moteur détecté pour le moment. Vous roulez de manière optimale !')"><i class="fa-solid fa-bolt"></i> LANCER L'ANALYSE IA</button>
         </div>`;
   } else if (page === "profile") {
     if (typeof content !== "undefined")
@@ -423,7 +423,7 @@ content.innerHTML = `<h3><i class="fa-solid fa-oil-can"></i> Le Sorcier de la M�
                 <div style="margin-top:15px;">
                     <input type="number" id="mix-liters" placeholder="Litres d'essence" class="scooter-brand-select" style="width:100%; margin-bottom:10px;">
                     <input type="number" id="mix-percent" placeholder="% d'huile (ex: 2)" class="scooter-brand-select" style="width:100%; margin-bottom:10px;">
-                    <button data-action="const vol = MecaWizard.calculateMix(document.getElementById('mix-liters').value, document.getElementById('mix-percent').value); document.getElementById('mix-res').innerHTML = vol + ' ml d\'huile Ãƒ  ajouter';" 
+                    <button data-action="const vol = MecaWizard.calculateMix(document.getElementById('mix-liters').value, document.getElementById('mix-percent').value); document.getElementById('mix-res').innerHTML = vol + ' ml d’huile à ajouter';" 
                             class="btn-insurance" style="width:100%; background:var(--accent); color:black;">CALCULER</button>
                     <div id="mix-res" style="margin-top:15px; font-weight:bold; text-align:center; color:var(--neon-blue;"></div>
                 </div>
@@ -510,7 +510,7 @@ content.innerHTML = `<div class="card" style="border:1px solid #9b59b6;">
                     : ""
               }
         </div>`;
-  } else if (page === "roadbooks") {
+  } else if (page === "chronos" || page === "chronos_guard") {
     if (typeof content !== "undefined")
       // eslint-disable-next-line no-restricted-syntax
 content.innerHTML = `<h3><i class="fa-solid fa-map-location-dot"></i> Navigation & Roadbooks</h3>
@@ -527,7 +527,7 @@ content.innerHTML = `<h3><i class="fa-solid fa-map-location-dot"></i> Navigation
             </div>
             
             <p style="text-align:center; padding:40px; color:#666;">Liste de vos roadbooks sauvegardés...</p>`;
-  } else if (page === "arbitre") {
+  } else if (page === "arbitre_litige" || page === "litigation" || page === "blackbox_litige") {
     if (
       window.Blackbox &&
       typeof window.Blackbox.showLitigationInfo === "function"

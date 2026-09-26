@@ -74,8 +74,7 @@ window.renderDynamicGarage = function () {
   if (!window.session) return;
   const c = document.getElementById("dynamic-garage-list");
   if (!c) return;
-  // eslint-disable-next-line no-restricted-syntax
-c.innerHTML = "";
+  c.replaceChildren();
   Object.keys(maintenanceIntervals).forEach((k) => {
     const total = window.session.totalDistance || 0;
     const last = (window.session.maintenance || {})[k] || 0;
@@ -83,7 +82,19 @@ c.innerHTML = "";
       ((total - last) / maintenanceIntervals[k]) * 100,
       100,
     );
-    c.innerHTML += `<div class="garage-item"><span>${k.toUpperCase()}</span><div class="garage-bar-bg"><div class="garage-bar-fill" style="width:${percent}%"></div></div></div>`;
+    const item = document.createElement("div");
+    item.className = "garage-item";
+    const span = document.createElement("span");
+    span.textContent = k.toUpperCase();
+    const barBg = document.createElement("div");
+    barBg.className = "garage-bar-bg";
+    const barFill = document.createElement("div");
+    barFill.className = "garage-bar-fill";
+    barFill.style.width = `${percent}%`;
+    barBg.appendChild(barFill);
+    item.appendChild(span);
+    item.appendChild(barBg);
+    c.appendChild(item);
   });
 };
 

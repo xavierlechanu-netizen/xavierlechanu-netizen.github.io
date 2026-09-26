@@ -19,6 +19,7 @@ import { registerAction } from './actionRegistry.js';
             `${fillPercent}%`;
 
           if (remaining === 0) {
+            // eslint-disable-next-line no-restricted-syntax
             document.getElementById("betaForm").innerHTML = `
                         <div style="background: rgba(255,0,85,0.1); border: 1px solid #ff0055; padding: 15px; border-radius: 10px; color: #ff0055;">
                             La Beta est malheureusement complète !

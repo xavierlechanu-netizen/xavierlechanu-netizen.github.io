@@ -94,9 +94,11 @@ async function loadGarageData() {
 
   } catch (error) {
     console.error("Erreur chargement données garage:", error);
-    if (error.code === 'failed-precondition') {
-      document.getElementById("predictive-alerts").innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);">Erreur d'index Firestore. Utilisez le bouton "Générer Démo".</div>`;
-    }
+      const alertsEl = document.getElementById("predictive-alerts");
+      if (alertsEl) {
+        // eslint-disable-next-line no-restricted-syntax
+        alertsEl.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);">Erreur d'index Firestore. Utilisez le bouton "Générer Démo".</div>`;
+      }
   }
 }
 

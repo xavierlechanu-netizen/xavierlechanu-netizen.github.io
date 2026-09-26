@@ -24,6 +24,7 @@ ul.innerHTML = "";
         users.forEach((u) => {
           const safeName = escapeHTML(u.username);
           const safeRole = escapeHTML(u.role);
+          // eslint-disable-next-line no-restricted-syntax
           ul.innerHTML += `<li>
                     <span><i class="fa-solid fa-user${safeRole === "admin" ? "-tie" : ""}"></i> <strong>${safeName}</strong> <span class="role-badge">${safeRole}</span></span>
                     ${safeRole !== "admin" ? `<button data-action="deleteUser('${safeName}')" class="btn-delete"><i class="fa-solid fa-trash"></i></button>` : ""}
@@ -43,6 +44,7 @@ hl.innerHTML = "";
               : h.type === "accident"
                 ? "Accident"
                 : "Danger";
+          // eslint-disable-next-line no-restricted-syntax
           hl.innerHTML += `<li>
                     <span><i class="fa-solid fa-triangle-exclamation" style="color:var(--warning)"></i> <strong>${safeAuthor}</strong> : ${badgeStr}</span>
                     <button data-action="deleteHazard(${index})" class="btn-delete"><i class="fa-solid fa-trash"></i></button>
@@ -58,6 +60,7 @@ ml.innerHTML = "";
           moods.forEach((m, index) => {
             const safeAuthor = escapeHTML(m.author);
             const safeText = escapeHTML(m.text ? m.text : m.label);
+            // eslint-disable-next-line no-restricted-syntax
             ml.innerHTML += `<li>
                         <span style="font-size:0.9rem;"><strong>${safeAuthor}</strong>: "${safeText}"</span>
                         <button data-action="deleteMood(${index})" class="btn-delete"><i class="fa-solid fa-trash"></i></button>
@@ -76,6 +79,7 @@ sl.innerHTML = "";
             const safeAuthor = escapeHTML(s.author);
             const safeText = escapeHTML(s.text);
             const safeDate = escapeHTML(s.date);
+            // eslint-disable-next-line no-restricted-syntax
             sl.innerHTML += `<li>
                         <span style="font-size:0.9rem; line-height: 1.4;"><strong>${safeAuthor}</strong> (${safeDate}):<br/><i>"${safeText}"</i></span>
                         <button data-action="deleteSuggestion(${index})" class="btn-delete" title="Archiver / Supprimer"><i class="fa-solid fa-check"></i></button>

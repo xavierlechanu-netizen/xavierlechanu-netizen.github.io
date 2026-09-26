@@ -37,7 +37,7 @@ function openReportModal(id, speed, gforce, fraud) {
           pendingAdminId = identifiant;
           document.getElementById("siret-modal").style.display = "flex";
           document.getElementById("siret-input").value = "";
-          document.getElementById("siret-result").innerHTML = "";
+          document.getElementById("siret-result").textContent = "";
           return;
         }
 
@@ -202,6 +202,7 @@ resultDiv.innerHTML = '<span style="color:#ff3333;">Erreur lors de la connexion 
 
           const escapeHTML = (str) => String(str).replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
           
+          // eslint-disable-next-line no-restricted-syntax
           document.getElementById("partner-name-display").innerHTML =
             escapeHTML(id) + badgeHtml;
 

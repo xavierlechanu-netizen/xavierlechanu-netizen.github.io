@@ -24,38 +24,47 @@ function updateHoloVehicle(type) {
     }
   }
 
+  function setSafeHTML(el, content) {
+    if (window.DOMSecurity && window.DOMSecurity.safeHTML) {
+      window.DOMSecurity.safeHTML(el, content);
+    } else {
+      // eslint-disable-next-line no-restricted-syntax
+      el.innerHTML = content;
+    }
+  }
+
   // Update Legal Specs Card
   if (specBody) {
     if (type === "trottinette") {
       if (specTitle) specTitle.textContent = "Réglementation EDPM (Trottinette Électrique)";
-      specBody.innerHTML = `
+      setSafeHTML(specBody, `
         • Vitesse max autorisée : <strong>25 km/h</strong> (Art. R311-1 6.15 Code de la route)<br>
         • Pistes cyclables obligatoires en ville si présentes | <strong>Trottoir interdit</strong> (amende 135 €)<br>
         • Âge minimum : <strong>14 ans</strong> | <strong>Passager strictement interdit</strong> (amende 135 €)<br>
         • Équipement : Feux AV/AR, avertisseur sonore, gilet rétro-réfléchissant la nuit.
-      `;
+      `);
     } else if (type === "velo") {
       if (specTitle) specTitle.textContent = "Réglementation Vélo & VAE";
-      specBody.innerHTML = `
+      setSafeHTML(specBody, `
         • Vitesse assistance VAE : <strong>25 km/h</strong> (moteur 250W max, Art. R311-1 6.11)<br>
         • Pistes &amp; bandes cyclables prioritaires | Trottoir interdit &gt; 8 ans<br>
         • Casque obligatoire &lt; 12 ans (recommandé pour tous) | Éclairage obligatoire la nuit<br>
         • Circulation sur autoroutes &amp; voies express : <strong>Interdite</strong> (Art. R421-2).
-      `;
+      `);
     } else if (type === "vsp") {
       if (specTitle) specTitle.textContent = "Réglementation Voiture Sans Permis (VSP)";
-      specBody.innerHTML = `
+      setSafeHTML(specBody, `
         • Vitesse max constructeur : <strong>45 km/h</strong> (Permis AM / BSR dès 14 ans)<br>
         • Voies express &amp; autoroutes : <strong>Strictement interdites</strong> (Art. R421-2)<br>
         • Ceinture de sécurité obligatoire | Interdiction de remonter les files.
-      `;
+      `);
     } else {
       if (specTitle) specTitle.textContent = "Réglementation Cyclomoteur 50cc";
-      specBody.innerHTML = `
+      setSafeHTML(specBody, `
         • Vitesse max constructeur : <strong>45 km/h</strong> (Art. R311-1)<br>
         • Voies express &amp; autoroutes : <strong>Strictement interdites</strong> (Art. R421-2)<br>
         • Équipement : Casque attaché &amp; gants homologués CE obligatoires (retrait 3 pts / amende).
-      `;
+      `);
     }
   }
 
@@ -88,7 +97,7 @@ function updateHoloVehicle(type) {
       icon.style.color = "#00d2ff";
       icon.style.filter = "drop-shadow(0 0 15px #00d2ff)";
     }
-    icon.innerHTML = html;
+    setSafeHTML(icon, html);
     icon.style.opacity = "1";
     icon.style.transform = "scale(1)";
   }, 200);

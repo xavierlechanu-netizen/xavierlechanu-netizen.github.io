@@ -141,24 +141,32 @@ window.closeMenu = function () {
 // --- I18N SYSTEM ---
 window.updateI18N = function () {
   const t = window.t || ((k) => k);
+  const setHtml = (el, str) => {
+    if (window.DOMSecurity && window.DOMSecurity.safeHTML) {
+      window.DOMSecurity.safeHTML(el, str);
+    } else {
+      // eslint-disable-next-line no-restricted-syntax
+      el.innerHTML = str;
+    }
+  };
   const mGarage = document.getElementById("menu-garage");
   if (mGarage)
-    mGarage.innerHTML = `<i class="fa-solid fa-warehouse"></i> ${t("garage")}`;
+    setHtml(mGarage, `<i class="fa-solid fa-warehouse"></i> ${t("garage")}`);
   const mRoadbooks = document.getElementById("menu-roadbooks");
   if (mRoadbooks)
-    mRoadbooks.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Roadbooks`;
+    setHtml(mRoadbooks, `<i class="fa-solid fa-map-location-dot"></i> Roadbooks`);
   const mSafety = document.getElementById("menu-rodage");
   if (mSafety)
-    mSafety.innerHTML = `<i class="fa-solid fa-gauge-high"></i> ${t("safety")}`;
+    setHtml(mSafety, `<i class="fa-solid fa-gauge-high"></i> ${t("safety")}`);
   const mInsurance = document.getElementById("menu-insurance");
   if (mInsurance)
-    mInsurance.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${t("insurance")}`;
+    setHtml(mInsurance, `<i class="fa-solid fa-shield-halved"></i> ${t("insurance")}`);
   const mMechanic = document.getElementById("menu-mechanic");
   if (mMechanic)
-    mMechanic.innerHTML = `<i class="fa-solid fa-robot"></i> ${t("maintenance")}`;
+    setHtml(mMechanic, `<i class="fa-solid fa-robot"></i> ${t("maintenance")}`);
   const mArbitre = document.getElementById("menu-arbitre");
   if (mArbitre)
-    mArbitre.innerHTML = `<i class="fa-solid fa-scale-balanced"></i> ${t("arbitre")}`;
+    setHtml(mArbitre, `<i class="fa-solid fa-scale-balanced"></i> ${t("arbitre")}`);
   const lStop = document.getElementById("label-stop-nav");
   if (lStop) lStop.textContent = t("stop");
   const lReroute = document.getElementById("label-reroute");
@@ -168,17 +176,17 @@ window.updateI18N = function () {
     document.querySelector("[onclick=\"scanRadar('fuel')\"] span") ||
     document.querySelector("[onclick=\"scanRadar('fuel')\"]");
   if (gasLabel)
-    gasLabel.innerHTML = `<i class="fa-solid fa-gas-pump"></i> ${t("gas")}`;
+    setHtml(gasLabel, `<i class="fa-solid fa-gas-pump"></i> ${t("gas")}`);
   const emergencyLabel =
     document.querySelector("[onclick=\"scanRadar('doctors')\"] span") ||
     document.querySelector("[onclick=\"scanRadar('doctors')\"]");
   if (emergencyLabel)
-    emergencyLabel.innerHTML = `<i class="fa-solid fa-hospital"></i> ${t("emergency")}`;
+    setHtml(emergencyLabel, `<i class="fa-solid fa-hospital"></i> ${t("emergency")}`);
   const bankLabel =
     document.querySelector("[onclick=\"scanRadar('atm')\"] span") ||
     document.querySelector("[onclick=\"scanRadar('atm')\"]");
   if (bankLabel)
-    bankLabel.innerHTML = `<i class="fa-solid fa-money-bill-1"></i> ${t("bank")}`;
+    setHtml(bankLabel, `<i class="fa-solid fa-money-bill-1"></i> ${t("bank")}`);
 };
 
 // PWA Installation Logic
@@ -2042,10 +2050,9 @@ async function speak(phraseKey) {
   // Simulation d'accents régionaux (pitch/rate)
   if (region && region !== "standard" && voiceMode === "standard") {
     switch (region) {
-      // Système A — Régions administratives (Nominatim)
+      // Système A (Régions) & Système B (Villes/zones GPS)
       case "provence-alpes-côte d'azur":
       case "occitanie":
-      // Système B — Villes/zones (GPS)
       case "marseille":
       case "reunion":
         rate = 0.85;
