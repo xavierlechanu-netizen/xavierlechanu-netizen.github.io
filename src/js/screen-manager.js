@@ -60,16 +60,22 @@ container.innerHTML = '<div style="display:flex;align-items:center;justify-conte
         this.cache[screenId] = await resp.text();
       }
 
-      // Sécurité XSS : Sanitizer le HTML chargé (ASVS v5.0.0-1.3.1)
+      // Sécurité XSS & Event Delegation (ASVS v5.0.0-1.3.1 / v5.0.0-3.2.2)
       if (typeof DOMPurify === 'undefined') {
         console.error('[ScreenManager] DOMPurify non chargé — injection HTML refusée (ASVS v5.0.0-1.3.1)');
         container.textContent = 'Erreur de sécurité : module de sanitization manquant.';
         return;
       }
 
-      const safeHtml = DOMPurify.sanitize(this.cache[screenId], {
+      // Convertir les onclick inline en data-action pour compatibilité Event Delegator
+      let rawContent = this.cache[screenId] || '';
+      rawContent = rawContent.replace(/\bonclick\s*=\s*(['"])(.*?)\1/gi, (match, quote, code) => {
+        return `data-action="${code.replace(/"/g, '&quot;')}"`;
+      });
+
+      const safeHtml = DOMPurify.sanitize(rawContent, {
         ADD_TAGS: ['input', 'select', 'textarea', 'button', 'form', 'canvas', 'video'],
-        ADD_ATTR: ['onclick', 'onchange', 'onkeypress', 'onsubmit', 'oninput', 'aria-label', 'role', 'placeholder', 'type', 'id', 'for'],
+        ADD_ATTR: ['aria-label', 'role', 'placeholder', 'type', 'id', 'for', 'data-action', 'data-id', 'data-value', 'data-screen-close'],
         ALLOW_DATA_ATTR: true,
       });
 

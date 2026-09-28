@@ -70,6 +70,10 @@ window.PocketLawyer = {
     }
   },
 
+  open: function () {
+    return this.openLawyer();
+  },
+
   openLawyer: function () {
     const isAdmin = (typeof window.session !== "undefined" && window.session?.role === "admin") || 
                     (typeof window.session !== "undefined" && window.session?.email === "admin@mon50ccetmoi.com") ||
@@ -127,7 +131,7 @@ overlay.innerHTML = `
             </div>
             
             <div style="width: 90%; max-width: 500px; display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="lawyer-input" placeholder="Votre question..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #555; background: #222; color: #fff; outline: none;" onkeypress="if(event.key === 'Enter') PocketLawyer.sendMessage()">
+                <input type="text" id="lawyer-input" placeholder="Votre question..." style="flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #555; background: #222; color: #fff; outline: none;">
                 <button data-action="PocketLawyer.sendMessage()" style="background: #cca300; color: #000; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
             
@@ -141,6 +145,17 @@ overlay.innerHTML = `
                 .lawyer-btn { padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 15px; }
             </style>
         `;
+
+    // B-04 Fix: Attach Enter key listener AFTER DOM injection (survives DOMPurify)
+    setTimeout(() => {
+      const lawyerInput = document.getElementById('lawyer-input');
+      if (lawyerInput) {
+        lawyerInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') PocketLawyer.sendMessage();
+        });
+        lawyerInput.focus();
+      }
+    }, 50);
   },
 
   reportInsurer: function () {
@@ -326,22 +341,35 @@ tempDiv.innerHTML = htmlContent;
       const results = window.LegalDatabase.search(text);
       if (results.length > 0) {
         const r = results[0];
+        // Build a full HTTPS URL from the stored domain
+        const fullUrl = r.url && !r.url.startsWith("http")
+          ? `https://${r.url}`
+          : (r.url || "https://www.legifrance.gouv.fr");
         let html = `<strong>${r.title}</strong><br>${r.content}`;
-        html += `<br><em style="color:#888; font-size:0.8em;">Source : ${r.source}</em>`;
+        // Render source as clickable link (required by Google Play Misleading Claims policy)
+        html += `<br><em style="color:#888; font-size:0.8em;">Source officielle : <a href="${fullUrl}" target="_blank" rel="noopener noreferrer" style="color:#00f0ff;text-decoration:underline;">${r.source}</a></em>`;
 
         if (results.length > 1) {
-          html += `<br><br><span style="color:#cca300; font-size:0.85em;">📚 ${results.length - 1} autre(s) résultat(s) trouvé(s). Précisez votre question pour affiner.</span>`;
+          html += `<br><br><span style="color:#cca300; font-size:0.85em;">&#x1F4DA; ${results.length - 1} autre(s) resultat(s) trouve(s). Precisez votre question pour affiner.</span>`;
         }
 
         if (t.includes("accident") || t.includes("litige") || t.includes("assurance") || t.includes("accrochage") || t.includes("constat") || t.includes("sinistre")) {
           html += `<br><br><div style="background:rgba(255, 51, 51, 0.1); border:1px solid #ff3333; border-radius:10px; padding:10px; margin-top:10px;">
-                        <p style="margin:0 0 10px 0; color:#ffcccc; font-size:0.9rem;"><strong>Dossier d'Expertise (Boîte Noire)</strong><br>Avez-vous besoin de générer un Code Litige pour votre assureur ?</p>
-                        <button data-action="if(window.DisputeAutomation) window.DisputeAutomation.initiateDispute(); else alert('Module introuvable.');" style="background:#ff3333; color:#fff; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:bold; width:100%;"><i class="fa-solid fa-gavel"></i> Générer mon Code Litige</button>
+                        <p style="margin:0 0 10px 0; color:#ffcccc; font-size:0.9rem;"><strong>Dossier d'Expertise (Boite Noire)</strong><br>Avez-vous besoin de generer un Code Litige pour votre assureur ?</p>
+                        <button data-action="if(window.DisputeAutomation) window.DisputeAutomation.initiateDispute(); else alert('Module introuvable.');" style="background:#ff3333; color:#fff; border:none; border-radius:20px; padding:8px 15px; cursor:pointer; font-weight:bold; width:100%;"><i class="fa-solid fa-gavel"></i> Generer mon Code Litige</button>
                     </div>`;
         }
 
+        // Google Play Misleading Claims policy — mandatory disclaimer
+        html += '<br><div style="background:rgba(255,183,3,0.08);border:1px solid rgba(255,183,3,0.3);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:0.72rem;color:#aaa;">' +
+          '&#x26A0;&#xFE0F; <strong style="color:#ffb703;">Application independante &mdash; Non affiliee au gouvernement.</strong> ' +
+          'Informations a titre indicatif uniquement. ' +
+          '<a href="https://www.legifrance.gouv.fr" target="_blank" rel="noopener noreferrer" style="color:#00f0ff;text-decoration:underline;">legifrance.gouv.fr</a>' +
+          '</div>';
+
         return html;
       }
+
     }
 
     if (t.includes("pays") || t.includes("monde") || t.includes("mondial") || t.includes("international") || (t.includes("quel") && t.includes("droit"))) {
@@ -570,5 +598,6 @@ registerAction('PocketLawyer.reportInsurer', () => window.PocketLawyer.reportIns
 registerAction('PocketLawyer.generateLetter', () => window.PocketLawyer.generateLetter());
 registerAction('toggleLawyer', () => window.PocketLawyer.toggleLawyer());
 registerAction('openLawyer', () => window.PocketLawyer.openLawyer());
-registerAction('closeLawyer', () => window.PocketLawyer.closeLawyer());
+registerAction('PocketLawyer.open', () => window.PocketLawyer.openLawyer());
+registerAction('open', () => window.PocketLawyer.openLawyer());
 

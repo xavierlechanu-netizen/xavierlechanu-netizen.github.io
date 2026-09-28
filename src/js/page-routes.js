@@ -219,8 +219,13 @@ export const PAGE_ROUTES = {
     if (!content) return;
     // eslint-disable-next-line no-restricted-syntax
     content.innerHTML = `<h3><i class="fa-solid fa-scale-balanced"></i> ${t("arbitre_title")}</h3>
-            <p style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Posez votre question sur la réglementation 50cc (débridage, équipement, contrôles...).</p>
+            <p style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Posez votre question sur la reglementation 50cc (debridage, equipement, controles...).</p>
             
+            <div style="background:rgba(255,183,3,0.08);border:1px solid rgba(255,183,3,0.3);border-radius:8px;padding:8px 12px;margin-bottom:15px;font-size:0.72rem;color:#aaa;font-family:Inter,sans-serif;">
+              &#x26A0;&#xFE0F; <strong style="color:#ffb703;">Application independante &mdash; Non affiliee au gouvernement.</strong>
+              Informations basees sur le Code de la Route officiel. Source : <a href="https://www.legifrance.gouv.fr" target="_blank" rel="noopener noreferrer" style="color:#00f0ff;">legifrance.gouv.fr</a>
+            </div>
+
             <div id="arbitre-chat" style="background:rgba(0,0,0,0.3); border-radius:15px; padding:15px; min-height:150px; max-height:300px; overflow-y:auto; margin-bottom:15px; border:1px solid rgba(255,183,3,0.2);">
                 <div class="bot-msg" style="background:rgba(255,183,3,0.1); padding:10px; border-radius:10px 10px 10px 0; margin-bottom:10px; font-size:0.9rem; border-left:3px solid #ffb703;">
                     Bonjour ! Je suis l'Arbitre. Quel est votre litige ou votre question sur le Code de la Route ?
@@ -228,10 +233,11 @@ export const PAGE_ROUTES = {
             </div>
 
             <div style="display:flex; gap:10px;">
-                <input type="text" id="arbitre-query" placeholder="Ex: Mon pot est-il homologué ?" style="flex:1; background:#111; color:white; border:1px solid #444; border-radius:20px; padding:10px 15px; font-size:0.9rem;">
+                <input type="text" id="arbitre-query" placeholder="Ex: Mon pot est-il homologue ?" style="flex:1; background:#111; color:white; border:1px solid #444; border-radius:20px; padding:10px 15px; font-size:0.9rem;">
                 <button data-action="submitArbitre()" style="background:#ffb703; color:black; border:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-paper-plane"></i></button>
             </div>`;
   },
+
 
   ia_predictive: (content) => {
     if (!content) return;

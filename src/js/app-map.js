@@ -2,6 +2,7 @@ import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
 import { registerAction } from './actionRegistry.js';
 
 // --- 3. ROUTAGE ---
+let directionsRenderer = null;
 let destinationMarker = null;
 let currentRoutePolylines = [];
 let currentRouteMarkers = [];
@@ -420,19 +421,22 @@ tempDiv.innerHTML = nextStep.navigationInstruction ? nextStep.navigationInstruct
 
       if (destinationMarker) destinationMarker.map = null;
       
-      const destIcon = document.createElement("div");
-      // eslint-disable-next-line no-restricted-syntax
+      // Guard: Only create marker if AdvancedMarkerElement is available (B-02)
+      if (window.googleLibraries?.AdvancedMarkerElement) {
+        const destIcon = document.createElement("div");
+        // eslint-disable-next-line no-restricted-syntax
 destIcon.innerHTML = `<i class="fa-solid fa-flag-checkered"></i>`;
-      destIcon.style.color = "white";
-      destIcon.style.fontSize = "24px";
-      destIcon.style.textShadow = "0 0 5px black";
+        destIcon.style.color = "white";
+        destIcon.style.fontSize = "24px";
+        destIcon.style.textShadow = "0 0 5px black";
 
-      destinationMarker = new window.googleLibraries.AdvancedMarkerElement({
-        position: { lat: destLat, lng: destLng },
-        map: map,
-        content: destIcon,
-      });
-      currentRouteMarkers.push(destinationMarker);
+        destinationMarker = new window.googleLibraries.AdvancedMarkerElement({
+          position: { lat: destLat, lng: destLng },
+          map: map,
+          content: destIcon,
+        });
+        currentRouteMarkers.push(destinationMarker);
+      }
   } catch (error) {
     console.error("Routage impossible: ", error);
     speak("Erreur de calcul d'itinéraire.");
@@ -440,18 +444,31 @@ destIcon.innerHTML = `<i class="fa-solid fa-flag-checkered"></i>`;
 }
 
 window.cancelRoute = function () {
-  if (directionsRenderer) directionsRenderer.setDirections({ routes: [] });
+  if (directionsRenderer) {
+    try { directionsRenderer.setDirections({ routes: [] }); } catch (e) {}
+  }
   if (destinationMarker) {
-    destinationMarker.setMap(null);
+    destinationMarker.map = null; // AdvancedMarkerElement uses .map property, not .setMap()
     destinationMarker = null;
   }
 
-  document.getElementById("nav-instruction").classList.add("hidden");
-  document.getElementById("nav-info-bar").style.display = "none"; // On cache le bandeau
-  document.getElementById("btn-stop-nav").classList.add("hidden");
-  document.getElementById("btn-reroute").classList.add("hidden");
+  // Clean up route polylines and markers
+  currentRoutePolylines.forEach((p) => { try { p.setMap(null); } catch(e) {} });
+  currentRoutePolylines = [];
+  currentRouteMarkers.forEach((m) => { try { m.map = null; } catch(e) {} });
+  currentRouteMarkers = [];
 
-  document.getElementById("route-search").value = "";
+  const navInstr = document.getElementById("nav-instruction");
+  if (navInstr) navInstr.classList.add("hidden");
+  const navBar = document.getElementById("nav-info-bar");
+  if (navBar) navBar.style.display = "none";
+  const btnStop = document.getElementById("btn-stop-nav");
+  if (btnStop) btnStop.classList.add("hidden");
+  const btnReroute = document.getElementById("btn-reroute");
+  if (btnReroute) btnReroute.classList.add("hidden");
+
+  const searchEl = document.getElementById("route-search");
+  if (searchEl) searchEl.value = "";
 };
 
 window.pendingDestination = null;
@@ -1197,24 +1214,51 @@ window.MapSystem.updateTerritoryLayer = function (zipCode, data) {
   }
 };
 
-// Tracking fake de km sur le code postal actuel si en mouvement
+let cachedTerritoryZip = null;
+let lastTerritoryGeocodeTime = 0;
+let lastTerritoryPos = null;
+
+function getHaversineDist(pos1, pos2) {
+  if (!pos1 || !pos2) return 999999;
+  const lat1 = typeof pos1.lat === "function" ? pos1.lat() : pos1.lat;
+  const lon1 = typeof pos1.lng === "function" ? pos1.lng() : pos1.lng;
+  const lat2 = typeof pos2.lat === "function" ? pos2.lat() : pos2.lat;
+  const lon2 = typeof pos2.lng === "function" ? pos2.lng() : pos2.lng;
+  const R = 6371e3;
+  const phi1 = (lat1 * Math.PI) / 180;
+  const phi2 = (lat2 * Math.PI) / 180;
+  const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+  const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(deltaPhi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * (Math.sin(deltaLambda / 2) ** 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Tracking optimisé de km sur le code postal actuel si en mouvement (D-03)
 setInterval(() => {
-  // Si on roule, toutes les minutes on ajoute des kms virtuels au territoire actuel
-  if (
-    window.isRiding &&
-    window.currentPosition &&
-    typeof geocoder !== "undefined"
-  ) {
+  if (!window.isRiding || !window.currentPosition || typeof geocoder === "undefined") return;
+
+  const now = Date.now();
+  const distFromLast = getHaversineDist(window.currentPosition, lastTerritoryPos);
+
+  // N'appeler l'API Geocoding que si déplacé de > 1km ou si le cache a plus de 10 min
+  if (!cachedTerritoryZip || distFromLast > 1000 || (now - lastTerritoryGeocodeTime > 600000)) {
+    lastTerritoryGeocodeTime = now;
+    lastTerritoryPos = window.currentPosition;
     geocoder.geocode({ location: window.currentPosition }, (res, status) => {
       if (status === "OK" && res[0]) {
         const zipComp = res[0].address_components.find((c) =>
           c.types.includes("postal_code"),
         );
-        if (zipComp && window.CrewSystem && window.CrewSystem.currentCrew) {
-          window.CrewSystem.addKmToTerritory(zipComp.short_name, 0.5); // +0.5 km simulés
+        if (zipComp) {
+          cachedTerritoryZip = zipComp.short_name;
         }
       }
     });
+  }
+
+  // Créditer les points avec le code postal en cache (0 requête API superflue)
+  if (cachedTerritoryZip && window.CrewSystem && window.CrewSystem.currentCrew) {
+    window.CrewSystem.addKmToTerritory(cachedTerritoryZip, 0.5);
   }
 }, 60000);
 

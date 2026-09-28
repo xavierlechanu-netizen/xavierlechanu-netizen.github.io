@@ -7,13 +7,20 @@ if (typeof firebase !== "undefined" && typeof CONFIG !== "undefined") {
   if (!firebase.apps.length) {
     firebase.initializeApp(CONFIG.FIREBASE);
     
-    // OWASP A11 : Protection App Check (ReCAPTCHA v3)
+    // OWASP A11 : Protection App Check (ReCAPTCHA v3) avec vérification de clé
     if (typeof firebase.appCheck === 'function') {
-      const appCheck = firebase.appCheck();
-      appCheck.activate(
-        new firebase.appCheck.ReCaptchaV3Provider('INSERER_CLE_RECAPTCHA_ICI'),
-        true
-      );
+      const recaptchaKey = CONFIG?.FIREBASE?.RECAPTCHA_SITE_KEY;
+      if (recaptchaKey && recaptchaKey !== 'INSERER_CLE_RECAPTCHA_ICI') {
+        try {
+          const appCheck = firebase.appCheck();
+          appCheck.activate(
+            new firebase.appCheck.ReCaptchaV3Provider(recaptchaKey),
+            true
+          );
+        } catch (e) {
+          console.warn('[AppCheck] Initialisation ignorée ou échouée:', e);
+        }
+      }
     }
   }
 }
@@ -150,13 +157,8 @@ window.register = async function (username, password, brand, model) {
       .createUserWithEmailAndPassword(email, password);
     const user = userCredential.user;
 
-    // Capturer IP et Fingerprint pour la sécurité
-    let userIp = "0.0.0.0";
-    try {
-      const ipRes = await fetch("https://api.ipify.org?format=json");
-      const ipData = await ipRes.json();
-      userIp = ipData.ip;
-    } catch (e) {}
+    // Conformité RGPD Art. 5.1.b / ASVS v5.0.0-14.x : Pas de capture IP côté client via tiers
+    const userIp = "managed_by_server";
 
     const profile = {
       uid: user.uid,
@@ -431,11 +433,12 @@ if (typeof firebase !== "undefined" && firebase.auth()) {
           .get();
         if (doc.exists) {
           const profile = doc.data();
+          const sessionData = { ...profile, uid: user.uid };
           cacheSetItem(
             "session",
-            JSON.stringify({ ...profile, uid: user.uid }),
+            JSON.stringify(sessionData),
           );
-          window.session = profile;
+          window.session = sessionData;
         }
       } catch (err) {
         console.warn("Firestore sync failed:", err);

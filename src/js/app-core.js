@@ -797,7 +797,7 @@ modal.innerHTML = `
 banner.innerHTML = `
             <strong>⚠ï¸ Localisation requise</strong><br>
             L'application ne peut pas fonctionner sans accès à votre position.
-            <br><button data-action="checkLegalConsent(" style="margin-top:8px); padding:8px 24px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; cursor:pointer;">Réessayer</button>
+            <br><button data-action="checkLegalConsent()" style="margin-top:8px; padding:8px 24px; background:#ffb703; color:#000; border:none; border-radius:20px; font-weight:bold; cursor:pointer;">Réessayer</button>
         `;
     document.body.appendChild(banner);
     if (typeof speak === "function")

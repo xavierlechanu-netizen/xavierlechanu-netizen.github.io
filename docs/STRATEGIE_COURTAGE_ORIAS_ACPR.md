@@ -18,7 +18,26 @@ L'officialisation de la démarche de courtage local via l'immatriculation à l'*
 
 ---
 
-## 2. STATUT JURIDIQUE & CATÉGORIE D'INTERMÉDIATION
+## 2. EXTENSION MICRO-MOBILITÉS & NOUVELLES MOBILITÉS (EDPM & VAE)
+
+### A. Cadre Légal et Spécificités Réglementaires EDPM
+* **Statut VTAM obligatoire :** Conformément à l'article L. 211-1 du Code des assurances, les Engins de Déplacement Personnel Motorisés (EDPM : trottinettes électriques, hoverboards, gyropodes) constituent des Véhicules Terrestres à Moteur.
+* **Obligation d'assurance Responsabilité Civile :** Une assurance RC spécifique est obligatoire (la RC vie privée / habitation standard exclut expressément les engins à moteur dépassant 6 km/h). Défaut passible d'une amende de 3 750 € (délit).
+* **Vélos à Assistance Électrique (VAE) :** Régime distinct pour les VAE conformes à la norme NF EN 15194 (coupure d'assistance à 25 km/h, puissance 250 W max), couverts par la RC vie privée standard, mais forte demande sur les garanties vol, casse et individuelle accident.
+
+### B. Douleur Marché & Opportunité Assureur
+* **Taux de non-assurance critique :** Plus de 70 % des usagers d'EDPM circulent sans couverture dédiée par méconnaissance du droit, pesant lourdement sur le Fonds de Garantie des Assurances Obligatoires de Dommages (FGAO).
+* **Parcours d'acquisition in-app :** Détection automatique du mode de transport lors de la navigation et affichage d'un avertissement légal de défaut d'assurance avec passerelle de souscription instantanée vers l'offre partenaire (Nationale de Courtage).
+* **Cycle de fidélisation pluriannuel :** Accompagnement de l'usager sur l'ensemble de son parcours de mobilité (12–14 ans en trottinette/VAE, 14–17 ans en 50cc/VSP, 18+ ans en permis auto B/A2), maximisant la valeur vie client (LTV) pour le porteur de risque.
+
+### C. Télémétrie et Analyse du Risque Dédiée
+* **Contrôle d'allure et conformité :** Détection des débridages illégaux (> 25 km/h sur EDPM/VAE) via l'algorithme BVC (*Behavior Vehicle Control*).
+* **Sécurisation des parcours :** Exclusion formelle des trottoirs piétons et des axes à chaussée interdite, limitation des sinistres collision piéton/véhicule.
+* **Preuve post-sinistre :** Enregistrement des décélérations et chocs par boîte noire e-Soleau INPI pour déterminer les responsabilités matérielles et corporelles.
+
+---
+
+## 3. STATUT JURIDIQUE & CATÉGORIE D'INTERMÉDIATION
 
 Conformément à l'**Article R. 511-2 du Code des assurances**, le projet adopte définitivement le statut de premier rang :
 
@@ -30,7 +49,7 @@ Conformément à l'**Article R. 511-2 du Code des assurances**, le projet adopte
 
 ---
 
-## 3. PARCOURS DE FORMATION PROFESSIONNELLE & CAPACITÉ (NIVEAU I)
+## 4. PARCOURS DE FORMATION PROFESSIONNELLE & CAPACITÉ (NIVEAU I)
 
 Pour prétendre à l'immatriculation en tant que Courtier d'assurance, le dirigeant doit justifier de la **Capacité Professionnelle de Niveau I - IAS** (Art. R. 512-8 à R. 512-10 du Code des assurances) :
 
@@ -51,7 +70,7 @@ Pour prétendre à l'immatriculation en tant que Courtier d'assurance, le dirige
 
 ---
 
-## 4. DOSSIER D'IMMATRICULATION ORIAS (LES 5 EXIGENCES OBLIGATOIRES)
+## 5. DOSSIER D'IMMATRICULATION ORIAS (LES 5 EXIGENCES OBLIGATOIRES)
 
 Pour valider l'inscription sur le registre unique consultable sur `www.orias.fr` :
 
@@ -84,7 +103,7 @@ graph TD
 
 ---
 
-## 5. IMPACT SUR LE MODÈLE ÉCONOMIQUE (BUSINESS PLAN 2026-2028)
+## 6. IMPACT SUR LE MODÈLE ÉCONOMIQUE (BUSINESS PLAN 2026-2028)
 
 ### Comparatif Unitaire par Assuré
 
@@ -103,7 +122,7 @@ graph TD
 
 ---
 
-## 6. FEUILLE DE ROUTE D'IMPLÉMENTATION APPLICATIVE (CODE & CONFORMITÉ)
+## 7. FEUILLE DE ROUTE D'IMPLÉMENTATION APPLICATIVE (CODE & CONFORMITÉ)
 
 Dès l'inscription en formation et l'obtention du numéro d'immatriculation, les modules suivants de l'application seront activés :
 
@@ -127,7 +146,7 @@ Ajout dans [`src/mentions-legales.html`](file:///c:/Users/xavie/.gemini/antigrav
 
 ---
 
-## 7. CALENDRIER OPÉRATIONNEL CIBLÉ
+## 8. CALENDRIER OPÉRATIONNEL CIBLÉ
 
 | Mois | Jalons Opérationnels |
 |---|---|
@@ -138,7 +157,7 @@ Ajout dans [`src/mentions-legales.html`](file:///c:/Users/xavie/.gemini/antigrav
 
 ---
 
-## 8. ANNEXE TECHNIQUE : MODÈLE TYPE DE DOCUMENT D'ENTRÉE EN RELATION (DER)
+## 9. ANNEXE TECHNIQUE : MODÈLE TYPE DE DOCUMENT D'ENTRÉE EN RELATION (DER)
 *Conforme aux articles L. 521-2 et R. 521-1 du Code des assurances (Distribution d'Assurances — DDA)*
 
 ```markdown

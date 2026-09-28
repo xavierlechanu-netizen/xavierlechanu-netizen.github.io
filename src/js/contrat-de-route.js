@@ -1,4 +1,4 @@
-import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
+import { db, auth, CONFIG, secureGetItem, secureSetItem, firebase } from './config.js';
 import { registerAction } from './actionRegistry.js';
 
 /**

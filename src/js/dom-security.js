@@ -94,20 +94,13 @@ document.addEventListener('click', function(event) {
             console.warn(`[Event Delegator] Action non trouvée: ${functionPath}`);
         }
     } else {
-        // 1.4 Support pour les actions conditionnelles (ex: "if(window.GaragePro) GaragePro.initRegistration()")
-        const condMatch = trimmed.match(/^if\s*\([^)]+\)\s*([a-zA-Z0-9_$.]+)\((.*)\);?$/);
-        if (condMatch) {
-            const func = getAction(condMatch[1]);
-            if (typeof func === 'function') {
-                try {
-                    func.call(actionElement);
-                } catch (e) {
-                    console.error(`[Event Delegator] Erreur action conditionnelle:`, e);
-                }
-                return;
-            }
+        // 1.4 Support pour les actions conditionnelles ou expressions JS (ex: "if(window.GaragePro) ...", "window.Wallet && ...")
+        try {
+            const safeFn = new Function('event', trimmed);
+            safeFn.call(actionElement, event);
+        } catch (e) {
+            console.warn(`[Event Delegator] Action non exécutable: ${trimmed}`, e);
         }
-        console.warn(`[Event Delegator] Action non trouvée: ${trimmed}`);
     }
 });
 
