@@ -188,3 +188,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+// --- AXEPTIO CMP (RGPD) ---
+window.axeptioSettings = {
+  clientId: "6abf7d654bd86ad927014c33",
+  cookiesVersion: "356689da-708f-406a-a78f-f026435aa81f",
+  googleConsentMode: {
+    default: {
+      analytics_storage: "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      wait_for_update: 500
+    }
+  }
+};
+
+(function(d, s) {
+  var t = d.getElementsByTagName(s)[0], e = d.createElement(s);
+  e.async = true; e.src = "//static.axept.io/sdk.js";
+  if (t) t.parentNode.insertBefore(e, t);
+  else d.head.appendChild(e);
+})(document, "script");

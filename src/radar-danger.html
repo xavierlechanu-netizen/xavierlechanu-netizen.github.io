@@ -682,7 +682,28 @@
         .speed-number { font-size: 2rem; }
       }
     </style>
-  </head>
+  <!-- AXEPTIO CMP -->
+<script>
+window.axeptioSettings = {
+  clientId: "6abf7d654bd86ad927014c33",
+  cookiesVersion: "73984ab7-6f43-4eef-9577-94f735eedc51",
+  googleConsentMode: {
+    default: {
+      analytics_storage: "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      wait_for_update: 500
+    }
+  }
+};
+(function(d, s) {
+  var t = d.getElementsByTagName(s)[0], e = d.createElement(s);
+  e.async = true; e.src = "//static.axept.io/sdk.js";
+  t.parentNode.insertBefore(e, t);
+})(document, "script");
+</script>
+</head>
   <body>
     <div class="top-bar">
       <a href="app.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i></a>
@@ -858,3 +879,4 @@
     <script type="module" src="/js/inline-radar-danger-3.js"></script>
   </body>
 </html>
+

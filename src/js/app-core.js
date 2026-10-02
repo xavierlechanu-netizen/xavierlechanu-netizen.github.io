@@ -418,6 +418,25 @@ window.initMapController = async function () {
       gestureHandling: "greedy",
     });
 
+    // NEXUS ATLAS : Requêtes Spatiales - Recharger les hazards visibles lors du déplacement
+    map.addListener("idle", () => {
+      // Si la carte a bougé et est immobile on requête dynamiquement
+      // On s'assure que la fonction est accessible via window. 
+      // Puisque loadHazards() a été exporté / géré par registerAction, elle devrait être appelable 
+      if (typeof window.executeAction === "function") {
+         window.executeAction('loadHazards');
+      } else if (typeof loadHazards === "function") {
+         loadHazards();
+      }
+
+      // UX Moderne : Afficher le bouton "Rechercher dans cette zone" pour les POI payants
+      if (typeof window.executeAction === "function") {
+         window.executeAction('checkMapPanForRadar');
+      } else if (typeof window.checkMapPanForRadar === "function") {
+         window.checkMapPanForRadar();
+      }
+    });
+
     geocoder = new google.maps.Geocoder();
     trafficLayer = new google.maps.TrafficLayer();
     trafficLayer.setMap(map);
@@ -711,6 +730,23 @@ document.addEventListener("visibilitychange", () => {
 
 // ── Garde de consentement : vérifie si l'utilisateur a accepté la divulgation ──
 function hasLocationConsent() {
+  // Vérification de la bannière Axeptio (RGPD)
+  const axCookie = document.cookie.split('; ').find(row => row.startsWith('axeptio_cookies='));
+  if (axCookie) {
+    try {
+      const val = decodeURIComponent(axCookie.split('=')[1]);
+      const parsed = JSON.parse(val);
+      // On accepte si l'utilisateur a tout accepté, ou s'il a accepté Google Maps / Geolocation spécifiquement
+      if (parsed.$$all || parsed.google_maps || parsed.geolocation) {
+        return true;
+      }
+      return false; // Refusé explicitement dans Axeptio
+    } catch (e) {
+      console.warn("Erreur lecture cookie Axeptio");
+    }
+  }
+  
+  // Fallback (Ancien système ou application hybride Capacitor sans cookies)
   return localStorage.getItem("location_consent_accepted") === "true";
 }
 

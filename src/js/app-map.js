@@ -1,4 +1,5 @@
 import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
+import * as geofire from 'geofire-common';
 import { registerAction } from './actionRegistry.js';
 
 // --- 3. ROUTAGE ---
@@ -601,6 +602,8 @@ window.saveHazard = function (type, description = "") {
     return;
   }
 
+  const hash = geofire.geohashForLocation([currentPosition.lat, currentPosition.lng]);
+
   const h = {
     lat: currentPosition.lat,
     lon: currentPosition.lng,
@@ -608,6 +611,7 @@ window.saveHazard = function (type, description = "") {
     description: description,
     author: window.session ? window.session.username : "Anonyme",
     date: new Date().toISOString(),
+    geohash: hash,
   };
 
   // 1. Sauvegarde Locale (Fallback)
@@ -633,11 +637,62 @@ window.saveHazard = function (type, description = "") {
   loadHazards();
 };
 
-function loadHazards() {
-  if (typeof google === "undefined" || !google.maps || !window.googleLibraries?.AdvancedMarkerElement)
+async function loadHazards() {
+  if (typeof google === "undefined" || !google.maps || !window.googleLibraries?.AdvancedMarkerElement || !map)
     return;
-  const raw = secureGetItem("hazards");
-  let hazards = raw ? JSON.parse(raw) : [];
+
+  const center = map.getCenter();
+  if (!center) return;
+
+  // Filtrage par rayon de proximité (25 km autour du centre de la vue)
+  const radiusInM = 25000;
+  const bounds = geofire.geohashQueryBounds(
+    [center.lat(), center.lng()],
+    radiusInM
+  );
+
+  const promises = [];
+  for (const b of bounds) {
+    const q = db.collection('hazards')
+      .orderBy('geohash')
+      .startAt(b[0])
+      .endAt(b[1]);
+    promises.push(q.get());
+  }
+
+  let hazards = [];
+  try {
+    const snapshots = await Promise.all(promises);
+    
+    for (const snap of snapshots) {
+      for (const doc of snap.docs) {
+        const data = doc.data();
+        let hazard = data;
+        
+        // Décrypter si nécessaire (la logique existait dans database.js)
+        if (data.payload && typeof window.cloudDecrypt === "function") {
+          const decrypted = window.cloudDecrypt(data.payload);
+          if (decrypted) hazard = decrypted;
+        }
+
+        const hLat = hazard.pos?.lat || hazard.lat;
+        const hLng = hazard.pos?.lng || hazard.lon || hazard.lng;
+
+        if (hLat && hLng) {
+          const distanceInKm = geofire.distanceBetween([hLat, hLng], [center.lat(), center.lng()]);
+          if (distanceInKm <= (radiusInM / 1000)) {
+            // Éviter les doublons potentiels liés au tuilage Firestore
+            if (!hazards.some(existing => existing.date === hazard.date && existing.author === hazard.author)) {
+              hazards.push(hazard);
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[app-map] Erreur lors des requêtes spatiales hazards:", err);
+    return; // Fallback ou arrêt
+  }
 
   // Filtrage éphémère Animaux (> 30 mins = expiré)
   hazards = hazards.filter((h) => {
@@ -647,24 +702,6 @@ function loadHazards() {
     }
     return true;
   });
-
-  // Filtrage par rayon de proximité (max 25 km autour du conducteur)
-  if (window.currentPos && window.currentPos.lat && window.currentPos.lng) {
-    const uLat = window.currentPos.lat;
-    const uLng = window.currentPos.lng;
-    hazards = hazards.filter((h) => {
-      const hLat = h.pos?.lat || h.lat;
-      const hLng = h.pos?.lng || h.lng;
-      if (!hLat || !hLng) return true;
-      const dLat = (hLat - uLat) * Math.PI / 180;
-      const dLon = (hLng - uLng) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(uLat * Math.PI / 180) * Math.cos(hLat * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const distKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return distKm <= 25;
-    });
-  }
 
   hazardMarkers.forEach((m) => m.setMap(null));
   hazardMarkers = [];
@@ -767,9 +804,17 @@ window.toggleRadarMenu = function () {
   if (r) r.classList.toggle("hidden");
 };
 
-window.scanRadar = function (type) {
-  if (!currentPosition) return;
+window.currentActiveRadarType = null;
+window.lastRadarSearchCenter = null;
+
+window.scanRadar = function (type, searchCenter = null) {
+  const targetCenter = searchCenter || currentPosition;
+  if (!targetCenter) return;
+  
   toggleRadarMenu();
+  window.currentActiveRadarType = type;
+  window.lastRadarSearchCenter = targetCenter;
+  
   const config = poiConfig[type];
   const radarBtn =
     document.getElementById("btn-radar-quick") ||
@@ -777,13 +822,13 @@ window.scanRadar = function (type) {
   const oldHtml = radarBtn ? radarBtn.innerHTML : "";
   if (radarBtn)
     // eslint-disable-next-line no-restricted-syntax
-radarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    radarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
   if (type === "fuel") {
     // --- NEW: Government Data Integration ---
     fetchFuelPricesUsingGovAPI(
-      currentPosition.lat,
-      currentPosition.lng,
+      targetCenter.lat,
+      targetCenter.lng || targetCenter.lon,
       config,
       radarBtn,
       oldHtml,
@@ -791,16 +836,16 @@ radarBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
   } else if (type === "mechanic") {
     // --- NEW: Google Places Garage Integration ---
     fetchGaragesUsingPlacesAPI(
-      currentPosition.lat,
-      currentPosition.lng,
+      targetCenter.lat,
+      targetCenter.lng || targetCenter.lon,
       config,
       radarBtn,
       oldHtml,
     );
   } else {
     // Standard Overpass Search for other POIs
-    const lat = currentPosition.lat;
-    const lon = currentPosition.lng;
+    const lat = targetCenter.lat;
+    const lon = targetCenter.lng || targetCenter.lon;
     // MEDICAL includes doctors, clinics, hospitals AND pharmacy
     const medicalTags = "clinic|hospital|doctors|pharmacy";
     const query = `[out:json][timeout:15];(nwr["amenity"~"${type === "doctors" ? medicalTags : type}"](around:${config.radius},${lat},${lon}););out center;`;
@@ -1268,3 +1313,64 @@ registerAction('loadHazards', loadHazards);
 registerAction('fetchFuelPricesUsingGovAPI', fetchFuelPricesUsingGovAPI);
 registerAction('fetchGaragesUsingPlacesAPI', fetchGaragesUsingPlacesAPI);
 registerAction('renderPoiMarkers', renderPoiMarkers);
+
+window.checkMapPanForRadar = function () {
+  if (!window.map || !window.currentActiveRadarType || !window.lastRadarSearchCenter) return;
+  
+  const center = window.map.getCenter();
+  const currentPos = { lat: center.lat(), lng: center.lng() };
+  
+  const dist = getHaversineDist(window.lastRadarSearchCenter, currentPos);
+  
+  // Si déplacement > 4km (4000m), on affiche le bouton "Rechercher dans cette zone"
+  if (dist > 4000) {
+    let searchBtn = document.getElementById("btn-search-this-area");
+    if (!searchBtn) {
+      searchBtn = document.createElement("button");
+      searchBtn.id = "btn-search-this-area";
+      searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Rechercher ici';
+      searchBtn.style.cssText = `
+        position: absolute;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: #1a1a1a;
+        color: white;
+        border: 2px solid #ffb703;
+        padding: 10px 20px;
+        border-radius: 30px;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+      `;
+      
+      // Animation au hover
+      searchBtn.onmouseover = () => searchBtn.style.background = "#ffb703";
+      searchBtn.onmouseout = () => searchBtn.style.background = "#1a1a1a";
+
+      searchBtn.onclick = () => {
+        searchBtn.style.display = "none"; // Cacher immédiatement après clic
+        const newCenter = window.map.getCenter();
+        window.scanRadar(window.currentActiveRadarType, { lat: newCenter.lat(), lng: newCenter.lng() });
+      };
+      
+      const mapContainer = document.getElementById("map");
+      if (mapContainer && mapContainer.parentElement) {
+        mapContainer.parentElement.appendChild(searchBtn);
+      } else {
+        document.body.appendChild(searchBtn);
+      }
+    }
+    searchBtn.style.display = "flex"; // S'assurer qu'il est visible
+  } else {
+    const searchBtn = document.getElementById("btn-search-this-area");
+    if (searchBtn) searchBtn.style.display = "none";
+  }
+};
+registerAction('checkMapPanForRadar', window.checkMapPanForRadar);
+

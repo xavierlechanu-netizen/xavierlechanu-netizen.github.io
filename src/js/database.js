@@ -114,10 +114,11 @@ window.publishHazardCloud = async function (hazard) {
   }
 
   try {
-    // Chiffrement de bout en bout avant envoi
+    // Chiffrement de bout en bout avant envoi (Zero Trust)
     const encryptedPayload = cloudEncrypt(hazard);
     await db.collection("hazards").add({
       payload: encryptedPayload,
+      geohash: hazard.geohash, // Index spatial en clair (requis pour geofire)
       author: hazard.author, // Gardé en clair pour la modération par l'Oracle
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });

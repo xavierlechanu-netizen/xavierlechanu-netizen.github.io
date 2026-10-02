@@ -26,17 +26,32 @@ window.mapsSDKLoaded = false;
           return;
         }
 
-        const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${selectedKey}&libraries=geometry,places,marker&v=beta&callback=initMap&loading=async`;
-        script.async = true;
-        script.defer = true;
-        script.onerror = function () {
-          console.error(
-            "mon50cc Loader : Ã‰chec critique du chargement Maps SDK.",
-          );
-          forceStartApp("Ã‰CHEC_RÃ‰SEAU_SDK");
+        const injectGoogleMaps = () => {
+          const script = document.createElement("script");
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${selectedKey}&libraries=geometry,places,marker&v=beta&callback=initMap&loading=async`;
+          script.async = true;
+          script.defer = true;
+          script.onerror = function () {
+            console.error(
+              "mon50cc Loader : Échec critique du chargement Maps SDK.",
+            );
+            forceStartApp("ÉCHEC_RÉSEAU_SDK");
+          };
+          document.head.appendChild(script);
         };
-        document.head.appendChild(script);
+
+        // Blocage Axeptio (RGPD)
+        window._axcb = window._axcb || [];
+        window._axcb.push(function(axeptio) {
+          axeptio.on("cookies:complete", function(choices) {
+            if (choices.google_maps || choices.$$all) {
+              injectGoogleMaps();
+            } else {
+              console.warn("mon50cc Loader : Consentement Google Maps refusé par Axeptio.");
+              forceStartApp("REFUS_RGPD");
+            }
+          });
+        });
       }
 
       function initFallbackMap() {

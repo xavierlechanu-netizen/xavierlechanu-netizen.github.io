@@ -110,7 +110,28 @@
     <script type="module" defer="" src="/js/radar-social.js" charset="utf-8"></script>
 
     <!-- GAMIFICATION HUD -->
-    </head><body style="margin: 0; padding: 0; background: #000; overflow: hidden"><div id="gamification-hud" class="gami-hud-cyber">
+    <!-- AXEPTIO CMP -->
+<script>
+window.axeptioSettings = {
+  clientId: "6abf7d654bd86ad927014c33",
+  cookiesVersion: "73984ab7-6f43-4eef-9577-94f735eedc51",
+  googleConsentMode: {
+    default: {
+      analytics_storage: "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      wait_for_update: 500
+    }
+  }
+};
+(function(d, s) {
+  var t = d.getElementsByTagName(s)[0], e = d.createElement(s);
+  e.async = true; e.src = "//static.axept.io/sdk.js";
+  t.parentNode.insertBefore(e, t);
+})(document, "script");
+</script>
+</head><body style="margin: 0; padding: 0; background: #000; overflow: hidden"><div id="gamification-hud" class="gami-hud-cyber">
         <div>
             <i id="gami-icon" class="fa-solid fa-motorcycle gami-icon" style="color: #a0a0a0;"></i>
         </div>

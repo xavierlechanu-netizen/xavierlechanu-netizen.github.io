@@ -47,6 +47,28 @@
         border-radius: 8px;
       }
     </style>
+
+    <!-- AXEPTIO CMP -->
+    <script>
+    window.axeptioSettings = {
+      clientId: "6abf7d654bd86ad927014c33",
+      cookiesVersion: "73984ab7-6f43-4eef-9577-94f735eedc51",
+      googleConsentMode: {
+        default: {
+          analytics_storage: "denied",
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+          wait_for_update: 500
+        }
+      }
+    };
+    (function(d, s) {
+      var t = d.getElementsByTagName(s)[0], e = d.createElement(s);
+      e.async = true; e.src = "//static.axept.io/sdk.js";
+      t.parentNode.insertBefore(e, t);
+    })(document, "script");
+    </script>
   </head>
   <body>
     <a href="app.html" class="back-btn">⬅ Retour à l'application</a>
@@ -82,9 +104,22 @@
     </div>
 
     <div class="card">
-        <h2>5. Nous contacter</h2>
-        <p>Pour toute question sur vos données, pour exercer votre droit à l'oubli (RGPD) ou votre droit de retrait (CCPA), contactez le délégué à la protection des données depuis les paramètres de votre compte dans l'application.</p>
+        <h2>5. Nous contacter (DPO)</h2>
+        <p>Pour toute question sur vos données, pour exercer votre droit à l'oubli (RGPD) ou votre droit de retrait (CCPA), utilisez notre formulaire sécurisé ci-dessous ou contactez le délégué à la protection des données depuis les paramètres de votre compte dans l'application.</p>
+        
+        <!-- Le widget DPO Axeptio viendra s'insérer ici -->
+        <div id="axeptio-dpo-widget" style="margin-top: 20px;"></div>
     </div>
 
+    <script>
+      void 0 === window._axcb && (window._axcb = []);
+      window._axcb.push(function(axeptio){
+        axeptio.mountWidget({
+          service: "",
+          id: "",
+          node: document.getElementById("axeptio-dpo-widget")
+        });
+      });
+    </script>
   </body>
 </html>
