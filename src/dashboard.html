@@ -513,6 +513,23 @@ window.axeptioSettings = {
         </div>
       </div>
 
+      <!-- ─── BOUTIQUE BVC ─────────────────────────────────── -->
+      <div class="glass-card bvc-shop" style="margin-bottom: var(--space-xl); animation: fadeInUp 0.5s ease 0.35s both; background: linear-gradient(145deg, rgba(255, 0, 127, 0.05) 0%, rgba(0, 0, 0, 0.2) 100%); border: 1px solid rgba(255, 0, 127, 0.3);">
+        <div class="chart-title" style="color: #ff007f;">
+          <i class="fa-solid fa-store"></i> Boutique BVC : Skin Exclusif
+        </div>
+        <div style="display: flex; gap: var(--space-md); align-items: center; margin-top: 15px;">
+          <div style="font-size: 2.5rem; color: #ff007f;">🎀</div>
+          <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 1.1rem; color: #fff;">Thème GPS "Octobre Rose"</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Conservez la couleur Rose Néon sur votre GPS toute l'année. Montrez votre soutien à la communauté.</div>
+          </div>
+        </div>
+        <button id="btn-buy-pink" style="width: 100%; margin-top: var(--space-md); background: #ff007f; color: #fff; border: none; padding: 12px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; transition: 0.2s;" onclick="acheterThemeRose()">
+          Débloquer (500 Points BVC)
+        </button>
+      </div>
+
       <!-- ─── RECENT TRIPS ─────────────────────────────────── -->
       <div class="glass-card trips-section">
         <div class="chart-title">
@@ -607,6 +624,36 @@ window.axeptioSettings = {
     <script type="module" src="/js/crypto-native.js" charset="utf-8"></script>
 
     <script type="module" src="/js/inline-dashboard-2.js"></script>
+    <script>
+      // Fonction pour débloquer le thème Rose définitivement via les points BVC
+      window.acheterThemeRose = function() {
+        // Simulation de déduction de 500 BVC
+        const btn = document.getElementById('btn-buy-pink');
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Traitement...';
+        
+        setTimeout(() => {
+          localStorage.setItem('unlockedTheme_Pink', 'true');
+          btn.style.background = 'rgba(0, 230, 118, 0.2)';
+          btn.style.color = 'var(--neon-green)';
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Débloqué à vie !';
+          btn.disabled = true;
+          alert("🎉 Félicitations ! Votre GPS brillera désormais en Rose Néon pour toujours. Merci pour votre soutien !");
+        }, 1000);
+      };
+
+      // Vérifier si déjà débloqué au chargement
+      document.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('unlockedTheme_Pink') === 'true') {
+          const btn = document.getElementById('btn-buy-pink');
+          if(btn) {
+            btn.style.background = 'rgba(0, 230, 118, 0.2)';
+            btn.style.color = 'var(--neon-green)';
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Débloqué à vie !';
+            btn.disabled = true;
+          }
+        }
+      });
+    </script>
   </body>
 </html>
 

@@ -79,13 +79,19 @@ function initMap() {
     styles: darkMapStyle()
   });
 
+  // --- Logique "Octobre Rose" & Déblocage par Points BVC ---
+  const currentDate = new Date();
+  const isOctober = currentDate.getMonth() === 9; // 9 = Octobre (index 0)
+  const hasUnlockedPinkTheme = localStorage.getItem('unlockedTheme_Pink') === 'true';
+  const routeColor = (isOctober || hasUnlockedPinkTheme) ? '#ff007f' : '#00f0ff'; // Rose Néon ou Cyan
+
   // Services Google Directions pour le Turn-by-Turn
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map: map,
     suppressMarkers: false,
     polylineOptions: {
-      strokeColor: '#00f0ff',
+      strokeColor: routeColor,
       strokeWeight: 6,
       strokeOpacity: 0.85
     }
