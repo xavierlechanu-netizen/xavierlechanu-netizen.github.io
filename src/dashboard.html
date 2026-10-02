@@ -36,6 +36,12 @@
         margin: 0 auto;
       }
 
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.7); }
+        70% { box-shadow: 0 0 0 8px rgba(0, 242, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
+      }
+
       /* ─── Dashboard Header ───────────────────────────────── */
       .dash-header {
         display: flex;
@@ -404,6 +410,13 @@ window.axeptioSettings = {
       </div>
 
       <!-- ─── BVC SCORE RING ───────────────────────────────── -->
+      <div class="glass-card privacy-shield" style="margin-bottom: var(--space-xl); display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md); border-left: 4px solid var(--neon-green); background: rgba(0, 230, 118, 0.05); animation: fadeInUp 0.5s ease 0.1s both;">
+        <div style="font-size: 2rem; color: var(--neon-green);"><i class="fa-solid fa-shield-halved"></i></div>
+        <div>
+          <h3 style="font-size: var(--text-base); font-weight: 700; margin-bottom: 2px;">Confidentialité Zero-Trust</h3>
+          <p style="font-size: var(--text-xs); color: var(--text-muted); line-height: 1.4;">Vos données de position sont chiffrées localement. Vous participez à la communauté sans jamais être pisté.</p>
+        </div>
+      </div>
       <div class="score-section">
         <div class="score-ring-wrapper">
           <svg width="180" height="180">
@@ -434,6 +447,32 @@ window.axeptioSettings = {
           <span class="badge badge-green">
             <i class="fa-solid fa-shield-halved"></i> Conduite exemplaire
           </span>
+        </div>
+      </div>
+
+      <!-- ─── SOCIAL PROOF / COMMUNITY ───────────────────────── -->
+      <div class="glass-card community-section" style="margin-bottom: var(--space-xl); animation: fadeInUp 0.5s ease 0.15s both;">
+        <div class="chart-title">
+          <i class="fa-solid fa-users"></i> Communauté en direct
+        </div>
+        <div class="community-stats" style="display: flex; justify-content: space-between; text-align: center; gap: var(--space-md);">
+          <div style="flex: 1; padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-md);">
+            <div style="font-size: 1.5rem; font-family: var(--font-display); font-weight: 900; color: var(--neon-cyan);">
+              <span class="pulse-dot" style="display:inline-block; width:8px; height:8px; background:var(--neon-cyan); border-radius:50%; margin-right:5px; animation: pulse 2s infinite;"></span>
+              142
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted);">VSP en ligne</div>
+          </div>
+          <div style="flex: 1; padding: var(--space-md); background: rgba(255,255,255,0.03); border-radius: var(--radius-md);">
+            <div style="font-size: 1.5rem; font-family: var(--font-display); font-weight: 900; color: var(--neon-gold);">
+              <i class="fa-solid fa-triangle-exclamation" style="font-size: 1rem; margin-right:5px;"></i>
+              38
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted);">Dangers évités aujourd'hui</div>
+          </div>
+        </div>
+        <div style="margin-top: var(--space-md); font-size: var(--text-xs); color: var(--text-muted); text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: var(--space-sm);">
+          <i class="fa-solid fa-bolt" style="color: var(--neon-purple);"></i> <strong>Mathieu R.</strong> vient de sécuriser un trajet à 2km.
         </div>
       </div>
 
