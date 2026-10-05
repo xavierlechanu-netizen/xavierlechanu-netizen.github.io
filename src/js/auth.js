@@ -3,27 +3,7 @@ import { registerAction } from './actionRegistry.js';
 
 
 // --- FIREBASE INITIALIZATION ---
-if (typeof firebase !== "undefined" && typeof CONFIG !== "undefined") {
-  if (!firebase.apps.length) {
-    firebase.initializeApp(CONFIG.FIREBASE);
-    
-    // OWASP A11 : Protection App Check (ReCAPTCHA v3) avec vérification de clé
-    if (typeof firebase.appCheck === 'function') {
-      const recaptchaKey = CONFIG?.FIREBASE?.RECAPTCHA_SITE_KEY;
-      if (recaptchaKey && recaptchaKey !== 'INSERER_CLE_RECAPTCHA_ICI') {
-        try {
-          const appCheck = firebase.appCheck();
-          appCheck.activate(
-            new firebase.appCheck.ReCaptchaV3Provider(recaptchaKey),
-            true
-          );
-        } catch (e) {
-          console.warn('[AppCheck] Initialisation ignorée ou échouée:', e);
-        }
-      }
-    }
-  }
-}
+// Initialisation centralisée dans config.js
 
 // --- CACHE HELPERS (localStorage wrappers — PAS de chiffrement) ---
 // NOTE SÉCURITÉ : Ces fonctions sont de simples wrappers localStorage.
@@ -116,26 +96,8 @@ window.login = async function (username, password) {
     const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     const isRefererBlocked = error.message && error.message.includes('requests-from-referer');
 
-    if ((isLocalhost && isRefererBlocked) || (isLocalhost && username.toLowerCase() === 'google-review')) {
-      if (password === 'GoogleTest2026!') {
-        console.warn("[Auth] Mode local détecté avec restriction de referer Google : Authentification locale de revue activée.");
-        const localSession = {
-          uid: "google-review-demo-uid",
-          username: "google-review",
-          email: "google-review@mon50cc.internal",
-          role: "user",
-          points: 150,
-          brand: "Aixam",
-          model: "City Sport",
-          registrationDate: Date.now(),
-          isCertifiedGarage: false,
-          lastSeen: Date.now()
-        };
-        cacheSetItem("session", JSON.stringify(localSession));
-        window.session = localSession;
-        window.location.href = "app.html";
-        return;
-      }
+    if (isLocalhost && isRefererBlocked) {
+      console.warn("[Auth] Mode local détecté avec restriction de referer Google.");
     }
 
     alert("Erreur de connexion : " + error.message);
@@ -388,37 +350,68 @@ window.loginBiometric = async function () {
 // --- AUTH GUARD ---
 
 window.checkAuth = function (requireAdmin = false) {
-  const rawSession = cacheGetItem("session");
-  if (!rawSession) {
-    window.location.href = "login.html";
-    return null;
-  }
-  const session = JSON.parse(rawSession);
+  return new Promise((resolve) => {
+    if (typeof firebase === "undefined" || !firebase.auth) {
+      window.location.href = "login.html";
+      return resolve(null);
+    }
 
-  if (requireAdmin && session.role !== "admin") {
-    alert("Accès refusé.");
-    window.location.href = "app.html";
-    return null;
-  }
+    const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+      unsubscribe(); // Run only once
 
-  // Gestion de l'expiration d'essai (Trial Logic)
-  const PUB_DATE = new Date("2027-04-18").getTime();
-  const regTime = session.registrationDate || 0;
+      if (!user) {
+        window.location.href = "login.html";
+        return resolve(null);
+      }
 
-  if (regTime < PUB_DATE && regTime > 1000) {
-    session.isTrialExpired = false;
-    session.isFoundingMember = true;
-  } else {
-    const oneYearLater = regTime + 365 * 24 * 60 * 60 * 1000;
-    session.isTrialExpired = Date.now() > oneYearLater;
-  }
+      try {
+        // Validation stricte côté serveur
+        await user.getIdTokenResult(true);
+        const doc = await firebase.firestore().collection("users").doc(user.uid).get();
+        
+        if (!doc.exists) {
+          window.location.href = "login.html";
+          return resolve(null);
+        }
 
-  if (session.isPermanentlyBanned) {
-    window.location.href = "banned.html";
-    return null;
-  }
+        const session = doc.data();
+        session.uid = user.uid;
 
-  return session;
+        if (requireAdmin && session.role !== "admin") {
+          alert("Accès refusé.");
+          window.location.href = "app.html";
+          return resolve(null);
+        }
+
+        // Gestion de l'expiration d'essai (Trial Logic)
+        const PUB_DATE = new Date("2027-04-18").getTime();
+        const regTime = session.registrationDate || 0;
+
+        if (regTime < PUB_DATE && regTime > 1000) {
+          session.isTrialExpired = false;
+          session.isFoundingMember = true;
+        } else {
+          const oneYearLater = regTime + 365 * 24 * 60 * 60 * 1000;
+          session.isTrialExpired = Date.now() > oneYearLater;
+        }
+
+        if (session.isPermanentlyBanned) {
+          window.location.href = "banned.html";
+          return resolve(null);
+        }
+
+        // Met à jour le cache local pour la suite
+        cacheSetItem("session", JSON.stringify(session));
+        window.session = session;
+
+        resolve(session);
+      } catch (err) {
+        console.error("Erreur de validation Auth :", err);
+        window.location.href = "login.html";
+        resolve(null);
+      }
+    });
+  });
 };
 
 // Écouteur de changement d'état (Sync Firebase -> Local)

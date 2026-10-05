@@ -11,19 +11,7 @@ import { registerAction } from './actionRegistry.js';
 function initDatabase() {
   try {
     // Initialisation Firebase (si pas déjà fait par auth.js)
-    if (!firebase.apps.length) {
-      firebase.initializeApp(CONFIG.FIREBASE);
-      
-      // OWASP A11 : Protection App Check (ReCAPTCHA v3)
-      if (typeof firebase.appCheck === 'function') {
-        const appCheck = firebase.appCheck();
-        appCheck.activate(
-          // TODO: Remplacer par la vraie clé du site reCAPTCHA v3
-          new firebase.appCheck.ReCaptchaV3Provider('INSERER_CLE_RECAPTCHA_ICI'),
-          true
-        );
-      }
-    }
+    // Centralisé dans config.js
     // db est importé. Firebase 10 gère l'instance.
 
     // Connexion aux émulateurs en environnement local pour éviter de toucher à la production
@@ -58,6 +46,8 @@ function cloudEncrypt(data) {
 
 function cloudDecrypt(encryptedData) {
   if (typeof CryptoJS === "undefined" || !encryptedData) return null;
+  // NOTE: This E2EE function relies on a static key and should only be used 
+  // for non-critical legacy data. True E2EE requires derived keys (Web Crypto).
   const key = window.getSyncKey();
   try {
     const bytes = CryptoJS.AES.decrypt(encryptedData, key);
@@ -81,6 +71,7 @@ function syncHazards() {
     snapshot.forEach((doc) => {
       const data = doc.data();
       if (data.payload) {
+        // Fallback pour les anciens messages chiffrés (Legacy)
         const decrypted = cloudDecrypt(data.payload);
         if (decrypted) hazards.push(decrypted);
       } else {
@@ -114,11 +105,12 @@ window.publishHazardCloud = async function (hazard) {
   }
 
   try {
-    // Chiffrement de bout en bout avant envoi (Zero Trust)
-    const encryptedPayload = cloudEncrypt(hazard);
+    // On n'utilise plus cloudEncrypt pour les données publiques communautaires
+    // car le E2EE partagé n'a aucun sens. Sécurisé via Firestore Rules.
     await db.collection("hazards").add({
-      payload: encryptedPayload,
-      geohash: hazard.geohash, // Index spatial en clair (requis pour geofire)
+      ...hazard,
+      geohash: hazard.geohash,
+
       author: hazard.author, // Gardé en clair pour la modération par l'Oracle
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });
@@ -142,10 +134,9 @@ window.publishUserLocation = async function (lat, lng, status = "Riding") {
       status,
       brand: window.session.brand || "Scooter",
     };
-    const encryptedPayload = cloudEncrypt(payload);
-
+    // On n'utilise plus cloudEncrypt pour les positions publiques communautaires
     await db.collection("presence").doc(window.session.username).set({
-      payload: encryptedPayload,
+      ...payload,
       username: window.session.username,
       lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
     });

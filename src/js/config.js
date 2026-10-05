@@ -10,8 +10,8 @@ import localforage from 'localforage';
 export const CONFIG = {
   // Google Maps API Keys
   MAPS: {
-    PC: atob("QUl6YVN5Q05fZmV2VGlHOEF2V1B1RFMyS2NfV3B3bFlmRHk0azRN"),
-    ANDROID: atob("QUl6YVN5Q05fZmV2VGlHOEF2V1B1RFMyS2NfV3B3bFlmRHk0azRN"),
+    PC: "AIzaSyCN_fevTiG8AvWPuDS2Kc_WpwlYfDy4k4M",
+    ANDROID: "AIzaSyCN_fevTiG8AvWPuDS2Kc_WpwlYfDy4k4M",
     MAP_ID: "", // Laisser vide si non configurÃ© sur Google Cloud
   },
 
@@ -69,6 +69,20 @@ export const CONFIG = {
 // Initialize Firebase once
 if (!firebase.apps.length) {
     firebase.initializeApp(CONFIG.FIREBASE);
+    if (typeof firebase.appCheck === 'function') {
+      const recaptchaKey = CONFIG?.FIREBASE?.RECAPTCHA_SITE_KEY;
+      if (recaptchaKey && recaptchaKey !== 'INSERER_CLE_RECAPTCHA_ICI') {
+        try {
+          const appCheck = firebase.appCheck();
+          appCheck.activate(
+            new firebase.appCheck.ReCaptchaV3Provider(recaptchaKey),
+            true
+          );
+        } catch (e) {
+          console.warn('[AppCheck] Initialisation ignorée ou échouée:', e);
+        }
+      }
+    }
 }
 export const db = firebase.firestore();
 export const auth = firebase.auth();
