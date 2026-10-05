@@ -34,10 +34,7 @@ window.cacheRemoveItem = function (key) {
 // (couche hybride IndexedDB + RAM Cache). NE PAS les écraser ici.
 // Les fonctions cacheSetItem / cacheGetItem restent des utilitaires distincts.
 
-window.getSyncKey = function () {
-  // Return an empty string or fixed value since we removed NeuralCrypto
-  return "SYNC_E2EE_VAULT";
-};
+
 
 // --- SECURITY HELPERS ---
 window.escapeHTML = function (str) {

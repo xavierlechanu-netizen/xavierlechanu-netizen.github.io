@@ -36,27 +36,7 @@ function initDatabase() {
   }
 }
 
-// --- E2EE HELPERS ---
-function cloudEncrypt(data) {
-  if (typeof CryptoJS === "undefined" || !data) return data;
-  const key = window.getSyncKey();
-  const str = typeof data === "string" ? data : JSON.stringify(data);
-  return CryptoJS.AES.encrypt(str, key).toString();
-}
 
-function cloudDecrypt(encryptedData) {
-  if (typeof CryptoJS === "undefined" || !encryptedData) return null;
-  // NOTE: This E2EE function relies on a static key and should only be used 
-  // for non-critical legacy data. True E2EE requires derived keys (Web Crypto).
-  const key = window.getSyncKey();
-  try {
-    const bytes = CryptoJS.AES.decrypt(encryptedData, key);
-    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-    return JSON.parse(decrypted);
-  } catch (e) {
-    return null;
-  }
-}
 
 // --- SYNCHRONISATION DES DANGERS (COMMUNAUTÉ) ---
 
@@ -71,9 +51,8 @@ function syncHazards() {
     snapshot.forEach((doc) => {
       const data = doc.data();
       if (data.payload) {
-        // Fallback pour les anciens messages chiffrés (Legacy)
-        const decrypted = cloudDecrypt(data.payload);
-        if (decrypted) hazards.push(decrypted);
+        // Ignore legacy encrypted messages
+        console.log("Ignored legacy encrypted hazard");
       } else {
         hazards.push(data);
       }
@@ -159,10 +138,7 @@ function syncCommunityPositions() {
               const data = doc.data();
               if (data.username !== window.session?.username) {
                 if (data.payload) {
-                  const decrypted = cloudDecrypt(data.payload);
-                  if (decrypted) {
-                    members.push({ ...decrypted, username: data.username });
-                  }
+                  console.log("Ignored legacy encrypted presence");
                 } else {
                   members.push(data); // Legacy
                 }
@@ -532,8 +508,7 @@ window.isUserBanned = function () {
 
 // --- Action Registry (ESM) ---
 registerAction('initDatabase', initDatabase);
-registerAction('cloudEncrypt', cloudEncrypt);
-registerAction('cloudDecrypt', cloudDecrypt);
+
 registerAction('syncHazards', syncHazards);
 registerAction('syncCommunityPositions', syncCommunityPositions);
 registerAction('syncSocialTicker', syncSocialTicker);

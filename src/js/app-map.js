@@ -669,10 +669,9 @@ async function loadHazards() {
         const data = doc.data();
         let hazard = data;
         
-        // Décrypter si nécessaire (la logique existait dans database.js)
-        if (data.payload && typeof window.cloudDecrypt === "function") {
-          const decrypted = window.cloudDecrypt(data.payload);
-          if (decrypted) hazard = decrypted;
+        // Skip legacy encrypted documents
+        if (data.payload) {
+          continue;
         }
 
         const hLat = hazard.pos?.lat || hazard.lat;

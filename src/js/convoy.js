@@ -4,7 +4,7 @@ import { registerAction } from './actionRegistry.js';
 /**
  * 🗺ï¸ MODE CONVOI
  * Système de balades en groupe avec partage de position en temps réel via Firebase Firestore.
- * Sécurité : request.auth.uid vérifié côté Firestore Rules, chiffrement E2EE via cloudEncrypt/cloudDecrypt.
+ * Sécurité : request.auth.uid vérifié côté Firestore Rules.
  */
 
 window.ConvoyManager = {
