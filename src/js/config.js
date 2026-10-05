@@ -79,7 +79,7 @@ if (!firebase.apps.length) {
             true
           );
         } catch (e) {
-          console.warn('[AppCheck] Initialisation ignorée ou échouée:', e);
+          console.warn('[AppCheck] Initialisation ignorï¿½e ou ï¿½chouï¿½e:', e);
         }
       }
     }
