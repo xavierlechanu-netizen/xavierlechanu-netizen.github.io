@@ -86,3 +86,6 @@ archives/
 dist/
 android-app/www/
 
+
+# Firebase deploy cache
+.firebase/
