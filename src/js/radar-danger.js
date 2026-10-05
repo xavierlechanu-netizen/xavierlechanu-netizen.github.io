@@ -194,6 +194,79 @@ function loadDangers(userGeohash) {
 
   if (firestoreUnsubscribe) firestoreUnsubscribe();
 
+  // MOCK DEMO DATA (Secure offline / Demo mode pour le salon BIG)
+  const isDemoMode = true; // Activer pour la démo
+  
+  if (isDemoMode && currentPosition) {
+    dangerMarkers.forEach(m => m.setMap(null));
+    dangerMarkers = [];
+    
+    // Générer quelques dangers autour de la position actuelle
+    const mockHazards = [
+      { type: 'POTHOLE', latOff: 0.005, lngOff: 0.002, time: Date.now() - 300000 },
+      { type: 'ACCIDENT', latOff: -0.003, lngOff: -0.004, time: Date.now() - 1200000 },
+      { type: 'ROADWORKS', latOff: 0.002, lngOff: -0.006, time: Date.now() - 50000 },
+      { type: 'SLIPPERY', latOff: -0.007, lngOff: 0.005, time: Date.now() - 8600000 }
+    ];
+    
+    const feed = document.getElementById('danger-feed');
+    const items = [];
+    
+    mockHazards.forEach((mock, i) => {
+      const type = DANGER_TYPES.find(t => t.id === mock.type) || DANGER_TYPES[0];
+      const lat = currentPosition.lat + mock.latOff;
+      const lng = currentPosition.lng + mock.lngOff;
+      
+      const marker = new google.maps.Marker({
+        position: { lat, lng },
+        map,
+        title: type.label,
+        label: { text: type.icon, fontSize: '20px' },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 14,
+          fillColor: type.color,
+          fillOpacity: 0.4,
+          strokeColor: type.color,
+          strokeWeight: 2,
+        },
+        animation: google.maps.Animation.DROP
+      });
+      
+      marker.customHazard = { id: `mock-${i}`, label: type.label, lat, lng, icon: type.icon };
+      
+      const infoWindow = new google.maps.InfoWindow({
+        content: `<div style="font-family:Inter,sans-serif; color:#000; font-size:13px; padding:4px;">
+          <strong>${type.icon} ${type.label}</strong><br>
+          Signalé par la communauté (Mode Démo)<br>
+          <span style="color:#888; font-size:11px;">${formatAge({ toMillis: () => mock.time })}</span>
+        </div>`
+      });
+      marker.addListener('click', () => infoWindow.open(map, marker));
+      dangerMarkers.push(marker);
+      
+      const timeAgo = formatAge({ toMillis: () => mock.time });
+      items.push(`
+        <div class="feed-item">
+          <span class="feed-icon">${type.icon}</span>
+          <div class="feed-body">
+            <span class="feed-label">${type.label}</span>
+            <span class="feed-time">${timeAgo}</span>
+          </div>
+          <span class="feed-votes" title="2 confirmations">
+            <i class="fa-solid fa-thumbs-up"></i> 2
+          </span>
+        </div>
+      `);
+    });
+    
+    if (feed) feed.innerHTML = items.length ? items.join('') : '<p class="feed-empty">Aucun danger signalé dans la zone. Bonne route ! 🟢</p>';
+    const countBadge = document.getElementById('signal-count');
+    if (countBadge) countBadge.textContent = mockHazards.length;
+    
+    return; // On ne connecte pas Firestore en mode démo strict
+  }
+
   firestoreUnsubscribe = db.collection('hazards')
     .where('geohash', '>=', userGeohash)
     .where('geohash', '<=', userGeohash + '\uf8ff')
