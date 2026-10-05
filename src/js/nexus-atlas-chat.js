@@ -80,6 +80,16 @@ window.NexusAtlasChat = {
             // Si Nexus Atlas doit déclencher une action visuelle (comme ouvrir le GPS ou lancer le mode avocat)
             if (response.action && response.action !== "NONE" && response.action !== "CHAT") {
                 console.log("[NexusAtlasChat] Exécution de l'action :", response.action);
+
+                // Gestion spéciale pour Facebook : confirmation avant publication
+                if (response.action === "FACEBOOK" && response.parameter) {
+                    this.addMessage("Nexus Atlas", `📘 Voulez-vous publier ceci sur Facebook ?\n\n"${response.parameter}"\n\nDites "oui" ou publiez directement via commande vocale.`, "ai");
+                    window.NexusAtlasFacebook.publishToFacebook(response.parameter)
+                        .then(() => this.addMessage("Système", "Publication Facebook réussie.", "ai"))
+                        .catch(e => this.addMessage("Système", "Échec : " + e.message, "error"));
+                    return;
+                }
+
                 if (window.OracleVoice && window.OracleVoice.executeAction) {
                     window.OracleVoice.executeAction(response.action, response.parameter);
                 }

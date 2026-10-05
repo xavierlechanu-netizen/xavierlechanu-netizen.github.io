@@ -11,6 +11,7 @@ const payments = require('./api/payments');
 const services = require('./api/services');
 const iot = require('./api/iot');
 const alerts = require('./api/alerts');
+const social = require('./api/social');
 
 module.exports = {
     // Auth & Identity (FIDO2 & RGPD)
@@ -39,5 +40,9 @@ module.exports = {
     // Alerts & Safety
     sendEmergencySOS: alerts.sendEmergencySOS,
     triggerAntiTheftAlert: alerts.triggerAntiTheftAlert,
-    createHazardReport: alerts.createHazardReport
+    createHazardReport: alerts.createHazardReport,
+
+    // Social Media (Facebook Page)
+    publishToFacebook: social.publishToFacebook,
+    autoPublishFacebookNexusAtlas: social.autoPublishFacebookNexusAtlas
 };

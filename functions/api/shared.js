@@ -22,6 +22,8 @@ const PISTE_CLIENT_ID = defineSecret("PISTE_CLIENT_ID");
 const PISTE_CLIENT_SECRET = defineSecret("PISTE_CLIENT_SECRET");
 const PISTE_API_KEY = defineSecret("PISTE_API_KEY");
 const SMTP_PASSWORD = defineSecret("SMTP_PASSWORD");
+const FB_PAGE_ACCESS_TOKEN = defineSecret("FB_PAGE_ACCESS_TOKEN");
+const FB_PAGE_ID = defineSecret("FB_PAGE_ID");
 
 const REVOLUT_API_BASE    = "https://merchant.revolut.com/api";
 const REVOLUT_API_VERSION = "2026-04-20";
@@ -51,6 +53,6 @@ module.exports = {
     admin, db, googleAuth, crypto, Client,
     REVOLUT_SECRET_KEY, REVOLUT_WEBHOOK_SECRET, GEMINI_API_KEY, NOTION_API_KEY, NOTION_DATABASE_ID,
     METEO_FRANCE_API_KEY, PISTE_CLIENT_ID, PISTE_CLIENT_SECRET, PISTE_API_KEY, SMTP_PASSWORD,
-    REVOLUT_API_BASE, REVOLUT_API_VERSION,
+    REVOLUT_API_BASE, REVOLUT_API_VERSION, FB_PAGE_ACCESS_TOKEN, FB_PAGE_ID,
     setCorsHeaders, verifyAuthToken
 };

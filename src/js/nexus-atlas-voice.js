@@ -226,6 +226,18 @@ window.NexusAtlasEngine = {
         reply: `D'après mes dernières analyses en date du 4 juillet 2026, l'application compte 4 installations uniques. 3 pilotes sont en France, et nous avons 1 pilote en Indonésie.`,
       };
     }
+    // Publication Facebook (Admin uniquement)
+    else if (this.matchAny(t, ["publie sur facebook", "poster sur facebook", "facebook", "réseaux sociaux", "post facebook"])) {
+      let content = t;
+      ["publie sur facebook", "poster sur facebook", "poste sur facebook"].forEach(kw => {
+        if (t.includes(kw)) content = t.split(kw)[1]?.trim() || t;
+      });
+      return {
+        action: "FACEBOOK_POST",
+        payload: content,
+        reply: `Je prépare la publication sur la Page Facebook mon50ccetmoi.`
+      };
+    }
     // Identité / Blague
     else if (this.matchAny(t, ["blague", "humour", "fais-moi rire"])) {
       return { action: "JOKE", reply: this.getRandomResponse("jokes") };
@@ -337,6 +349,13 @@ window.NexusAtlasEngine = {
       case "OPEN_PROFILE":
         if (typeof window.openProfile === "function") window.openProfile();
         else window.location.href = "profile.html";
+        break;
+      case "FACEBOOK_POST":
+        if (window.NexusAtlasFacebook) {
+          window.NexusAtlasFacebook.publishToFacebook(result.payload)
+            .then(() => this.speak("Publication Facebook réussie."))
+            .catch(e => this.speak("Échec de la publication : " + e.message));
+        }
         break;
       case "DRUGS_WARNING":
         console.warn(

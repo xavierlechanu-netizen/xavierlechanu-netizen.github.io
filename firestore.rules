@@ -461,6 +461,16 @@ service cloud.firestore {
     }
 
     // ─────────────────────────────────────────────────────────────
+    // FACEBOOK POSTS (Log des publications Page Facebook)
+    // Écriture via Cloud Functions uniquement.
+    // Lecture par les admins uniquement.
+    // ─────────────────────────────────────────────────────────────
+    match /facebook_posts/{postId} {
+      allow read: if isAdmin();
+      allow write: if false; // Écriture exclusivement via Firebase Admin (Cloud Function)
+    }
+
+    // ─────────────────────────────────────────────────────────────
     // SMS OUTBOX (Passerelle SMS Custom)
     // ─────────────────────────────────────────────────────────────
     match /sms_outbox/{msgId} {
