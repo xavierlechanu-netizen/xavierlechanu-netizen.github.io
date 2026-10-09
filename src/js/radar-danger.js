@@ -195,7 +195,10 @@ function loadDangers(userGeohash) {
   if (firestoreUnsubscribe) firestoreUnsubscribe();
 
   // MOCK DEMO DATA (Secure offline / Demo mode pour le salon BIG)
-  const isDemoMode = true; // Activer pour la démo
+  // Opt-in uniquement : ?demo=1 dans l'URL ou localStorage.demoMode = "true"
+  const isDemoMode =
+    new URLSearchParams(window.location.search).get('demo') === '1' ||
+    localStorage.getItem('demoMode') === 'true';
   
   if (isDemoMode && currentPosition) {
     dangerMarkers.forEach(m => m.setMap(null));

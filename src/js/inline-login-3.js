@@ -93,6 +93,11 @@ function doLogin() {
       if (typeof window !== 'undefined') {
         window._handleCredentialResponseReal = handleCredentialResponse;
         window.handleCredentialResponse = handleCredentialResponse;
+        if (window._pendingGoogleResponse) {
+          const pending = window._pendingGoogleResponse;
+          delete window._pendingGoogleResponse;
+          handleCredentialResponse(pending);
+        }
         window.doLogin = doLogin;
         window.doRegister = doRegister;
         window.toggleForm = toggleForm;

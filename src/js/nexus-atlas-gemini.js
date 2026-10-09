@@ -14,6 +14,8 @@ class NexusAtlasGemini {
         
         // Mémoire conversationnelle de Nexus Atlas
         this.history = [];
+        this.sessionId = "session_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+        this.sessionIntents = new Set();
         
         // Contexte donné à l'IA pour qu'elle agisse comme Nexus Atlas Conversationnel
         this.systemPrompt = `
@@ -143,6 +145,9 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 sessionStorage.setItem(normalizedKey, JSON.stringify(jsonResult));
             } catch (e) {}
 
+            // Synchronisation asynchrone non bloquante vers le serveur central (Firestore)
+            this.syncSessionToCentralServer(userText, jsonResult.reply || "", jsonResult.action || "NONE");
+
             console.log("Nexus Atlas Gemini Réponse:", jsonResult);
             return jsonResult;
 
@@ -153,6 +158,45 @@ Ne renvoie QUE du JSON valide. Pas de code markdown.`;
                 this.history.pop();
             }
             throw error;
+        }
+    }
+
+    /**
+     * Synchronise la conversation en arrière-plan vers le serveur central
+     * pour l'analyse périodique autonome des retours et idées utilisateurs.
+     */
+    async syncSessionToCentralServer(userText, replyText, action) {
+        try {
+            if (typeof firebase === "undefined" || !firebase.firestore) return;
+            const firestoreDb = firebase.firestore();
+            if (action && action !== "NONE") {
+                this.sessionIntents.add(action);
+            }
+
+            const currentUid = (firebase.auth && firebase.auth().currentUser)
+                ? firebase.auth().currentUser.uid
+                : "anonymous";
+
+            const sessionRef = firestoreDb.collection("nexus_conversations").doc(this.sessionId);
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+            await sessionRef.set({
+                sessionId: this.sessionId,
+                uid: currentUid,
+                appVersion: "111.01.00",
+                platform: isAndroid ? "Android" : isIOS ? "iOS" : "Web",
+                summary: userText.slice(0, 100),
+                intents: Array.from(this.sessionIntents),
+                updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+                messages: firebase.firestore.FieldValue.arrayUnion(
+                    { role: "user", text: userText, ts: Date.now() },
+                    { role: "model", text: replyText, action, ts: Date.now() }
+                )
+            }, { merge: true });
+        } catch (e) {
+            // Échec silencieux pour ne jamais impacter l'utilisateur en cas de réseau instable
+            console.warn("[Nexus Atlas Sync] Sync non bloquante différée :", e.message);
         }
     }
 }

@@ -514,5 +514,52 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.user_id == request.auth.uid || isAdmin());
       allow write: if false;
     }
+
+    // ─────────────────────────────────────────────────────────────
+    // FACEBOOK DAILY RUNS (Idempotence & Verrouillage CRON — ISO 27001 A.5.15)
+    // Lecture par les admins uniquement. Écriture réservée au backend Cloud Function.
+    // ─────────────────────────────────────────────────────────────
+    match /facebook_daily_runs/{dateKey} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // SYSTEM CONFIGURATION (Coupe-circuit & Paramètres globaux — ISO 27001 A.8.31)
+    // Lecture et écriture réservées strictement aux administrateurs.
+    // ─────────────────────────────────────────────────────────────
+    match /config/{configId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CRASH REPORTS & LOGS DE TÉLÉMÉTRIE (Zero-Trust)
+    // Création autorisée pour le signalement d'erreurs en production.
+    // Lecture et audit réservés aux administrateurs. Inaltérable.
+    // ─────────────────────────────────────────────────────────────
+    match /crash_reports/{reportId} {
+      allow create: if true;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // NEXUS CONVERSATIONS (Synchronisation d'interactions & Feedback)
+    // Lecture réservée aux administrateurs. Écriture pour les sessions actives.
+    // ─────────────────────────────────────────────────────────────
+    match /nexus_conversations/{sessionId} {
+      allow create, update: if true;
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // NEXUS IMPROVEMENT REPORTS (Rapports d'architecture autonome)
+    // Générés par les Cloud Functions (Admin SDK). Lecture admin uniquement.
+    // ─────────────────────────────────────────────────────────────
+    match /nexus_improvement_reports/{reportId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
   }
 }

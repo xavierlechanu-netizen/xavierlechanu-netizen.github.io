@@ -2,9 +2,15 @@ import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
 import { registerAction } from './actionRegistry.js';
 
 function checkProminentDisclosure() {
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const modal = document.getElementById("prominent-disclosure-modal");
+        if (!modal) return;
+        if (!isAndroid) {
+          modal.style.display = "none";
+          return;
+        }
         if (localStorage.getItem("location_consent_accepted") !== "true") {
-          document.getElementById("prominent-disclosure-modal").style.display =
-            "flex";
+          modal.style.display = "flex";
         }
       }
       document.addEventListener("DOMContentLoaded", function () {

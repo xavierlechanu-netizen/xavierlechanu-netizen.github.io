@@ -173,3 +173,29 @@ Chaque page HTML doit inclure :
 3. **PowerShell `&&` non supporté** → Utiliser `;` comme séparateur de commandes dans PowerShell.
 4. **Synchronisation 3 dossiers** → Après modification d'un fichier dans `public/`, penser à rebuilder (`npm run build`) pour mettre à jour `dist/`.
 5. **`innerHTML` interdit avec données utilisateur** → Utiliser `textContent` ou `insertAdjacentHTML` avec des données internes uniquement (OWASP A03).
+6. **Blocage Cartographique en Démo** → Toujours s'assurer que le fallback Leaflet et le mode démo (`?demo=1`) sont actifs sans dépendre d'Axeptio ou d'un réseau parfait.
+
+---
+
+## 9. Architecture Auto-Développante & Boucle d'Apprentissage Nexus Atlas
+
+Le système intègre un pipeline autonome de télé-métrologie, d'analyse des échanges et d'auto-amélioration continue :
+
+1. **Capture & Tagging Client (`src/js/error-tracking.js`)** :
+   - Capture automatique des exceptions JS et rejections de promesses non gérées.
+   - Tagging immédiat des anomalies cartographiques (`MAPS_API`) et corrélation avec `conversationSessionId`.
+   - Écriture asynchrone non-bloquante dans `crash_reports`.
+
+2. **Synchronisation des Conversations (`src/js/nexus-atlas-gemini.js`)** :
+   - Chaque échange vocal ou textuel avec Nexus Atlas est journalisé sous un identifiant de session unique (`sessionId`).
+   - Synchronisation non-bloquante vers `nexus_conversations/{sessionId}` (messages, intentions détectées, métadonnées plateforme).
+
+3. **Moteur d'Analyse Autonome (`functions/api/nexus-insights.js`)** :
+   - Cloud Function planifiée `autoAnalyzeNexusInsights` (tous les jours à 02:00 Europe/Paris) et endpoint à la demande `triggerNexusAnalysis`.
+   - Ingestion des logs de crashs et des conversations récentes.
+   - Analyse causale (RCA), scoring de santé système (0-100%), identification des frictions utilisateur et génération de recommandations d'architecture P0/P1/P2 via Gemini 2.5 Flash / Vertex AI.
+
+4. **Transmission & Centralisation** :
+   - Archivage structuré dans Firestore (`nexus_improvement_reports`).
+   - Transmission des recommandations et anomalies critiques dans la base Notion via l'API Notion (`reportToNotion`).
+   - Mise à jour de l'indicateur de santé système dans `config/nexus_status`.

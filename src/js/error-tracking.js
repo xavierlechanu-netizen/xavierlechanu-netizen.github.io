@@ -49,9 +49,11 @@ window.CrashReporter = {
         ...errorData,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         userAgent: navigator.userAgent,
-        appVersion: "110.00.00", // Updated version
+        appVersion: "111.01.00",
         url: window.location.href,
         online: navigator.onLine,
+        conversationSessionId: window.NexusAtlasGemini?.sessionId || null,
+        category: errorData.category || (errorData.message && /map|google\.maps|leaflet|directions/i.test(errorData.message) ? "MAPS_API" : "GENERAL")
       };
 
       // If user is logged in, attach their UID (helps debug specific user states)
@@ -67,16 +69,16 @@ window.CrashReporter = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              title: `[BUG] ${errorData.type}: ${String(errorData.message).substring(0, 50)}`,
-              description: `Message: ${errorData.message}\nURL: ${payload.url}\nUserAgent: ${payload.userAgent}\nStack: ${errorData.stack}`,
-              category: "Bug Technique",
-              priority: "High"
+              title: `[${payload.category}] ${errorData.type}: ${String(errorData.message).substring(0, 50)}`,
+              description: `Message: ${errorData.message}\nCatégorie: ${payload.category}\nSession: ${payload.conversationSessionId || 'N/A'}\nURL: ${payload.url}\nUserAgent: ${payload.userAgent}\nStack: ${errorData.stack}`,
+              category: payload.category === "MAPS_API" ? "Cartographie" : "Bug Technique",
+              priority: payload.category === "MAPS_API" ? "High" : "Medium"
             })
-          }).catch(err => console.warn("🛡ï¸  Failed to sync to Notion", err));
+          }).catch(err => console.warn("🛡️ Failed to sync to Notion", err));
         })
         .catch((err) =>
           console.warn(
-            "🛡ï¸ Failed to send crash report (probably offline).",
+            "🛡️ Failed to send crash report (probably offline).",
             err,
           ),
         );

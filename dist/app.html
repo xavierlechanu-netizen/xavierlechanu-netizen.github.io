@@ -92,16 +92,38 @@
     <!-- Revolut Merchant SDK : chargé à  la demande via app-init.js -->
 
     <!-- GAMIFICATION HUD -->
-      <script type="module" crossorigin src="/assets/app-CfdEkJSD.js"></script>
-      <link rel="modulepreload" crossorigin href="/assets/dom-security-CnIADrfH.js">
-      <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-B2s7GmDW.js">
-      <link rel="modulepreload" crossorigin href="/assets/vendor-storage-B_9XKQv5.js">
-      <link rel="modulepreload" crossorigin href="/assets/config-qDgn9DmF.js">
-      <link rel="modulepreload" crossorigin href="/assets/error-tracking-Smxz7q5U.js">
-      <link rel="modulepreload" crossorigin href="/assets/exchange-DbSmTpRV.js">
-      <link rel="modulepreload" crossorigin href="/assets/auth-CKmnXoJv.js">
-      <link rel="modulepreload" crossorigin href="/assets/database-CHBgM9n9.js">
-    </head><body style="margin: 0; padding: 0; background: #000; overflow: hidden"><div id="gamification-hud" class="gami-hud-cyber">
+    <!-- AXEPTIO CMP -->
+<script>
+window.axeptioSettings = {
+  clientId: "6abf7d654bd86ad927014c33",
+  cookiesVersion: "73984ab7-6f43-4eef-9577-94f735eedc51",
+  googleConsentMode: {
+    default: {
+      analytics_storage: "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      wait_for_update: 500
+    }
+  }
+};
+(function(d, s) {
+  var t = d.getElementsByTagName(s)[0], e = d.createElement(s);
+  e.async = true; e.src = "//static.axept.io/sdk.js";
+  t.parentNode.insertBefore(e, t);
+})(document, "script");
+</script>
+  <script type="module" crossorigin src="/assets/app-DEhBvkjJ.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/dom-security-CnIADrfH.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-B2s7GmDW.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-storage-B_9XKQv5.js">
+  <link rel="modulepreload" crossorigin href="/assets/config-BXz8bZGR.js">
+  <link rel="modulepreload" crossorigin href="/assets/error-tracking-gopHEpn0.js">
+  <link rel="modulepreload" crossorigin href="/assets/exchange-DHaaavbU.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-DoGJHVNn.js">
+  <link rel="modulepreload" crossorigin href="/assets/database-_t9Ss9QC.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-libs-CTTWaExz.js">
+</head><body style="margin: 0; padding: 0; background: #000; overflow: hidden"><div id="gamification-hud" class="gami-hud-cyber">
         <div>
             <i id="gami-icon" class="fa-solid fa-motorcycle gami-icon" style="color: #a0a0a0;"></i>
         </div>

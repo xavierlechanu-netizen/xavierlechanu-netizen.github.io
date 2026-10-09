@@ -4,6 +4,33 @@ Toutes les modifications notables du projet sont documentées dans ce fichier.
 
 Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) et ce projet adhère au [Versionnement Sémantique](https://semver.org/lang/fr/).
 
+## [111.02.00] - 2026-10-10 - 🧠 Nexus Atlas — Moteur d'Analyse Autonome, Résolution GSI & Durcissement COOP
+
+### Ajouté
+- **Moteur d'Analyse Autonome & Détection de Logs (`functions/api/nexus-insights.js`)** : Cloud Function planifiée (CRON 02:00) et endpoint sécurisé (`triggerNexusAnalysis`) ingérant automatiquement les logs de crashs et les sessions de conversations utilisateurs pour générer des rapports causaux (RCA) et des recommandations P0/P1/P2 via Gemini 2.5 Flash / Vertex AI.
+- **Synchronisation d'Interactions & Feedback (`nexus-atlas-gemini.js`)** : Capture de session conversationnelle asynchrone non-bloquante avec identifiant unique (`sessionId`) et journalisation dans `nexus_conversations`.
+- **Règles Firestore & Télémétrie (`firestore.rules`)** : Sécurisation Zero-Trust des collections `crash_reports`, `nexus_conversations` et `nexus_improvement_reports`.
+
+### Corrigé
+- **Google Sign-In (GSI Client Callback Timing)** : Résolution de l'erreur `[GSI_LOGGER]: The value of 'callback' is not a function`. La fonction `window.handleCredentialResponse` est désormais attachée de manière synchrone avant le chargement asynchrone de `gsi/client`, avec mise en file d'attente sécurisée (`_pendingGoogleResponse`).
+- **Politique COOP (Cross-Origin-Opener-Policy)** : Ajout de l'en-tête `Cross-Origin-Opener-Policy: same-origin-allow-popups` dans `firebase.json` pour autoriser les communications `window.postMessage` entre le popup Google Sign-In / Revolut et l'application.
+- **Affichage Modale de Localisation iOS (`inline-index-1.js` & `inline-login-2.js`)** : La modale `prominent-disclosure-modal` (exigence Google Play Android) est désormais strictement restreinte aux terminaux Android, empêchant le masquage intempestif de l'écran d'accueil et le déclenchement forcé du mode lecteur Safari sur iPhone.
+
+---
+
+## [111.01.00] - 2026-10-05 - 🤖 Nexus Atlas — Publication Autonome Facebook (Visuel Télémétrie) & Durcissement ISO 27001
+
+### Ajouté
+- **Publication Quotidienne Autonome Facebook Photo (`functions/api/social.js`)** : Cloud Function planifiée (CRON 10:00 Europe/Paris) générant et publiant chaque jour un post Facebook de type Photo associant texte rédigé par Gemini et carte de télémétrie.
+- **Moteur de Rendu Visuel Télémétrie (`functions/api/social-visual.js`)** : Générateur de carte carrée 1080x1080 (SVG -> PNG haute résolution via `@resvg/resvg-js`) affichant l'indice d'activité communautaire (jauge 0-100), l'histogramme des 24h et les compteurs de télémétrie/boîte noire avec polices embarquées (Outfit & JetBrains Mono).
+- **Prévisualisation Admin Sécurisée (`functions/api/social.js` & `src/js/nexus-atlas-facebook.js`)** : Endpoint de simulation et fonction client `NexusAtlasFacebook.previewDailyPost()` et `renderPreview()` (injection XSS-safe via `textContent`) permettant aux administrateurs de contrôler le rendu texte et graphique avant publication.
+- **Transparence IA (AI Act art. 50)** : Mention automatique de divulgation des contenus générés par IA apposée sur le texte du post et dans le cartouche du visuel.
+- **Script de Test Hors-Ligne (`functions/scripts/preview-daily-post.js`)** : Outil de test local générant l'aperçu HTML et le fichier PNG sans dépendance réseau.
+
+### Sécurité & Norme ISO/IEC 27001:2022
+- **Contrôle d'accès & Idempotence (A.5.15 & A.8.28)** : Verrou transactionnel Firestore sur `facebook_daily_runs/{dateKey}` empêchant tout doublon même en cas de rejeu Cloud Scheduler ; protection stricte des collections `config/social_automation` et `facebook_daily_runs` dans `firestore.rules`.
+- **Résilience & Gestion des Replis (A.5.29)** : Triple mécanisme de fail-safe : Vertex AI -> Gemini AI Studio -> Gabarit éditorial déterministe (zéro rupture si l'IA est indisponible) ; repli texte seul si l'upload d'image échoue ; suspension des rejeux en cas de timeout pour éviter toute publication multiple.
+
 ---
 
 ## [111.00.00] - 2026-09-08 - 🌿 Alignement ESG IT — Fruggr, RGAA 4.1.2, AI Act & ISO/IEC 27001

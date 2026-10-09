@@ -12,6 +12,7 @@ const services = require('./api/services');
 const iot = require('./api/iot');
 const alerts = require('./api/alerts');
 const social = require('./api/social');
+const nexusInsights = require('./api/nexus-insights');
 
 module.exports = {
     // Auth & Identity (FIDO2 & RGPD)
@@ -44,5 +45,10 @@ module.exports = {
 
     // Social Media (Facebook Page)
     publishToFacebook: social.publishToFacebook,
-    autoPublishFacebookNexusAtlas: social.autoPublishFacebookNexusAtlas
+    autoPublishFacebookNexusAtlas: social.autoPublishFacebookNexusAtlas,
+    previewFacebookDailyPost: social.previewFacebookDailyPost,
+
+    // Nexus Atlas Autonomous Intelligence (Logs & Insights)
+    autoAnalyzeNexusInsights: nexusInsights.autoAnalyzeNexusInsights,
+    triggerNexusAnalysis: nexusInsights.triggerNexusAnalysis
 };

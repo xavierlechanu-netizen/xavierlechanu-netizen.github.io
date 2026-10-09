@@ -49,14 +49,35 @@
     </style>
 
     <!-- Google Firebase & Config -->
-    <script type="module" crossorigin src="/assets/admin-_WU0RW8o.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/dom-security-CnIADrfH.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-B2s7GmDW.js">
-    <link rel="modulepreload" crossorigin href="/assets/vendor-storage-B_9XKQv5.js">
-    <link rel="modulepreload" crossorigin href="/assets/config-qDgn9DmF.js">
-    <link rel="modulepreload" crossorigin href="/assets/crypto-native-BOBi9hyu.js">
-    <link rel="modulepreload" crossorigin href="/assets/error-tracking-Smxz7q5U.js">
-  </head>
+  <!-- AXEPTIO CMP -->
+<script>
+window.axeptioSettings = {
+  clientId: "6abf7d654bd86ad927014c33",
+  cookiesVersion: "73984ab7-6f43-4eef-9577-94f735eedc51",
+  googleConsentMode: {
+    default: {
+      analytics_storage: "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+      wait_for_update: 500
+    }
+  }
+};
+(function(d, s) {
+  var t = d.getElementsByTagName(s)[0], e = d.createElement(s);
+  e.async = true; e.src = "//static.axept.io/sdk.js";
+  t.parentNode.insertBefore(e, t);
+})(document, "script");
+</script>
+  <script type="module" crossorigin src="/assets/admin-C7f-oiwO.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/dom-security-CnIADrfH.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-firebase-B2s7GmDW.js">
+  <link rel="modulepreload" crossorigin href="/assets/vendor-storage-B_9XKQv5.js">
+  <link rel="modulepreload" crossorigin href="/assets/config-BXz8bZGR.js">
+  <link rel="modulepreload" crossorigin href="/assets/crypto-native-BOBi9hyu.js">
+  <link rel="modulepreload" crossorigin href="/assets/error-tracking-gopHEpn0.js">
+</head>
   <body class="admin-body">
     <div class="admin-header">
       <h1 style="margin: 0; font-size: 1.5rem">
@@ -115,3 +136,4 @@
 
   </body>
 </html>
+
