@@ -48,6 +48,7 @@ static const char *TAG = "MAIN";
 #define TELEMETRY_PERIOD_MS 100         /* 10 Hz (1 point / 1,25 m à 45 km/h) */
 #define SHOCK_THRESHOLD_X10 30          /* 3.0G = Bascule en GATT Indicate + Flush Flash */
 #define DEEP_SLEEP_TIMEOUT  (5 * 60 * 1000000ULL)  /* 5 min en µs */
+#define BATTERY_LOW_MV      3000        /* LiFePO4 : en dessous, signer l'accident en cours sans attendre */
 
 /* Commandes PMTK Quectel L76-LB (avec checksum XOR NMEA) */
 #define PMTK_SET_BAUD_115200 "$PMTK251,115200*1F\r\n"
@@ -202,15 +203,20 @@ static void telemetry_task(void *pvParameters)
         was_ext_powered = ext_power;
 
         if (s_power_fail_triggered) {
-            ESP_LOGW(TAG, "⚡ COUPURE 12V DÉTECTÉE (Last-Gasp Write) — Sauvegarde d'urgence Flash !");
-            gps_power_off();
-            ble_comm_stop_advertising();
+            /* Le boîtier a sa propre batterie : la coupure du 12 V (faisceau arraché dans
+             * l'accident, contact coupé) ne l'arrête pas. Il continue d'enregistrer, le GPS
+             * reste allumé jusqu'à la fin de la fenêtre (+30 s) et l'appli peut toujours se
+             * connecter pour récupérer l'accident. Avant : GPS et Bluetooth coupés et
+             * accident signé immédiatement, donc les 30 s après le choc perdues. */
+            ESP_LOGW(TAG, "⚡ Coupure du 12 V : fonctionnement sur batterie interne.");
             blackbox_storage_flush();
-            /* Comme un enregistreur d'avion : un accident en cours est figé et signé tout de suite */
-            if (blackbox_event_pending()) {
-                blackbox_event_seal_now();
-            }
             s_power_fail_triggered = false;
+        }
+
+        /* Batterie qui faiblit : figer et signer tout de suite plutôt que tout perdre */
+        if (blackbox_event_pending() && read_battery_mv() < BATTERY_LOW_MV) {
+            ESP_LOGW(TAG, "Batterie faible : accident en cours signé sans attendre la fin de la fenêtre.");
+            blackbox_event_seal_now();
         }
 
         /* ---- Lire les trames NMEA du GPS (10 Hz @ 115200 bps) ---- */
@@ -283,7 +289,11 @@ static void telemetry_task(void *pvParameters)
             last_ext_power_time = esp_timer_get_time();
         } else {
             int64_t elapsed = esp_timer_get_time() - last_ext_power_time;
-            if (elapsed > (int64_t)DEEP_SLEEP_TIMEOUT) {
+            /* Pas de sommeil profond tant qu'un accident attend d'être récupéré par l'appli
+             * (le Bluetooth s'éteindrait) : le téléphone a souvent cassé dans l'accident,
+             * le propriétaire peut revenir des heures plus tard avec un autre. */
+            if (elapsed > (int64_t)DEEP_SLEEP_TIMEOUT &&
+                !blackbox_event_pending() && blackbox_event_oldest_unacked() < 0) {
                 ESP_LOGW(TAG, "Alimentation ext. absente > 5 min → Deep Sleep.");
                 gps_power_off();
                 enter_deep_sleep();
@@ -300,6 +310,9 @@ static void telemetry_task(void *pvParameters)
  */
 static uint16_t read_battery_mv(void)
 {
+    /* À FAIRE avec le plan de l'usine (CONFIG_BB_PIN_VBAT_ADC) : lecture ADC réelle.
+     * En attendant, valeur nominale : la signature anticipée sur batterie faible ne
+     * se déclenche jamais, celle à +30 s et au redémarrage restent actives. */
     return 3300;
 }
 
