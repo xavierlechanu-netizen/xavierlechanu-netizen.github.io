@@ -161,10 +161,15 @@ esp_err_t blackbox_storage_get_pubkey(uint8_t pubkey_out[65]);
 esp_err_t blackbox_storage_flush(void);
 
 /**
- * @brief Détruit immédiatement en RAM les clés cryptographiques AES-256-GCM,
- *        ECDSA P-256 et le condensat Merkle courant (Zeroization anti-tamper).
+ * @brief Détruit en RAM la clé privée ECDSA (plus aucune signature possible).
  */
 void blackbox_storage_zeroize_keys(void);
+
+/**
+ * @brief Ouverture du boîtier : signe l'accident en cours, détruit la clé de signature
+ *        (RAM + NVS), efface les trajets ordinaires, CONSERVE les accidents signés.
+ */
+esp_err_t blackbox_storage_tamper_wipe(void);
 
 /**
  * @brief Scelle immédiatement l'événement en cours (coupure d'alimentation) :

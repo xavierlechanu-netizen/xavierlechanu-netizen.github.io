@@ -93,10 +93,17 @@ void app_main(void)
      * ================================================================ */
     if (tamper_is_bricked()) {
         ESP_LOGE(TAG, "████████████████████████████████████████████");
-        ESP_LOGE(TAG, "█  BOÎTIER NEUTRALISÉ — TAMPER DÉTECTÉ    █");
-        ESP_LOGE(TAG, "█  Toutes les données ont été effacées.    █");
+        ESP_LOGE(TAG, "█  BOÎTIER OUVERT — plus d'enregistrement █");
+        ESP_LOGE(TAG, "█  Accidents signés récupérables par BLE   █");
         ESP_LOGE(TAG, "████████████████████████████████████████████");
 
+        /* Comme l'enregistreur d'un avion après l'accident : on n'enregistre plus,
+         * mais on laisse l'appli récupérer les accidents déjà signés. */
+        if (blackbox_storage_init() == ESP_OK && ble_comm_init() == ESP_OK) {
+            ble_comm_set_event_callbacks(on_event_info, on_event_export, on_ack);
+            ble_comm_update_tamper_state(TAMPER_STATE_DESTROYED);
+            xTaskCreate(event_export_task, "evt_export", 3072, NULL, 4, &s_event_export_task);
+        }
         while (1) {
             vTaskDelay(pdMS_TO_TICKS(10000));
         }
@@ -183,8 +190,8 @@ static void telemetry_task(void *pvParameters)
         /* ---- Priorité 0 : Vérifier l'état d'intrusion physique (Two-Stage Zeroization) ---- */
         if (tamper_get_state() != TAMPER_STATE_SAFE) {
             ESP_LOGE(TAG, "🚨 INTRUSION PHYSIQUE DÉTECTÉE — Exécution Zeroization matérielle !");
-            blackbox_storage_zeroize_keys();
-            tamper_zeroize();
+            blackbox_storage_tamper_wipe();   /* signe l'accident en cours, garde les accidents */
+            tamper_zeroize();                 /* marque eFuse « ouvert », redémarre */
         }
 
         /* ---- Vérifier la présence du 12V véhicule ("Last-Gasp Write" sur coupure) ---- */
@@ -415,8 +422,11 @@ static void enter_deep_sleep(void)
  */
 static uint16_t on_event_info(uint8_t *buf, uint16_t cap)
 {
-    if (cap < 65 || blackbox_storage_get_pubkey(buf) != ESP_OK) {
+    if (cap < 65) {
         return 0;
+    }
+    if (blackbox_storage_get_pubkey(buf) != ESP_OK) {
+        memset(buf, 0, 65);
     }
     uint16_t n = 65;
     int slot = blackbox_event_oldest_unacked();

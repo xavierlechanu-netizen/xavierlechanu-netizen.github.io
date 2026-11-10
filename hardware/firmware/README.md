@@ -94,3 +94,11 @@ idf.py -p /dev/ttyUSB0 flash monitor
 ### Format de la Flash (BOX3)
 
 Le premier démarrage d'un boîtier au format précédent (BOX2) **efface** la partition `blackbox_data` (aucun boîtier n'est encore livré). En-tête journalisé dans le secteur 0 (un effacement tous les 42 enregistrements), anneau de 6 678 trames (~11 min), 2 × 16 secteurs d'accidents.
+
+### Ouverture du boîtier (résine + maillage de cuivre)
+
+Couper le maillage déclenche, dans l'ordre : signature de l'accident en cours, destruction de la **clé de signature** (RAM + NVS), effacement des trajets ordinaires, gravure du bit d'eFuse « ouvert » (bloc utilisateur `EFUSE_BLK3`, bit 0) et coupure du JTAG. Les **accidents signés sont conservés** avec la clé AES qui permet de les relire : au redémarrage, le boîtier n'enregistre plus rien mais laisse l'appli les récupérer par Bluetooth (état anti-effraction `0xFF`).
+
+### UUID Bluetooth
+
+`50ccXXXX-0000-4d6f-6e35-306363657431`, où `XXXX` est l'identifiant court de `ble_comm.h` (ex. service télémétrie `0001`, `ECDSA_SIG` `0105`). Contrat vérifié par `tests/ble-uuid-contract.test.js`.

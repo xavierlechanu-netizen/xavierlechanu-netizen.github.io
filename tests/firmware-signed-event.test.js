@@ -152,6 +152,20 @@ describeIfBuilt("Boîte noire : accident figé et signé par le firmware, vérif
         expect(r.slotReusedImpact).toBe(r.fourthImpact);
     });
 
+    test("boîtier ouvert : l'accident en cours est signé, la clé de signature détruite, les trajets effacés, les accidents gardés", () => {
+        expect(r.tamperWipeOk).toBe(1);
+        expect(r.tamperRingGone).toBe(1);
+        expect(r.tamperEvent).toMatchObject({ impactSeq: r.tamperFifthImpact, unreadable: 0 });
+        const { chain, sigOk } = verifyEvent(r.tamperEvent, r.publicKey);
+        expect(chain.valid && chain.finalHashHex === r.tamperEvent.root).toBe(true);
+        expect(sigOk).toBe(true);
+        // Après redémarrage : plus aucune signature possible, mais l'accident reste récupérable
+        expect(r.afterTamperCanSign).toBe(0);
+        expect(r.afterTamperPubKnown).toBe(1);
+        expect(r.tamperEventAfterReboot.root).toBe(r.tamperEvent.root);
+        expect(r.tamperEventAfterReboot.unreadable).toBe(0);
+    });
+
     test("envoi au serveur souverain : accepté tel quel, refusé si une trame est retouchée", async () => {
         const ownerUid = "pilote-fw-01";
         const wormDir = fs.mkdtempSync(path.join(os.tmpdir(), "bb-fw-worm-"));

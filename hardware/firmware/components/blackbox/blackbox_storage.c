@@ -119,7 +119,8 @@ static uint32_t s_header_next = 0;           /* prochain enregistrement libre du
 static uint8_t s_aes_key[AES_KEY_SIZE] __attribute__((aligned(4)));
 static uint8_t s_ecdsa_priv[ECDSA_PRIV_SIZE] __attribute__((aligned(4)));
 static uint8_t s_ecdsa_pub[ECDSA_PUB_SIZE] __attribute__((aligned(4)));
-static bool    s_ecdsa_ready = false;
+static bool    s_ecdsa_ready = false;   /* clé privée présente : signature possible */
+static bool    s_pub_ready = false;     /* clé publique connue */
 
 /* ---- Prototypes internes ---- */
 static esp_err_t _load_or_generate_keys(void);
@@ -704,7 +705,7 @@ esp_err_t blackbox_storage_sign_digest(const uint8_t hash32[32], uint8_t *sig_de
 
 esp_err_t blackbox_storage_get_pubkey(uint8_t pubkey_out[65])
 {
-    if (!s_ecdsa_ready || pubkey_out == NULL) {
+    if (!s_pub_ready || pubkey_out == NULL) {
         return ESP_ERR_INVALID_STATE;
     }
     memcpy(pubkey_out, s_ecdsa_pub, ECDSA_PUB_SIZE);
@@ -751,8 +752,8 @@ static esp_err_t _load_or_generate_keys(void)
     esp_err_t err_priv = nvs_get_blob(nvs, "ecdsa_priv", s_ecdsa_priv, &priv_len);
     esp_err_t err_pub  = nvs_get_blob(nvs, "ecdsa_pub", s_ecdsa_pub, &pub_len);
 
-    if (err_priv == ESP_OK && err_pub == ESP_OK && priv_len == ECDSA_PRIV_SIZE &&
-        pub_len == ECDSA_PUB_SIZE && s_ecdsa_pub[0] == 0x04) {
+    s_pub_ready = (err_pub == ESP_OK && pub_len == ECDSA_PUB_SIZE && s_ecdsa_pub[0] == 0x04);
+    if (err_priv == ESP_OK && s_pub_ready && priv_len == ECDSA_PRIV_SIZE) {
         s_ecdsa_ready = true;
         ESP_LOGI(TAG, "Clé de signature ECDSA P-256 du boîtier chargée (provisionnement usine).");
     } else {
@@ -777,14 +778,19 @@ static esp_err_t _load_or_generate_keys(void)
             nvs_set_blob(nvs, "ecdsa_pub", s_ecdsa_pub, ECDSA_PUB_SIZE);
             nvs_commit(nvs);
             s_ecdsa_ready = true;
+            s_pub_ready = true;
         }
 #else
         /* Production : jamais de clé improvisée. Le boîtier enregistre et fige quand
          * même les accidents, mais sans signature tant qu'il n'est pas provisionné. */
         mbedtls_platform_zeroize(s_ecdsa_priv, sizeof(s_ecdsa_priv));
-        memset(s_ecdsa_pub, 0, sizeof(s_ecdsa_pub));
         s_ecdsa_ready = false;
-        ESP_LOGE(TAG, "Boîtier NON PROVISIONNÉ : aucune clé ECDSA en NVS, accidents non signés.");
+        if (!s_pub_ready) {
+            memset(s_ecdsa_pub, 0, sizeof(s_ecdsa_pub));
+            ESP_LOGE(TAG, "Boîtier NON PROVISIONNÉ : aucune clé ECDSA en NVS, accidents non signés.");
+        } else {
+            ESP_LOGW(TAG, "Clé de signature détruite (boîtier ouvert) : accidents existants lisibles, plus aucune signature.");
+        }
 #endif
     }
 
@@ -867,8 +873,40 @@ esp_err_t blackbox_storage_flush(void)
 
 void blackbox_storage_zeroize_keys(void)
 {
-    mbedtls_platform_zeroize(s_aes_key, sizeof(s_aes_key));
     mbedtls_platform_zeroize(s_ecdsa_priv, sizeof(s_ecdsa_priv));
-    mbedtls_platform_zeroize(&s_header, sizeof(s_header));
     s_ecdsa_ready = false;
+}
+
+/*
+ * Ouverture du boîtier (maillage de cuivre coupé) — comme un enregistreur d'avion,
+ * la preuve n'est jamais détruite :
+ *   1. l'accident en cours est signé tant que la clé existe encore ;
+ *   2. la clé de SIGNATURE est détruite (RAM + NVS) : plus aucune nouvelle preuve ;
+ *   3. l'anneau des trajets ordinaires est effacé (vie privée) ;
+ *   4. les accidents figés et signés sont conservés, ainsi que la clé AES qui
+ *      permet de les relire et de les exporter (sans elle ils seraient perdus).
+ */
+esp_err_t blackbox_storage_tamper_wipe(void)
+{
+    if (s_partition == NULL) return ESP_ERR_INVALID_STATE;
+
+    if (s_header.pend_active) {
+        blackbox_event_seal_now();
+    }
+
+    blackbox_storage_zeroize_keys();
+    nvs_handle_t nvs;
+    if (nvs_open("storage", NVS_READWRITE, &nvs) == ESP_OK) {
+        nvs_erase_key(nvs, "ecdsa_priv");
+        nvs_commit(nvs);
+        nvs_close(nvs);
+    }
+
+    esp_err_t err = esp_partition_erase_range(s_partition, HEADER_SECTOR_SIZE,
+                                              s_ring_sectors * FLASH_SECTOR_SIZE);
+    mbedtls_platform_zeroize(s_snap, sizeof(s_snap));
+    s_snap_used = 0;
+    _write_header();
+    ESP_LOGE(TAG, "Boîtier ouvert : clé de signature détruite, trajets effacés, accidents signés conservés.");
+    return err;
 }

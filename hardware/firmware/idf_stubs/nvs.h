@@ -28,6 +28,8 @@ esp_err_t nvs_get_u32(nvs_handle_t handle, const char *key, uint32_t *out_value)
 esp_err_t nvs_set_u32(nvs_handle_t handle, const char *key, uint32_t value);
 esp_err_t nvs_commit(nvs_handle_t handle);
 
+esp_err_t nvs_erase_key(nvs_handle_t handle, const char *key);
+
 #ifdef __cplusplus
 }
 #endif

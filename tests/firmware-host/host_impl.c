@@ -113,6 +113,20 @@ esp_err_t nvs_set_blob(nvs_handle_t h, const char *key, const void *v, size_t le
     return ESP_OK;
 }
 
+esp_err_t nvs_erase_key(nvs_handle_t h, const char *key)
+{
+    (void)h;
+    char k[40];
+    full_key(k, key);
+    for (int i = 0; i < s_nvs_n; i++) {
+        if (strcmp(s_nvs[i].key, k) == 0) {
+            s_nvs[i] = s_nvs[--s_nvs_n];
+            return ESP_OK;
+        }
+    }
+    return ESP_ERR_NVS_NOT_FOUND;
+}
+
 /* Provisionnement « usine » simulé : comme le CSV de tools/provision_blackbox.py */
 void host_provision(const uint8_t aes[32], const uint8_t priv[32], const uint8_t pub[65])
 {

@@ -34,9 +34,10 @@ class BlackBoxBLE {
     this.telemetryService = null;
     this.diagnosticService = null;
 
-    // Base UUID 128-bit défini dans ble_comm.h & blackbox_ble.ino
+    // UUID 128 bits du firmware (ble_comm.c) : 50ccXXXX-0000-4d6f-6e35-306363657431.
+    // Correctif : il manquait le groupe « -0000 » (UUID de 28 chiffres, refusé par Web Bluetooth).
     this.baseUuidPrefix = "50cc0000-";
-    this.baseUuidSuffix = "-4d6f-6e35-306363657431";
+    this.baseUuidSuffix = "-0000-4d6f-6e35-306363657431";
 
     this.SVC_TELEMETRY  = this.buildUuid("0001");
     this.SVC_DIAGNOSTIC = this.buildUuid("0002");

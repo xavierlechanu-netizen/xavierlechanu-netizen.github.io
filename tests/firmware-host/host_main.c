@@ -148,6 +148,33 @@ int main(int argc, char **argv)
     blackbox_event_get((uint8_t)first, &e1);
     printf(",\"fourthImpact\":%u,\"slotReusedImpact\":%u", fourth_impact, e1.impact_seq);
 
+    /* 7. Ouverture du boîtier 10 s après un 5e choc : l'accident en cours est signé,
+     *    la clé de signature détruite, les trajets effacés, les accidents conservés. */
+    blackbox_event_ack(e1.end_seq);   /* 4e accident envoyé : une place se libère */
+    for (int i = 0; i < 400; i++) put_frame(10);
+    uint32_t fifth_impact = blackbox_storage_count();
+    put_frame(70);
+    for (int i = 0; i < 100; i++) put_frame(10);
+    int wipe_ok = blackbox_storage_tamper_wipe() == ESP_OK;
+    blackbox_frame_t gone;
+    int ring_gone = blackbox_storage_read(blackbox_storage_count() - 5, &gone) != ESP_OK;
+    printf(",\"tamperWipeOk\":%d,\"tamperRingGone\":%d,\"tamperFifthImpact\":%u", wipe_ok, ring_gone, fifth_impact);
+    int tslot = -1;
+    for (int k = 0; k < BLACKBOX_EVENT_SLOTS; k++) {
+        blackbox_event_t e;
+        if (blackbox_event_get((uint8_t)k, &e) == ESP_OK && e.impact_seq == fifth_impact) tslot = k;
+    }
+    printf(",\"tamperEvent\":"); dump_event(tslot);
+    /* Redémarrage en mode « boîtier ouvert » : plus de clé de signature, accidents lisibles */
+    if (blackbox_storage_init() != ESP_OK) return 1;
+    uint8_t pub2[65] = {0};
+    int pub_ok = blackbox_storage_get_pubkey(pub2) == ESP_OK && memcmp(pub2, pub, 65) == 0;
+    uint8_t d[32] = {0}, sig[72];
+    size_t sl = 0;
+    int can_sign = blackbox_storage_sign_digest(d, sig, &sl) == ESP_OK;
+    printf(",\"afterTamperPubKnown\":%d,\"afterTamperCanSign\":%d,\"tamperEventAfterReboot\":", pub_ok, can_sign);
+    dump_event(tslot);
+
     printf(",\"headerSectorErases\":%u,\"totalFrames\":%u,\"flashViolations\":%d}\n",
            g_erase_count[0], blackbox_storage_count(), g_flash_violations);
     return 0;

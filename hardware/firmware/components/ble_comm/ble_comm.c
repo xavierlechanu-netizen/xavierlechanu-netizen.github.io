@@ -68,12 +68,24 @@ static const char *TAG = "BLE_COMM";
 #define FW_VERSION_STR      "1.0.0-proto"
 #define FW_VERSION_LEN      11
 
-/* ---- Base UUID 128-bit ---- */
-/* 50cc0000-0000-4d6f-6e35-306363657431 */
-static const ble_uuid128_t s_base_uuid = BLE_UUID128_INIT(
-    0x31, 0x74, 0x65, 0x63, 0x63, 0x30, 0x35, 0x6e,
-    0x6f, 0x4d, 0x00, 0x00, 0x00, 0x00, 0xcc, 0x50
-);
+/* ---- UUID 128 bits : 50ccXXXX-0000-4d6f-6e35-306363657431 (XXXX = identifiant court) ----
+ * Correctif : les services étaient déclarés en UUID 16 bits (0x0001, 0x0101…), réservés
+ * par le Bluetooth SIG, alors que l'appli cherche les UUID 128 bits ci-dessus : aucune
+ * connexion n'aurait abouti. Octets en little-endian (ordre de NimBLE). */
+#define UUID128_50CC(id) BLE_UUID128_DECLARE(                              \
+    0x31, 0x74, 0x65, 0x63, 0x63, 0x30, 0x35, 0x6e,                         \
+    0x6f, 0x4d, 0x00, 0x00, (uint8_t)((id) & 0xFF), (uint8_t)((id) >> 8),   \
+    0xcc, 0x50)
+
+/* Identifiant court (XXXX) d'un UUID 50ccXXXX-… */
+static uint16_t chr_short_id(const ble_uuid_t *uuid)
+{
+    if (uuid->type == BLE_UUID_TYPE_128) {
+        const ble_uuid128_t *u = (const ble_uuid128_t *)uuid;
+        return (uint16_t)(u->value[12] | (u->value[13] << 8));
+    }
+    return ble_uuid_u16(uuid);
+}
 
 /* ---- État interne ---- */
 static ble_conn_state_t s_ble_state = BLE_STATE_IDLE;
@@ -112,8 +124,8 @@ static void ble_generate_device_name(void);
  */
 
 /* ---- Helper macro pour UUID 16-bit sur base 128-bit ---- */
-#define SVC_UUID(id)  BLE_UUID16_DECLARE(id)
-#define CHR_UUID(id)  BLE_UUID16_DECLARE(id)
+#define SVC_UUID(id)  UUID128_50CC(id)
+#define CHR_UUID(id)  UUID128_50CC(id)
 
 static const struct ble_gatt_svc_def s_gatt_services[] = {
     /* ================================================================
@@ -567,7 +579,7 @@ static int ble_gatt_telemetry_access(
     (void)attr;
     (void)arg;
 
-    uint16_t uuid16 = ble_uuid_u16(ctxt->chr->uuid);
+    uint16_t uuid16 = chr_short_id(ctxt->chr->uuid);
 
     switch (ctxt->op) {
         case BLE_GATT_ACCESS_OP_READ_CHR:
@@ -655,7 +667,7 @@ static int ble_gatt_diagnostic_access(
         return BLE_ATT_ERR_UNLIKELY;
     }
 
-    uint16_t uuid16 = ble_uuid_u16(ctxt->chr->uuid);
+    uint16_t uuid16 = chr_short_id(ctxt->chr->uuid);
 
     switch (uuid16) {
         case BLE_UUID_CHR_BATTERY:
@@ -697,7 +709,7 @@ static int ble_gatt_fota_access(
     (void)attr;
     (void)arg;
 
-    uint16_t uuid16 = ble_uuid_u16(ctxt->chr->uuid);
+    uint16_t uuid16 = chr_short_id(ctxt->chr->uuid);
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) {
         if (uuid16 == BLE_UUID_CHR_OTA_CTRL) {

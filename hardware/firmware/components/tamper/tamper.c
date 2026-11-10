@@ -224,25 +224,11 @@ void tamper_zeroize(void)
      * La partition NVS (Non-Volatile Storage) peut contenir des
      * clés de session BLE ou des tokens FOTA. On efface tout.
      */
-    nvs_flash_erase();
-
-    /*
-     * ╔═══════════════════════════════════════════════════════════╗
-     * ║  ÉTAPE 3 : Effacement de la partition "blackbox_data"    ║
-     * ╚═══════════════════════════════════════════════════════════╝
-     *
-     * Efface la partition contenant les logs GPS / télémétrie
-     * chiffrés. Sans la clé (effacée à l'étape 1), les données
-     * étaient déjà illisibles, mais on les écrase par sécurité.
-     */
-    const esp_partition_t *data_part = esp_partition_find_first(
-        ESP_PARTITION_TYPE_DATA,
-        ESP_PARTITION_SUBTYPE_ANY,
-        "blackbox_data"
-    );
-    if (data_part != NULL) {
-        esp_partition_erase_range(data_part, 0, data_part->size);
-    }
+    /* Les étapes « effacement NVS » et « effacement de toute la partition » ont été
+     * retirées : elles détruisaient les accidents signés (la preuve) au moment même
+     * où quelqu'un a intérêt à les faire disparaître. Le tri est fait avant l'appel,
+     * par blackbox_storage_tamper_wipe() (clé de signature détruite, trajets effacés,
+     * accidents conservés). */
 
     /*
      * ╔═══════════════════════════════════════════════════════════╗
