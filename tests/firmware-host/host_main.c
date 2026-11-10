@@ -56,7 +56,7 @@ static void dump_event(int slot)
 
 void host_provision(const uint8_t aes[32], const uint8_t priv[32], const uint8_t pub[65]);
 
-/* Clé d'usine : passée en argument (hex) comme si tools/provision_blackbox.py l'avait injectée */
+/* Clé passée en argument (hex), injectée d'avance en NVS : teste le chargement d'une clé existante */
 static int unhex(const char *h, uint8_t *out, size_t n)
 {
     if (!h || strlen(h) != 2 * n) return -1;
@@ -77,6 +77,32 @@ int main(int argc, char **argv)
     uint8_t pub[65] = {0};
     blackbox_storage_get_pubkey(pub);
     printf("{\"provisioned\":%d,\"publicKey\":", argc == 3); hex(pub, 65);
+
+    /* 0. Identité : mode usine (clés et code d'appairage faits dans la puce), preuve de
+     *    possession sur un défi, numéro de série écrit une seule fois */
+    {
+        char serial[BLACKBOX_SERIAL_MAX];
+        uint32_t pin = 0;
+        uint8_t challenge[32], popsig[72];
+        size_t poplen = 0;
+        for (int i = 0; i < 32; i++) challenge[i] = (uint8_t)(0xA0 + i);
+        int no_serial = blackbox_identity_get_serial(serial, sizeof(serial)) == ESP_ERR_NOT_FOUND;
+        int pin_ok = blackbox_identity_get_pin(&pin) == ESP_OK && pin >= 100000 && pin <= 999999;
+        int pop_ok = blackbox_factory_pop(challenge, popsig, &poplen) == ESP_OK;
+        printf(",\"factoryNoSerial\":%d,\"factoryPinOk\":%d,\"popChallenge\":", no_serial, pin_ok);
+        hex(challenge, 32);
+        printf(",\"popSig\":"); hex(popsig, pop_ok ? poplen : 0);
+        int bad1 = blackbox_identity_set_serial("BB50V1-P11") == ESP_ERR_INVALID_ARG;   /* 11e prototype */
+        int bad2 = blackbox_identity_set_serial("BB50V1-PA01") == ESP_ERR_INVALID_ARG;  /* P en série */
+        int bad3 = blackbox_identity_set_serial("BB50V1-A00") == ESP_ERR_INVALID_ARG;   /* 00 exclu */
+        int set_ok = blackbox_identity_set_serial("BB50V1-A01") == ESP_OK;
+        int set_again = blackbox_identity_set_serial("BB50V1-A02") == ESP_ERR_INVALID_STATE;
+        blackbox_identity_get_serial(serial, sizeof(serial));
+        size_t l2 = 0;
+        int pop_after = blackbox_factory_pop(challenge, popsig, &l2) == ESP_ERR_INVALID_STATE;
+        printf(",\"serialBadRefused\":%d,\"serialSetOk\":%d,\"serialWriteOnce\":%d,\"serial\":\"%s\",\"popClosedAfterSerial\":%d",
+               bad1 && bad2 && bad3, set_ok, set_again, serial, pop_after);
+    }
 
     /* 1. Roulage puis choc à la trame 700 (4,5 G) ; 30 s plus tard l'événement est scellé */
     for (int i = 0; i < 700; i++) put_frame(10);
@@ -151,6 +177,28 @@ int main(int argc, char **argv)
     /* 7. Ouverture du boîtier 10 s après un 5e choc : l'accident en cours est signé,
      *    la clé de signature détruite, les trajets effacés, les accidents conservés. */
     blackbox_event_ack(e1.end_seq);   /* 4e accident envoyé : une place se libère */
+
+    /* 6b. Batterie retirée (remplacement en garage agréé) 5 s après un choc, 12 V absent :
+     *     coupure brutale, rien n'est signé sur le moment. Au redémarrage, l'accident resté
+     *     ouvert est scellé et signé ; ce n'est PAS une ouverture (clé toujours là). */
+    for (int i = 0; i < 400; i++) put_frame(10);
+    uint32_t swap_impact = blackbox_storage_count();
+    put_frame(55);
+    for (int i = 0; i < 50; i++) put_frame(10);
+    if (blackbox_storage_init() != ESP_OK) return 1;   /* RAM perdue, Flash et NVS conservées */
+    int sslot = -1;
+    for (int k = 0; k < BLACKBOX_EVENT_SLOTS; k++) {
+        blackbox_event_t e;
+        if (blackbox_event_get((uint8_t)k, &e) == ESP_OK && e.impact_seq == swap_impact) sslot = k;
+    }
+    uint8_t dd[32] = {0}, ss[72];
+    size_t sll = 0;
+    printf(",\"swapImpact\":%u,\"swapStillSigns\":%d,\"swapEvent\":", swap_impact,
+           blackbox_storage_sign_digest(dd, ss, &sll) == ESP_OK);
+    dump_event(sslot);
+    blackbox_event_t se;
+    if (sslot >= 0 && blackbox_event_get((uint8_t)sslot, &se) == ESP_OK) blackbox_event_ack(se.end_seq);
+
     for (int i = 0; i < 400; i++) put_frame(10);
     uint32_t fifth_impact = blackbox_storage_count();
     put_frame(70);

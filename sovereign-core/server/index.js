@@ -124,7 +124,8 @@ function createSovereignApp(options = {}) {
         if (!authHeader.startsWith("Bearer ")) return null;
         const token = authHeader.slice(7).trim();
         const verif = verifySovereignJwt(token);
-        return verif.valid ? verif.payload : null;
+        // Un jeton à usage particulier (défi d'usine…) n'ouvre jamais une session
+        return verif.valid && !verif.payload.purpose ? verif.payload : null;
     }
 
     async function handleRequest(req, res, rawBodyBuffer) {
@@ -422,7 +423,7 @@ function createSovereignApp(options = {}) {
                 });
             } catch (e) {
                 if (e instanceof StoreError) {
-                    res.statusCode = e.code === "UNIT_EXISTS" ? 409 : 400;
+                    res.statusCode = (e.code === "UNIT_EXISTS" || e.code === "KEY_EXISTS") ? 409 : 400;
                     res.end(JSON.stringify({ error: e.message }));
                     return;
                 }
@@ -430,6 +431,66 @@ function createSovereignApp(options = {}) {
             }
             res.statusCode = 201;
             res.end(JSON.stringify({ serial: unit.serial, status: unit.status, ownerUid: unit.ownerUid }));
+            return;
+        }
+
+        // 4b-bis. MISE EN SERVICE EN USINE — le boîtier fabrique sa clé dans la puce ; le serveur
+        // attribue le numéro de série et le lie définitivement à cette clé. Preuve de possession :
+        // le boîtier signe un défi du serveur (une usine ne peut pas présenter une clé fabriquée
+        // sur son propre PC sans que la puce l'ait signée). Comptes « factory » ou « admin ».
+        if (req.method === "POST" && (pathname === "/api/v1/factory/challenge" || pathname === "/api/v1/factory/units")) {
+            const authUser = extractBearerUser(req);
+            if (!authUser || (authUser.role !== "factory" && authUser.role !== "admin")) {
+                res.statusCode = 403;
+                res.end(JSON.stringify({ error: "Réservé à la mise en service en usine." }));
+                return;
+            }
+            if (pathname === "/api/v1/factory/challenge") {
+                const challenge = crypto.randomBytes(32).toString("hex");
+                // Défi signé et daté (5 min) : vérifiable par n'importe quelle instance du serveur
+                const challengeToken = signSovereignJwt({ uid: `factory-pop:${authUser.uid}`, purpose: "factory-pop", ctx: { challenge, by: authUser.uid } }, { expiresInSec: 300 });
+                res.statusCode = 200;
+                res.end(JSON.stringify({ challenge, challengeToken, expiresInSec: 300 }));
+                return;
+            }
+            const { ecdsaPublicKey, challengeToken, popSignature } = body;
+            const revision = body.revision === undefined ? "V1" : body.revision;
+            const type = body.type === undefined ? "SERIES" : body.type;
+            if (typeof ecdsaPublicKey !== "string" || !/^04[0-9a-fA-F]{128}$/.test(ecdsaPublicKey) ||
+                !blackboxCore.isValidEcdsaPublicKey(ecdsaPublicKey) ||
+                !blackboxCore.HW_REVISIONS.includes(revision) || !["SERIES", "PROTOTYPE"].includes(type)) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: "Clé publique (04 + 128 hex), révision ou type invalide." }));
+                return;
+            }
+            const ch = typeof challengeToken === "string" ? verifySovereignJwt(challengeToken) : { valid: false };
+            if (!ch.valid || ch.payload.purpose !== "factory-pop" || !ch.payload.ctx || ch.payload.ctx.by !== authUser.uid ||
+                !/^[0-9a-f]{64}$/.test(ch.payload.ctx.challenge || "")) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: "Défi absent, expiré ou émis pour un autre poste." }));
+                return;
+            }
+            const pubHex = ecdsaPublicKey.toLowerCase();
+            const message = Buffer.from(`mon50cc-factory-pop:${ch.payload.ctx.challenge}:${pubHex}`, "utf8");
+            if (typeof popSignature !== "string" || !blackboxCore.verifyEcdsaP256Signature(message, popSignature, pubHex)) {
+                res.statusCode = 422;
+                res.end(JSON.stringify({ error: "Le boîtier n'a pas prouvé qu'il détient la clé privée." }));
+                return;
+            }
+            let reg;
+            try {
+                reg = await store.registerFactoryUnit({ ecdsaPublicKey: pubHex, revision, type, nextSerial: blackboxCore.nextSerial });
+            } catch (e) {
+                if (e instanceof StoreError || /prototypes/.test(e.message)) {
+                    res.statusCode = 409;
+                    res.end(JSON.stringify({ error: e.message }));
+                    return;
+                }
+                throw e;
+            }
+            // Même clé présentée deux fois (outil relancé) → même numéro, rien de créé
+            res.statusCode = reg.created ? 201 : 200;
+            res.end(JSON.stringify({ serial: reg.unit.serial, revision: reg.unit.revision, created: reg.created }));
             return;
         }
 

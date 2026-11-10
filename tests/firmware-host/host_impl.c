@@ -127,7 +127,31 @@ esp_err_t nvs_erase_key(nvs_handle_t h, const char *key)
     return ESP_ERR_NVS_NOT_FOUND;
 }
 
-/* Provisionnement « usine » simulé : comme le CSV de tools/provision_blackbox.py */
+esp_err_t nvs_get_u32(nvs_handle_t h, const char *key, uint32_t *out)
+{
+    size_t len = sizeof(*out);
+    return nvs_get_blob(h, key, out, &len);
+}
+
+esp_err_t nvs_set_u32(nvs_handle_t h, const char *key, uint32_t v) { return nvs_set_blob(h, key, &v, sizeof(v)); }
+
+/* Comme ESP-IDF : out == NULL → renvoie la longueur (zéro final compris) */
+esp_err_t nvs_get_str(nvs_handle_t h, const char *key, char *out, size_t *len)
+{
+    char tmp[80];
+    size_t n = sizeof(tmp);
+    esp_err_t e = nvs_get_blob(h, key, tmp, &n);
+    if (e != ESP_OK) return e;
+    if (out == NULL) { *len = n; return ESP_OK; }
+    if (*len < n) return ESP_FAIL;
+    memcpy(out, tmp, n);
+    *len = n;
+    return ESP_OK;
+}
+
+esp_err_t nvs_set_str(nvs_handle_t h, const char *key, const char *v) { return nvs_set_blob(h, key, v, strlen(v) + 1); }
+
+/* Clés injectées d'avance en NVS (ancien procédé, conservé pour tester ce chemin de chargement) */
 void host_provision(const uint8_t aes[32], const uint8_t priv[32], const uint8_t pub[65])
 {
     nvs_handle_t h;

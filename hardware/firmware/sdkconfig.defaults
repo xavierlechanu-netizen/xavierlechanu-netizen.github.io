@@ -20,7 +20,7 @@ CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 # Sans chiffrement de la Flash, ESP-IDF chiffrerait la NVS avec une clé HMAC
 # gravée définitivement en eFuse au premier démarrage. La production utilise
 # sdkconfig.prod.defaults (chiffrement Flash + NVS via la partition nvs_keys,
-# comme le prévoit tools/provision_blackbox.py, + démarrage sécurisé).
+# clé générée par ESP-IDF au premier démarrage chiffré, + démarrage sécurisé).
 CONFIG_NVS_ENCRYPTION=n
 
 # ---- Secure Boot V2 (FOTA authentifiée) ----

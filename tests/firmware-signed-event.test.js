@@ -39,7 +39,7 @@ function buildAndRun() {
         throw new Error("Compilation du firmware sur le banc hôte impossible :\n" + msg, { cause: e });
     }
     const exec = (args) => JSON.parse(execFileSync(bin, args, { stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"));
-    // Clés propres à ce boîtier, comme les fabrique tools/provision_blackbox.py en usine
+    // Clé injectée d'avance (chemin de chargement d'une clé existante) ; le mode usine est testé sans argument
     const { publicKey, privateKey } = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
     const factoryPub = publicKey.export({ type: "spki", format: "der" }).subarray(-65).toString("hex");
     const factoryPriv = Buffer.from(privateKey.export({ format: "jwk" }).d, "base64url").toString("hex").padStart(64, "0");
@@ -83,12 +83,40 @@ describeIfBuilt("Boîte noire : accident figé et signé par le firmware, vérif
         expect(r.publicKey).toBe(run.factoryPub);
     });
 
-    test("boîtier non provisionné : accidents figés quand même, mais jamais signés avec une clé maison", () => {
+    test("boîtier neuf (mode usine) : clé et code d'appairage fabriqués dans la puce, accidents signés", () => {
         const u = run.unprovisioned;
         expect(u.provisioned).toBe(0);
-        expect(u.publicKey).toBe("00".repeat(65));
-        expect(u.event1).toMatchObject({ impactSeq: 700, sig: "", unreadable: 0 });
-        expect(u.event1.frames).toHaveLength(601);
+        expect(u.publicKey).toMatch(/^04[0-9a-f]{128}$/);
+        expect(u.factoryPinOk).toBe(1);
+        const { chain, sigOk } = verifyEvent(u.event1, u.publicKey);
+        expect(chain.valid && chain.finalHashHex === u.event1.root).toBe(true);
+        expect(sigOk).toBe(true);
+    });
+
+    test("preuve de possession : le boîtier signe le défi du serveur, puis ferme ce chemin une fois numéroté", () => {
+        const u = run.unprovisioned;
+        expect(u.factoryNoSerial).toBe(1);
+        const msg = Buffer.from(`mon50cc-factory-pop:${u.popChallenge}:${u.publicKey}`, "utf8");
+        expect(blackboxCore.verifyEcdsaP256Signature(msg, u.popSig, u.publicKey)).toBe(true);
+        // Une autre clé ou un autre défi ne passent pas
+        expect(blackboxCore.verifyEcdsaP256Signature(Buffer.from(`mon50cc-factory-pop:${"00".repeat(32)}:${u.publicKey}`), u.popSig, u.publicKey)).toBe(false);
+        expect(u.popClosedAfterSerial).toBe(1);
+    });
+
+    test("numéro de série : format vérifié (P01 à P10, pas de P en série, pas de 00), écrit une seule fois", () => {
+        const u = run.unprovisioned;
+        expect(u.serialBadRefused).toBe(1);
+        expect(u.serialSetOk).toBe(1);
+        expect(u.serial).toBe("BB50V1-A01");
+        expect(u.serialWriteOnce).toBe(1);
+    });
+
+    test("batterie retirée (garage agréé) juste après un choc : accident signé au redémarrage, clé intacte", () => {
+        expect(r.swapStillSigns).toBe(1);
+        expect(r.swapEvent).toMatchObject({ impactSeq: r.swapImpact, endSeq: r.swapImpact + 50, unreadable: 0 });
+        const { chain, sigOk } = verifyEvent(r.swapEvent, r.publicKey);
+        expect(chain.valid && chain.finalHashHex === r.swapEvent.root).toBe(true);
+        expect(sigOk).toBe(true);
     });
 
     test("au choc, la fenêtre [-30 s ; +30 s] est figée puis scellée 30 s après", () => {

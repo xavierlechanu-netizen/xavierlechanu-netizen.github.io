@@ -718,7 +718,7 @@ esp_err_t blackbox_storage_get_pubkey(uint8_t pubkey_out[65])
  */
 static esp_err_t _load_or_generate_keys(void)
 {
-    /* Clés propres à chaque boîtier, injectées en usine par tools/provision_blackbox.py
+    /* Clés propres à chaque boîtier, fabriquées dans la puce en mode usine (tools/mise_en_service.py)
      * (partition NVS chiffrée, espace « storage » : aes_key, ble_pin, ecdsa_priv, ecdsa_pub).
      * La clé publique est enregistrée au même moment côté serveur : c'est la seule
      * qui fera foi pour vérifier les accidents signés par ce boîtier. */
@@ -751,16 +751,18 @@ static esp_err_t _load_or_generate_keys(void)
     size_t pub_len  = ECDSA_PUB_SIZE;
     esp_err_t err_priv = nvs_get_blob(nvs, "ecdsa_priv", s_ecdsa_priv, &priv_len);
     esp_err_t err_pub  = nvs_get_blob(nvs, "ecdsa_pub", s_ecdsa_pub, &pub_len);
+    size_t serial_len = 0;
+    const bool has_serial = nvs_get_str(nvs, "serial", NULL, &serial_len) == ESP_OK && serial_len > 1;
 
     s_pub_ready = (err_pub == ESP_OK && pub_len == ECDSA_PUB_SIZE && s_ecdsa_pub[0] == 0x04);
     if (err_priv == ESP_OK && s_pub_ready && priv_len == ECDSA_PRIV_SIZE) {
         s_ecdsa_ready = true;
-        ESP_LOGI(TAG, "Clé de signature ECDSA P-256 du boîtier chargée (provisionnement usine).");
-    } else {
-#ifdef CONFIG_BLACKBOX_DEV_SELF_KEYS
-        /* Cartes de développement uniquement : une clé fabriquée ici n'est connue
-         * d'aucun serveur, ses signatures y seront refusées. */
-        ESP_LOGW(TAG, "DÉVELOPPEMENT : génération locale de la paire ECDSA P-256.");
+        ESP_LOGI(TAG, "Clé de signature ECDSA P-256 du boîtier chargée.");
+    } else if (!s_pub_ready && !has_serial) {
+        /* MODE USINE (boîtier neuf : ni clé ni numéro de série) : la paire de clés et le
+         * code d'appairage sont fabriqués ICI, dans la puce. La clé privée ne sort jamais ;
+         * l'usine ne relève que la clé publique, que le serveur lie à un numéro de série. */
+        ESP_LOGW(TAG, "Mode usine : génération de la paire ECDSA P-256 et du code d'appairage dans la puce.");
         mbedtls_ecdsa_context ecdsa;
         mbedtls_ecdsa_init(&ecdsa);
         int rc = mbedtls_ecdsa_genkey(&ecdsa, MBEDTLS_ECP_DP_SECP256R1, _esp_rng_cb, NULL);
@@ -773,25 +775,28 @@ static esp_err_t _load_or_generate_keys(void)
                                                 MBEDTLS_ECP_PF_UNCOMPRESSED, &olen, s_ecdsa_pub, ECDSA_PUB_SIZE);
         }
         mbedtls_ecdsa_free(&ecdsa);
-        if (rc == 0) {
-            nvs_set_blob(nvs, "ecdsa_priv", s_ecdsa_priv, ECDSA_PRIV_SIZE);
-            nvs_set_blob(nvs, "ecdsa_pub", s_ecdsa_pub, ECDSA_PUB_SIZE);
-            nvs_commit(nvs);
+        uint32_t rnd = 0;
+        esp_fill_random(&rnd, sizeof(rnd));
+        const uint32_t pin = 100000 + (rnd % 900000);
+        if (rc == 0 &&
+            nvs_set_blob(nvs, "ecdsa_priv", s_ecdsa_priv, ECDSA_PRIV_SIZE) == ESP_OK &&
+            nvs_set_blob(nvs, "ecdsa_pub", s_ecdsa_pub, ECDSA_PUB_SIZE) == ESP_OK &&
+            nvs_set_u32(nvs, "ble_pin", pin) == ESP_OK &&
+            nvs_commit(nvs) == ESP_OK) {
             s_ecdsa_ready = true;
             s_pub_ready = true;
+        } else {
+            mbedtls_platform_zeroize(s_ecdsa_priv, sizeof(s_ecdsa_priv));
+            ESP_LOGE(TAG, "Mode usine : génération des clés impossible.");
         }
-#else
-        /* Production : jamais de clé improvisée. Le boîtier enregistre et fige quand
-         * même les accidents, mais sans signature tant qu'il n'est pas provisionné. */
+    } else {
+        /* Clé privée absente alors que le boîtier a déjà une identité (clé publique ou
+         * numéro) : boîtier ouvert, ou NVS endommagée. Jamais de nouvelle clé : une clé
+         * refaite ne correspondrait plus au numéro enregistré sur le serveur. */
         mbedtls_platform_zeroize(s_ecdsa_priv, sizeof(s_ecdsa_priv));
         s_ecdsa_ready = false;
-        if (!s_pub_ready) {
-            memset(s_ecdsa_pub, 0, sizeof(s_ecdsa_pub));
-            ESP_LOGE(TAG, "Boîtier NON PROVISIONNÉ : aucune clé ECDSA en NVS, accidents non signés.");
-        } else {
-            ESP_LOGW(TAG, "Clé de signature détruite (boîtier ouvert) : accidents existants lisibles, plus aucune signature.");
-        }
-#endif
+        if (!s_pub_ready) memset(s_ecdsa_pub, 0, sizeof(s_ecdsa_pub));
+        ESP_LOGE(TAG, "Plus de clé de signature (boîtier ouvert ou NVS endommagée) : accidents existants lisibles, plus aucune signature.");
     }
 
     nvs_close(nvs);
@@ -875,6 +880,93 @@ void blackbox_storage_zeroize_keys(void)
 {
     mbedtls_platform_zeroize(s_ecdsa_priv, sizeof(s_ecdsa_priv));
     s_ecdsa_ready = false;
+}
+
+/* ============================================================================
+ * Identité du boîtier : numéro de série (écrit une seule fois), code d'appairage,
+ * preuve de possession de la clé pour la mise en service en usine
+ * ============================================================================
+ */
+static bool _serial_format_ok(const char *s)
+{
+    /* BB50V<1-9>-P01..P10 (prototypes) ou BB50V<1-9>-A01..ZZ99 sans P ni 00 */
+    size_t n = s ? strlen(s) : 0;
+    if (n < 10 || n > 11 || strncmp(s, "BB50V", 5) != 0 || s[5] < '1' || s[5] > '9' || s[6] != '-') return false;
+    const char *c = s + 7;
+    size_t letters = (n == 11) ? 2 : 1;
+    for (size_t i = 0; i < letters; i++) if (c[i] < 'A' || c[i] > 'Z') return false;
+    const char d1 = c[letters], d2 = c[letters + 1];
+    if (d1 < '0' || d1 > '9' || d2 < '0' || d2 > '9') return false;
+    const int num = (d1 - '0') * 10 + (d2 - '0');
+    if (num == 0) return false;
+    if (letters == 1 && c[0] == 'P') return num <= 10;          /* prototypes P01..P10 */
+    for (size_t i = 0; i < letters; i++) if (c[i] == 'P') return false;
+    return true;
+}
+
+esp_err_t blackbox_identity_get_serial(char *out, size_t cap)
+{
+    nvs_handle_t nvs;
+    if (out == NULL || cap == 0) return ESP_ERR_INVALID_ARG;
+    out[0] = '\0';
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs);
+    if (err != ESP_OK) return err;
+    size_t len = cap;
+    err = nvs_get_str(nvs, "serial", out, &len);
+    nvs_close(nvs);
+    if (err != ESP_OK || out[0] == '\0') { out[0] = '\0'; return ESP_ERR_NOT_FOUND; }
+    return ESP_OK;
+}
+
+esp_err_t blackbox_identity_set_serial(const char *serial)
+{
+    char current[BLACKBOX_SERIAL_MAX];
+    if (!_serial_format_ok(serial)) return ESP_ERR_INVALID_ARG;
+    if (!s_pub_ready) return ESP_ERR_INVALID_STATE;   /* jamais de numéro sans clé */
+    if (blackbox_identity_get_serial(current, sizeof(current)) == ESP_OK) {
+        return ESP_ERR_INVALID_STATE;                 /* écrit une seule fois */
+    }
+    nvs_handle_t nvs;
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs);
+    if (err != ESP_OK) return err;
+    err = nvs_set_str(nvs, "serial", serial);
+    if (err == ESP_OK) err = nvs_commit(nvs);
+    nvs_close(nvs);
+    return err;
+}
+
+esp_err_t blackbox_identity_get_pin(uint32_t *pin)
+{
+    nvs_handle_t nvs;
+    if (pin == NULL) return ESP_ERR_INVALID_ARG;
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs);
+    if (err != ESP_OK) return err;
+    err = nvs_get_u32(nvs, "ble_pin", pin);
+    nvs_close(nvs);
+    return err;
+}
+
+esp_err_t blackbox_factory_pop(const uint8_t challenge[32], uint8_t *sig_der_out, size_t *sig_len_out)
+{
+    char serial[BLACKBOX_SERIAL_MAX];
+    if (challenge == NULL || sig_der_out == NULL || sig_len_out == NULL) return ESP_ERR_INVALID_ARG;
+    /* Uniquement avant l'attribution du numéro : après, plus rien n'est signé sur demande */
+    if (blackbox_identity_get_serial(serial, sizeof(serial)) == ESP_OK || !s_ecdsa_ready) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    /* Message fixe et préfixé : ce n'est jamais un condensat quelconque fourni de l'extérieur,
+     * donc impossible de faire signer une fausse racine d'accident par ce chemin.
+     * Le serveur vérifie crypto.verify("sha256", message, cléPublique, signature). */
+    static const char hexd[] = "0123456789abcdef";
+    char msg[20 + 64 + 1 + 130 + 1];
+    size_t k = 0;
+    memcpy(msg, "mon50cc-factory-pop:", 20); k = 20;
+    for (int i = 0; i < 32; i++) { msg[k++] = hexd[challenge[i] >> 4]; msg[k++] = hexd[challenge[i] & 15]; }
+    msg[k++] = ':';
+    for (int i = 0; i < ECDSA_PUB_SIZE; i++) { msg[k++] = hexd[s_ecdsa_pub[i] >> 4]; msg[k++] = hexd[s_ecdsa_pub[i] & 15]; }
+    uint8_t digest[SHA256_DIGEST_SIZE];
+    mbedtls_sha256((const uint8_t *)msg, k, digest, 0);
+    return blackbox_storage_sign_digest(digest, sig_der_out, sig_len_out);
 }
 
 /*

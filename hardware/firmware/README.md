@@ -102,3 +102,20 @@ Couper le maillage déclenche, dans l'ordre : signature de l'accident en cours, 
 ### UUID Bluetooth
 
 `50ccXXXX-0000-4d6f-6e35-306363657431`, où `XXXX` est l'identifiant court de `ble_comm.h` (ex. service télémétrie `0001`, `ECDSA_SIG` `0105`). Contrat vérifié par `tests/ble-uuid-contract.test.js`.
+
+
+## Mise en service en usine : une clé faite dans la puce, liée à un numéro de série
+
+Un boîtier neuf (ni clé ni numéro) démarre en **mode usine** : il fabrique dans la puce sa paire de clés ECDSA P-256 et son code d'appairage à 6 chiffres. La clé privée ne sort jamais ; ni l'usine ni mon50ccetmoi ne la connaissent.
+
+`tools/mise_en_service.py` (lancé par l'usine, jeton de poste « factory ») :
+
+1. `BB50 INFO` sur le port série → clé publique et code d'appairage.
+2. `POST /api/v1/factory/challenge` → défi du serveur (valable 5 min, lié au poste).
+3. `BB50 POP <défi>` → le boîtier signe `SHA-256("mon50cc-factory-pop:<défi>:<clé publique>")` : **preuve que la clé est celle de cette puce**.
+4. `POST /api/v1/factory/units` → le serveur vérifie la preuve et attribue le **numéro suivant** (A01, A02… ou P01 à P10), **lié définitivement à la clé** : une clé = un numéro, et la base refuse toute modification du lien.
+5. `BB50 SERIAL <numéro>` → écrit une seule fois ; le boîtier redémarre sous ce nom Bluetooth et **le port d'usine ne s'ouvre plus jamais**.
+
+Une clé n'est jamais refaite : un boîtier qui a déjà une clé publique ou un numéro, mais plus de clé privée (ouverture, NVS endommagée), n'a plus de signature. Un retrait de batterie (remplacement en garage agréé) n'efface rien : un accident en cours est scellé et signé au redémarrage.
+
+Les boîtiers restent la propriété de mon50ccetmoi : le lien numéro ↔ clé est définitif, l'utilisateur rattaché au boîtier peut changer.

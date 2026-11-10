@@ -30,7 +30,7 @@ node sovereign-core/server/index.js                 # Démarrage direct du serve
 # 4. Firmware Embarqué C ESP32-C3 ("Boîte Noire Aragon REV3")
 npm run firmware:build       # Compilation ESP-IDF (idf.py -C hardware/firmware build)
 npm run firmware:flash       # Flash série (idf.py -C hardware/firmware flash)
-npm run firmware:provision   # Provisionnement clé unique par boîtier (hardware/provision_device.py)
+npm run firmware:provision -- --port <port>   # Mise en service usine : clé faite dans la puce, numéro lié par le serveur (tools/mise_en_service.py)
 
 # 5. Déploiement Production Actuel (GitHub Pages + Firebase Hosting transitoire)
 git push origin HEAD:main    # Déploie sur GitHub Pages (xavierlechanu-netizen.github.io -> mon50ccetmoi.com)

@@ -36,6 +36,7 @@
 #include "ble_comm.h"
 #include "gps_parser.h"
 #include "imu.h"
+#include "factory_console.h"
 
 /* ---- Tag de log ---- */
 static const char *TAG = "MAIN";
@@ -134,6 +135,8 @@ void app_main(void)
     } else {
         ESP_LOGI(TAG, "  ✓ AES-256-GCM + Merkle SHA-256 + ECDSA P-256 actifs (%lu trames).",
                  (unsigned long)blackbox_storage_count());
+        /* Boîtier neuf, sans numéro de série : port série d'usine pour la mise en service */
+        factory_console_start();
     }
 
     /* ================================================================

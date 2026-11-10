@@ -202,6 +202,30 @@ esp_err_t blackbox_event_ack(uint32_t end_seq);
 /** @brief Emplacement de l'événement non acquitté le plus ancien, -1 s'il n'y en a pas. */
 int blackbox_event_oldest_unacked(void);
 
+/* ---- Identité du boîtier ----
+ * Boîtier neuf (ni clé ni numéro) = MODE USINE : au démarrage, la paire de clés ECDSA et le
+ * code d'appairage sont fabriqués dans la puce. L'outil d'usine relève la clé publique, fait
+ * prouver au boîtier qu'il détient la clé privée (signature d'un défi du serveur), reçoit du
+ * serveur le numéro de série lié à cette clé et l'écrit dans le boîtier — une seule fois.
+ */
+#define BLACKBOX_SERIAL_MAX 16
+
+/** @brief Numéro de série écrit en usine. ESP_ERR_NOT_FOUND si le boîtier est encore en mode usine. */
+esp_err_t blackbox_identity_get_serial(char *out, size_t cap);
+
+/** @brief Écrit le numéro de série (format BB50V1-A01 / BB50V1-P01). Refusé s'il existe déjà. */
+esp_err_t blackbox_identity_set_serial(const char *serial);
+
+/** @brief Code d'appairage Bluetooth à 6 chiffres. */
+esp_err_t blackbox_identity_get_pin(uint32_t *pin);
+
+/**
+ * @brief Preuve de possession pour la mise en service : signe
+ *        SHA-256("mon50cc-factory-pop:<défi hex>:<clé publique hex>").
+ *        Refusé dès que le numéro de série est écrit.
+ */
+esp_err_t blackbox_factory_pop(const uint8_t challenge[32], uint8_t *sig_der_out, size_t *sig_len_out);
+
 #ifdef __cplusplus
 }
 #endif

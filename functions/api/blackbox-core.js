@@ -588,6 +588,26 @@ function filterCrashWindowFrames(frames, impactTimestampSec, windowSeconds = CRA
 }
 
 /**
+ * Prochain numéro de série libre pour une révision et un type, d'après les numéros déjà
+ * attribués (mise en service en usine : le serveur numérote, jamais l'usine).
+ * Prototypes : P01 à P10 en V1 uniquement, puis refus. Série : A01, A02… (P et 00 exclus).
+ * @param {string[]} existingSerials numéros déjà enregistrés (toutes révisions)
+ * @param {string} revision "V1" | "V2"
+ * @param {"PROTOTYPE"|"SERIES"} type
+ */
+function nextSerial(existingSerials, revision, type) {
+    let max = 0;
+    for (const s of existingSerials || []) {
+        const p = parseSerial(s);
+        if (p && p.revision === revision && p.type === type && p.unitNumber > max) max = p.unitNumber;
+    }
+    if (type === UNIT_TYPES.PROTOTYPE && max >= MAX_PROTOTYPES) {
+        throw new Error(`Les ${MAX_PROTOTYPES} prototypes (P01 à P${pad(MAX_PROTOTYPES, 2)}) sont déjà attribués.`);
+    }
+    return formatSerial(revision, type, max + 1);
+}
+
+/**
  * Décode une trame brute du boîtier (blackbox_frame_t, 64 octets little-endian,
  * hardware/firmware/components/blackbox/blackbox_storage.h). C'est ces 64 octets
  * exacts que le firmware chaîne : Hash_N = SHA-256(Hash_{N-1} || trame).
@@ -645,7 +665,7 @@ module.exports = {
     UNIT_TYPES, DEFAULT_MANUFACTURER, DEFAULT_MANUFACTURING_SITE,
     PARTNER_SERIES_STATUS, PARTNER_PROTOTYPE_STATUS, DELIVERY_GUARANTEE,
     CRASH_WINDOW_SECONDS,
-    decodeRawFrame, normalizeTelemetryFrames,
+    decodeRawFrame, normalizeTelemetryFrames, nextSerial,
     STATUSES, STATUS_LABELS, TRANSITIONS, ASSIGNMENT_ONLY_TRANSITIONS, REASON_REQUIRED_STATUSES, INITIAL_STATUSES,
     WARRANTY_TYPES, SHOP_PRODUCTS, SHOP_PRICES_CENTS, PROTOTYPE_RESERVATION_MINUTES,
     unitNumberToSeriesCode, seriesCodeToUnitNumber,

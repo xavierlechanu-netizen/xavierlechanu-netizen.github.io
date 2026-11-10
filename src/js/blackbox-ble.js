@@ -113,7 +113,7 @@ class BlackBoxBLE {
     try {
       console.log("[BLE] Demande d'appareil Web Bluetooth...");
       this.device = await navigator.bluetooth.requestDevice({
-        filters: [{ namePrefix: 'BB50-' }],
+        filters: [{ namePrefix: 'BB50' }], // « BB50V1-A01 » (numéroté) ou « BB50-XXXX » (mode usine)
         optionalServices: [this.SVC_TELEMETRY, this.SVC_DIAGNOSTIC]
       });
 
@@ -147,7 +147,7 @@ class BlackBoxBLE {
       await nativeBle.initialize({ androidNeverForLocation: true });
 
       const device = await nativeBle.requestDevice({
-        prefix: "BB50-",
+        prefix: "BB50",
         optionalServices: [this.SVC_TELEMETRY, this.SVC_DIAGNOSTIC]
       });
 

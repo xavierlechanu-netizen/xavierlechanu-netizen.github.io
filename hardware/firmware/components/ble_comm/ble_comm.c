@@ -770,6 +770,17 @@ static int ble_gatt_fota_access(
  */
 static void ble_generate_device_name(void)
 {
+    /* Nom Bluetooth = numéro de série écrit en usine (ex. « BB50V1-A01 », celui de l'étiquette).
+     * Boîtier pas encore numéroté (mode usine) : « BB50-XXXX » d'après l'adresse MAC. */
+    nvs_handle_t nvs;
+    size_t len = sizeof(s_device_name);
+    if (nvs_open("storage", NVS_READONLY, &nvs) == ESP_OK) {
+        esp_err_t err = nvs_get_str(nvs, "serial", s_device_name, &len);
+        nvs_close(nvs);
+        if (err == ESP_OK && s_device_name[0] != '\0') {
+            return;
+        }
+    }
     uint8_t mac[6];
     esp_read_mac(mac, ESP_MAC_BT);
     snprintf(s_device_name, sizeof(s_device_name),
