@@ -56,7 +56,7 @@ npx firebase deploy --only hosting  # Déploie dist/ sur mon50ccetmoi.web.app
 | `└── CAHIER_DES_CHARGES_OVHCLOUD.md` | Spécifications complètes pour l'équipe avant-vente / Programme Startup OVHcloud. |
 | `hardware/firmware/` | **Firmware C ESP-IDF v5.x pour microcontrôleur ESP32-C3 (Boîte Noire REV3)**. |
 | `├── main/main.c` | Tâche temps réel 10 Hz (`telemetry_task`), acquisition IMU/GPS/ADC, zeroization en 2 étapes, transmission BLE. |
-| `├── components/blackbox/` | Stockage circulaire NVS/Flash, chiffrement `AES-256-GCM` (nonce 12 o aléatoire TRNG), signature `ECDSA P-256`, chaîne de Merkle `SHA-256`. |
+| `├── components/blackbox/` | Anneau de trames (42 par secteur), chiffrement `AES-256-GCM`, chaîne de Merkle `SHA-256`, en-tête journalisé (anti-usure), reprise après redémarrage. **Au choc ≥ 3 G** : fenêtre ±30 s figée hors de l'anneau (2 emplacements) et signée `ECDSA P-256` sur SHA-256(racine) ; libérée seulement après acquittement. Protocole : `hardware/firmware/README.md`. Testé sur PC par `tests/firmware-signed-event.test.js` (banc `tests/firmware-host/`). |
 | `├── components/tamper/` | Détection d'effraction physique par interruption `IRAM_ATTR` (< 1 µs) avec effacement RAM immédiat puis purge NVS hors ISR. |
 | `└── idf_stubs/` | En-têtes de compatibilité ESP-IDF/FreeRTOS pour l'analyse statique `clangd` (0 erreur / 0 warning). |
 | `src/` | **Frontend Web & PWA Multi-Pages (Vite)** compilé vers `dist/`. |

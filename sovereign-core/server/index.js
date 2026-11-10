@@ -305,7 +305,16 @@ function createSovereignApp(options = {}) {
             // La vérification porte sur le lot COMPLET, tel que le boîtier l'a chaîné et signé.
             // (Filtrer la fenêtre de l'accident avant de vérifier casserait la chaîne et ferait
             // refuser une vraie preuve dès qu'une trame sort de la fenêtre.)
-            const merkleVerification = blackboxCore.verifyMerkleChain(payloads, merkleSeedHex);
+            // Trames brutes du boîtier ({ raw }) décodées ici : on ne croit que ses octets.
+            let frames;
+            try {
+                frames = blackboxCore.normalizeTelemetryFrames(payloads);
+            } catch (e) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: e.message }));
+                return;
+            }
+            const merkleVerification = blackboxCore.verifyMerkleChain(frames, merkleSeedHex);
             if (!merkleVerification.valid) {
                 res.statusCode = 422;
                 res.end(JSON.stringify({ error: "Chaîne de trames rompue : " + merkleVerification.reason }));
@@ -332,7 +341,7 @@ function createSovereignApp(options = {}) {
                     return;
                 }
                 const inWindow = blackboxCore.filterCrashWindowFrames(
-                    payloads,
+                    frames,
                     impactTimestamp,
                     blackboxCore.CRASH_WINDOW_SECONDS
                 );

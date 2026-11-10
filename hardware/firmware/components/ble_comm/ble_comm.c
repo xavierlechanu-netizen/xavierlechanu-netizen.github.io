@@ -81,6 +81,9 @@ static uint16_t s_conn_handle = 0;
 static uint16_t s_frame_notify_handle = 0;
 static uint16_t s_ota_status_handle = 0;
 static ble_export_request_cb_t s_export_cb = NULL;
+static ble_event_info_cb_t   s_event_info_cb = NULL;
+static ble_event_export_cb_t s_event_export_cb = NULL;
+static ble_ack_cb_t          s_ack_cb = NULL;
 
 /* ---- Valeurs des caractéristiques (mises à jour en temps réel) ---- */
 static uint16_t s_battery_mv = 3700;
@@ -151,6 +154,13 @@ static const struct ble_gatt_svc_def s_gatt_services[] = {
                 .flags      = BLE_GATT_CHR_F_WRITE
                             | BLE_GATT_CHR_F_WRITE_ENC
                             | BLE_GATT_CHR_F_WRITE_AUTHEN,
+            },
+            {
+                /* Clé publique + événement d'accident signé (lecture chiffrée) */
+                .uuid       = CHR_UUID(BLE_UUID_CHR_ECDSA_SIG),
+                .access_cb  = ble_gatt_telemetry_access,
+                .flags      = BLE_GATT_CHR_F_READ
+                            | BLE_GATT_CHR_F_READ_ENC,
             },
             { 0 },  /* Fin des caractéristiques */
         },
@@ -436,6 +446,15 @@ void ble_comm_set_export_callback(ble_export_request_cb_t cb)
     s_export_cb = cb;
 }
 
+void ble_comm_set_event_callbacks(ble_event_info_cb_t info_cb,
+                                  ble_event_export_cb_t export_cb,
+                                  ble_ack_cb_t ack_cb)
+{
+    s_event_info_cb = info_cb;
+    s_event_export_cb = export_cb;
+    s_ack_cb = ack_cb;
+}
+
 /* ============================================================================
  * ble_comm_update_battery()
  * ============================================================================
@@ -555,6 +574,10 @@ static int ble_gatt_telemetry_access(
             if (uuid16 == BLE_UUID_CHR_FRAME_COUNT) {
                 return os_mbuf_append(ctxt->om, &s_frame_count,
                                       sizeof(s_frame_count));
+            } else if (uuid16 == BLE_UUID_CHR_ECDSA_SIG && s_event_info_cb != NULL) {
+                uint8_t info[65 + 160];
+                uint16_t n = s_event_info_cb(info, sizeof(info));
+                return os_mbuf_append(ctxt->om, info, n) == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
             break;
 
@@ -562,6 +585,19 @@ static int ble_gatt_telemetry_access(
             if (uuid16 == BLE_UUID_CHR_EXPORT_CMD) {
                 /* Commande d'export : [start_index (4B)] [count (4B)] */
                 uint16_t om_len = OS_MBUF_PKTLEN(ctxt->om);
+
+                /* Export d'un événement d'accident : [0xEE][emplacement] */
+                if (om_len == 2) {
+                    uint8_t evt_cmd[2];
+                    os_mbuf_copydata(ctxt->om, 0, 2, evt_cmd);
+                    if (evt_cmd[0] != 0xEE) {
+                        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+                    }
+                    if (s_event_export_cb != NULL) {
+                        s_event_export_cb(evt_cmd[1]);
+                    }
+                    break;
+                }
 
                 /* Validation taille (CIS 16.10 / OWASP A03) */
                 if (om_len != 8) {
@@ -591,6 +627,9 @@ static int ble_gatt_telemetry_access(
                 uint32_t ack_seq = 0;
                 os_mbuf_copydata(ctxt->om, 0, 4, &ack_seq);
                 s_last_acked_seq = ack_seq;
+                if (s_ack_cb != NULL) {
+                    s_ack_cb(ack_seq);
+                }
                 ESP_LOGI(TAG, "✓ ACK_SEQ_ID applicatif reçu du smartphone : #%lu",
                          (unsigned long)ack_seq);
             }

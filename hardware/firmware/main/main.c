@@ -54,6 +54,8 @@ static const char *TAG = "MAIN";
 #define PMTK_SET_NMEA_10HZ   "$PMTK220,100*2F\r\n"
 
 static volatile bool s_power_fail_triggered = false;
+static TaskHandle_t s_event_export_task = NULL;
+static volatile uint8_t s_event_export_slot = 0;
 
 /* ---- Prototypes ---- */
 static void init_nvs(void);
@@ -64,6 +66,10 @@ static bool is_external_power_present(void);
 static void telemetry_task(void *pvParameters);
 static void enter_deep_sleep(void);
 static void on_export_request(uint32_t start_index, uint32_t count);
+static uint16_t on_event_info(uint8_t *buf, uint16_t cap);
+static void on_event_export(uint8_t slot);
+static void on_ack(uint32_t seq);
+static void event_export_task(void *arg);
 static uint16_t read_battery_mv(void);
 
 /* ============================================================================
@@ -139,6 +145,8 @@ void app_main(void)
         ESP_LOGE(TAG, "ERREUR : BLE non initialisé.");
     } else {
         ble_comm_set_export_callback(on_export_request);
+        ble_comm_set_event_callbacks(on_event_info, on_event_export, on_ack);
+        xTaskCreate(event_export_task, "evt_export", 3072, NULL, 4, &s_event_export_task);
         ESP_LOGI(TAG, "  ✓ BLE GATT Server actif (Notify + Indicate + ACK_SEQ_ID).");
     }
 
@@ -191,6 +199,10 @@ static void telemetry_task(void *pvParameters)
             gps_power_off();
             ble_comm_stop_advertising();
             blackbox_storage_flush();
+            /* Comme un enregistreur d'avion : un accident en cours est figé et signé tout de suite */
+            if (blackbox_event_pending()) {
+                blackbox_event_seal_now();
+            }
             s_power_fail_triggered = false;
         }
 
@@ -397,6 +409,64 @@ static void enter_deep_sleep(void)
  * on_export_request() — Callback BLE d'export des trames
  * ============================================================================
  */
+/* ============================================================================
+ * Événements d'accident signés : lecture, export (tâche dédiée), acquittement
+ * ============================================================================
+ */
+static uint16_t on_event_info(uint8_t *buf, uint16_t cap)
+{
+    if (cap < 65 || blackbox_storage_get_pubkey(buf) != ESP_OK) {
+        return 0;
+    }
+    uint16_t n = 65;
+    int slot = blackbox_event_oldest_unacked();
+    blackbox_event_t ev;
+    if (slot >= 0 && cap >= n + sizeof(ev) && blackbox_event_get((uint8_t)slot, &ev) == ESP_OK) {
+        memcpy(buf + n, &ev, sizeof(ev));
+        n += sizeof(ev);
+    }
+    return n;
+}
+
+/* Appelé depuis la tâche BLE : on ne fait que réveiller la tâche d'export */
+static void on_event_export(uint8_t slot)
+{
+    if (slot < BLACKBOX_EVENT_SLOTS && s_event_export_task != NULL) {
+        s_event_export_slot = slot;
+        xTaskNotifyGive(s_event_export_task);
+    }
+}
+
+static void on_ack(uint32_t seq)
+{
+    if (blackbox_event_ack(seq) == ESP_OK) {
+        ESP_LOGI(TAG, "Événement terminé en #%lu acquitté : emplacement libéré.", (unsigned long)seq);
+    }
+}
+
+static void event_export_task(void *arg)
+{
+    (void)arg;
+    for (;;) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        const uint8_t slot = s_event_export_slot;
+        blackbox_event_t ev;
+        if (blackbox_event_get(slot, &ev) != ESP_OK) {
+            continue;
+        }
+        uint32_t count = ev.end_seq - ev.start_seq + 1;
+        ESP_LOGI(TAG, "Export de l'événement %u : %lu trames.", slot, (unsigned long)count);
+        for (uint32_t i = 0; i < count; i++) {
+            blackbox_frame_t frame;
+            if (blackbox_event_read_frame(slot, i, &frame) == ESP_OK) {
+                ble_comm_notify_frame((const uint8_t *)&frame, sizeof(frame));
+            }
+            memset(&frame, 0, sizeof(frame));
+            vTaskDelay(pdMS_TO_TICKS(20));
+        }
+    }
+}
+
 static void on_export_request(uint32_t start_index, uint32_t count)
 {
     uint32_t total = blackbox_storage_count();

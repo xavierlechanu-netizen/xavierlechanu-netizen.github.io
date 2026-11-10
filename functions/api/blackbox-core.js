@@ -587,6 +587,52 @@ function filterCrashWindowFrames(frames, impactTimestampSec, windowSeconds = CRA
     return frames.filter((f) => f && typeof f.timestamp === "number" && f.timestamp >= minTs && f.timestamp <= maxTs);
 }
 
+/**
+ * Décode une trame brute du boîtier (blackbox_frame_t, 64 octets little-endian,
+ * hardware/firmware/components/blackbox/blackbox_storage.h). C'est ces 64 octets
+ * exacts que le firmware chaîne : Hash_N = SHA-256(Hash_{N-1} || trame).
+ * @param {string} rawHex 128 caractères hexadécimaux
+ */
+function decodeRawFrame(rawHex) {
+    if (typeof rawHex !== "string" || !/^[0-9a-fA-F]{128}$/.test(rawHex)) {
+        throw new Error("Trame brute invalide (64 octets en hexadécimal attendus).");
+    }
+    const b = Buffer.from(rawHex, "hex");
+    const ts = b.readUInt32LE(0);
+    const ms = b.readUInt16LE(29);
+    return {
+        seqId: b.readUInt32LE(25),
+        timestamp: ts + Math.min(ms, 999) / 1000,
+        timestampUtc: ts,
+        timestampMs: ms,
+        latitude: b.readInt32LE(4) / 1e7,
+        longitude: b.readInt32LE(8) / 1e7,
+        speedKmh: b.readUInt16LE(12) / 10,
+        headingDeg: b.readUInt16LE(14),
+        satellites: b.readUInt8(16),
+        hdop: b.readUInt8(17) / 10,
+        batteryMv: b.readUInt16LE(18),
+        tamperState: b.readUInt8(20),
+        flags: b.readUInt8(21),
+        isShockFrame: (b.readUInt8(21) & 0x04) !== 0,
+        gForce: b.readUInt16LE(22) / 10,
+        leanAngleDeg: b.readUInt8(24),
+        accelMg: { x: b.readInt16LE(31), y: b.readInt16LE(33), z: b.readInt16LE(35) },
+        prevHashHex: b.subarray(37, 53).toString("hex"),
+        payload: b
+    };
+}
+
+/**
+ * Trames reçues → trames vérifiables. Une trame `{ raw: "<128 hex>" }` est décodée
+ * à partir des octets du boîtier (les champs envoyés à côté par l'appli sont ignorés).
+ * Les autres formes sont laissées telles quelles (anciens envois, tests).
+ */
+function normalizeTelemetryFrames(frames) {
+    if (!Array.isArray(frames)) return [];
+    return frames.map((f) => (f && typeof f.raw === "string" ? decodeRawFrame(f.raw) : f));
+}
+
 /** UID tronqué pour les journaux (RGPD : jamais d'UID complet ni de PII dans les logs). */
 function shortUid(uid) {
     return typeof uid === "string" && uid.length > 0 ? uid.substring(0, 6) + "…" : "anon";
@@ -599,6 +645,7 @@ module.exports = {
     UNIT_TYPES, DEFAULT_MANUFACTURER, DEFAULT_MANUFACTURING_SITE,
     PARTNER_SERIES_STATUS, PARTNER_PROTOTYPE_STATUS, DELIVERY_GUARANTEE,
     CRASH_WINDOW_SECONDS,
+    decodeRawFrame, normalizeTelemetryFrames,
     STATUSES, STATUS_LABELS, TRANSITIONS, ASSIGNMENT_ONLY_TRANSITIONS, REASON_REQUIRED_STATUSES, INITIAL_STATUSES,
     WARRANTY_TYPES, SHOP_PRODUCTS, SHOP_PRICES_CENTS, PROTOTYPE_RESERVATION_MINUTES,
     unitNumberToSeriesCode, seriesCodeToUnitNumber,

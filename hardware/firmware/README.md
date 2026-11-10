@@ -74,3 +74,23 @@ idf.py -p /dev/ttyUSB0 flash monitor
 - **Avant résinage** : Flasher le firmware, vérifier le fonctionnement, puis couler la résine PU.
 - **Après résinage** : Seules les mises à jour FOTA (BLE) sont possibles.
 - **eFuse JTAG** : Brûler les eFuses de désactivation JTAG **après** validation du prototype.
+
+
+## Accident figé et signé (comme l'enregistreur d'un avion)
+
+1. **Choc ≥ 3,0 G** : le boîtier ouvre une fenêtre qui part de 30 s avant le choc (graine de chaîne mémorisée en RAM toutes les secondes) et s'arrête 30 s après.
+2. **30 s après le choc**, ou **immédiatement à la coupure du 12 V**, ou **au redémarrage** si une coupure brutale a empêché de finir : les trames chiffrées de la fenêtre sont copiées dans un des **2 emplacements protégés** (hors de l'anneau, jamais écrasés par la suite du trajet), puis l'enregistrement est signé : ECDSA P-256 sur **SHA-256(racine)**.
+3. L'emplacement n'est **libéré qu'après acquittement** par l'appli. Si deux accidents attendent déjà, un troisième n'est pas figé : les premiers font foi.
+
+### Protocole Bluetooth (service Télémétrie)
+
+| Étape | Caractéristique | Contenu |
+| :--- | :--- | :--- |
+| Lire l'accident | `ECDSA_SIG` (0x0105), lecture | clé publique (65 o) puis, s'il y en a un, `blackbox_event_t` (156 o, little-endian) : `magic`, `start_seq`, `end_seq`, `impact_seq`, `seed[32]`, `root[32]`, `sig_len`, `sig[72]`, `ack`. Emplacement non indiqué : c'est le plus ancien non acquitté. |
+| Exporter ses trames | `EXPORT_CMD` (0x0103), écriture de 2 o `[0xEE][emplacement]` | `end_seq - start_seq + 1` notifications de 64 o sur `FRAME_DATA` (trames déchiffrées, dans l'ordre). L'emplacement se déduit de l'ordre : 0 puis 1 ; l'appli vérifie de toute façon la chaîne et redemande en cas de perte. |
+| Envoyer au serveur | — | `POST /api/v1/telemetry/upload` : `payloads: [{ raw: "<128 hex>" }]`, `merkleSeedHex: seed`, `ecdsaSignature: sig` (hex DER), `isCrashReport: true`, `impactTimestamp` (trame `impact_seq`). |
+| Acquitter | `ACK_SEQ` (0x0104), écriture de 4 o | `end_seq` de l'accident, **seulement après la réponse 201 du serveur**. |
+
+### Format de la Flash (BOX3)
+
+Le premier démarrage d'un boîtier au format précédent (BOX2) **efface** la partition `blackbox_data` (aucun boîtier n'est encore livré). En-tête journalisé dans le secteur 0 (un effacement tous les 42 enregistrements), anneau de 6 678 trames (~11 min), 2 × 16 secteurs d'accidents.
