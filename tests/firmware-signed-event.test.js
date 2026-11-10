@@ -13,6 +13,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const crypto = require("crypto");
 const { execFileSync } = require("child_process");
 
 const blackboxCore = require("../functions/api/blackbox-core");
@@ -37,7 +38,12 @@ function buildAndRun() {
         if (/ENOENT|openssl\/.*No such file|cannot find -lcrypto/.test(msg)) return { skipped: msg.split("\n")[0] };
         throw new Error("Compilation du firmware sur le banc hôte impossible :\n" + msg, { cause: e });
     }
-    return { result: JSON.parse(execFileSync(bin, [], { stdio: ["ignore", "pipe", "ignore"] }).toString("utf8")) };
+    const exec = (args) => JSON.parse(execFileSync(bin, args, { stdio: ["ignore", "pipe", "ignore"] }).toString("utf8"));
+    // Clés propres à ce boîtier, comme les fabrique tools/provision_blackbox.py en usine
+    const { publicKey, privateKey } = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+    const factoryPub = publicKey.export({ type: "spki", format: "der" }).subarray(-65).toString("hex");
+    const factoryPriv = Buffer.from(privateKey.export({ format: "jwk" }).d, "base64url").toString("hex").padStart(64, "0");
+    return { factoryPub, result: exec([factoryPriv, factoryPub]), unprovisioned: exec([]) };
 }
 
 const run = buildAndRun();
@@ -71,6 +77,19 @@ function invokeRequest(app, method, url, body, headers = {}) {
 
 describeIfBuilt("Boîte noire : accident figé et signé par le firmware, vérifié par le serveur", () => {
     const r = run.result;
+
+    test("le boîtier signe avec SA clé d'usine (celle enregistrée côté serveur), pas une clé improvisée", () => {
+        expect(r.provisioned).toBe(1);
+        expect(r.publicKey).toBe(run.factoryPub);
+    });
+
+    test("boîtier non provisionné : accidents figés quand même, mais jamais signés avec une clé maison", () => {
+        const u = run.unprovisioned;
+        expect(u.provisioned).toBe(0);
+        expect(u.publicKey).toBe("00".repeat(65));
+        expect(u.event1).toMatchObject({ impactSeq: 700, sig: "", unreadable: 0 });
+        expect(u.event1.frames).toHaveLength(601);
+    });
 
     test("au choc, la fenêtre [-30 s ; +30 s] est figée puis scellée 30 s après", () => {
         expect(r.pendingAfterShock).toBe(1);

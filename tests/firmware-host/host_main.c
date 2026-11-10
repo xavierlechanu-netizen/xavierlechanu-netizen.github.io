@@ -7,6 +7,7 @@
 #include <string.h>
 #include "blackbox_storage.h"
 #include "host_flash.h"
+#include "esp_random.h"
 
 #define T0 1730000000u
 
@@ -53,12 +54,29 @@ static void dump_event(int slot)
     printf("],\"unreadable\":%d}", bad);
 }
 
-int main(void)
+void host_provision(const uint8_t aes[32], const uint8_t priv[32], const uint8_t pub[65]);
+
+/* Clé d'usine : passée en argument (hex) comme si tools/provision_blackbox.py l'avait injectée */
+static int unhex(const char *h, uint8_t *out, size_t n)
 {
+    if (!h || strlen(h) != 2 * n) return -1;
+    for (size_t i = 0; i < n; i++) { unsigned v; if (sscanf(h + 2 * i, "%2x", &v) != 1) return -1; out[i] = (uint8_t)v; }
+    return 0;
+}
+
+int main(int argc, char **argv)
+{
+    /* argv[1] = clé privée d'usine (64 hex), argv[2] = clé publique (130 hex) ; sans argument : boîtier non provisionné */
+    if (argc == 3) {
+        uint8_t aes[32], priv[32], pubp[65];
+        esp_fill_random(aes, 32);
+        if (unhex(argv[1], priv, 32) || unhex(argv[2], pubp, 65)) return 2;
+        host_provision(aes, priv, pubp);
+    }
     if (blackbox_storage_init() != ESP_OK) return 1;
-    uint8_t pub[65];
+    uint8_t pub[65] = {0};
     blackbox_storage_get_pubkey(pub);
-    printf("{\"publicKey\":"); hex(pub, 65);
+    printf("{\"provisioned\":%d,\"publicKey\":", argc == 3); hex(pub, 65);
 
     /* 1. Roulage puis choc à la trame 700 (4,5 G) ; 30 s plus tard l'événement est scellé */
     for (int i = 0; i < 700; i++) put_frame(10);

@@ -717,70 +717,75 @@ esp_err_t blackbox_storage_get_pubkey(uint8_t pubkey_out[65])
  */
 static esp_err_t _load_or_generate_keys(void)
 {
+    /* Clés propres à chaque boîtier, injectées en usine par tools/provision_blackbox.py
+     * (partition NVS chiffrée, espace « storage » : aes_key, ble_pin, ecdsa_priv, ecdsa_pub).
+     * La clé publique est enregistrée au même moment côté serveur : c'est la seule
+     * qui fera foi pour vérifier les accidents signés par ce boîtier. */
     nvs_handle_t nvs;
-    esp_err_t err = nvs_open("bb_keys", NVS_READWRITE, &nvs);
+    esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs);
     if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Impossible d'ouvrir NVS bb_keys : %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Impossible d'ouvrir NVS storage : %s", esp_err_to_name(err));
         return err;
     }
 
-    /* 1. Clé symétrique AES-256-GCM */
+    /* 1. Clé symétrique AES-256-GCM (chiffrement des trames dans la Flash) */
     size_t key_len = AES_KEY_SIZE;
-    err = nvs_get_blob(nvs, "aes256", s_aes_key, &key_len);
+    err = nvs_get_blob(nvs, "aes_key", s_aes_key, &key_len);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        ESP_LOGW(TAG, "Premier boot — Génération de la clé AES-256-GCM via TRNG...");
+        ESP_LOGW(TAG, "Boîtier non provisionné : clé AES-256-GCM générée sur place (TRNG).");
         esp_fill_random(s_aes_key, AES_KEY_SIZE);
-        err = nvs_set_blob(nvs, "aes256", s_aes_key, AES_KEY_SIZE);
+        err = nvs_set_blob(nvs, "aes_key", s_aes_key, AES_KEY_SIZE);
         if (err != ESP_OK) {
             nvs_close(nvs);
             return err;
         }
         nvs_commit(nvs);
-    } else if (err != ESP_OK) {
+    } else if (err != ESP_OK || key_len != AES_KEY_SIZE) {
         nvs_close(nvs);
-        return err;
+        return (err != ESP_OK) ? err : ESP_ERR_INVALID_STATE;
     }
 
-    /* 2. Clé asymétrique ECDSA P-256 (secp256r1) pour signature judiciaire */
+    /* 2. Biclé ECDSA P-256 (signature des accidents) */
     size_t priv_len = ECDSA_PRIV_SIZE;
     size_t pub_len  = ECDSA_PUB_SIZE;
     esp_err_t err_priv = nvs_get_blob(nvs, "ecdsa_priv", s_ecdsa_priv, &priv_len);
     esp_err_t err_pub  = nvs_get_blob(nvs, "ecdsa_pub", s_ecdsa_pub, &pub_len);
 
-    if (err_priv == ESP_OK && err_pub == ESP_OK && priv_len == ECDSA_PRIV_SIZE && pub_len == ECDSA_PUB_SIZE) {
+    if (err_priv == ESP_OK && err_pub == ESP_OK && priv_len == ECDSA_PRIV_SIZE &&
+        pub_len == ECDSA_PUB_SIZE && s_ecdsa_pub[0] == 0x04) {
         s_ecdsa_ready = true;
-        ESP_LOGI(TAG, "Clé de signature ECDSA P-256 chargée depuis NVS.");
+        ESP_LOGI(TAG, "Clé de signature ECDSA P-256 du boîtier chargée (provisionnement usine).");
     } else {
-        ESP_LOGW(TAG, "Génération de la paire de clés ECDSA P-256 (secp256r1)...");
+#ifdef CONFIG_BLACKBOX_DEV_SELF_KEYS
+        /* Cartes de développement uniquement : une clé fabriquée ici n'est connue
+         * d'aucun serveur, ses signatures y seront refusées. */
+        ESP_LOGW(TAG, "DÉVELOPPEMENT : génération locale de la paire ECDSA P-256.");
         mbedtls_ecdsa_context ecdsa;
         mbedtls_ecdsa_init(&ecdsa);
-
         int rc = mbedtls_ecdsa_genkey(&ecdsa, MBEDTLS_ECP_DP_SECP256R1, _esp_rng_cb, NULL);
         if (rc == 0) {
             rc = mbedtls_mpi_write_binary(&ecdsa.MBEDTLS_PRIVATE(d), s_ecdsa_priv, ECDSA_PRIV_SIZE);
         }
         if (rc == 0) {
             size_t olen = 0;
-            rc = mbedtls_ecp_point_write_binary(
-                &ecdsa.MBEDTLS_PRIVATE(grp),
-                &ecdsa.MBEDTLS_PRIVATE(Q),
-                MBEDTLS_ECP_PF_UNCOMPRESSED,
-                &olen,
-                s_ecdsa_pub,
-                ECDSA_PUB_SIZE
-            );
+            rc = mbedtls_ecp_point_write_binary(&ecdsa.MBEDTLS_PRIVATE(grp), &ecdsa.MBEDTLS_PRIVATE(Q),
+                                                MBEDTLS_ECP_PF_UNCOMPRESSED, &olen, s_ecdsa_pub, ECDSA_PUB_SIZE);
         }
         mbedtls_ecdsa_free(&ecdsa);
-
         if (rc == 0) {
             nvs_set_blob(nvs, "ecdsa_priv", s_ecdsa_priv, ECDSA_PRIV_SIZE);
             nvs_set_blob(nvs, "ecdsa_pub", s_ecdsa_pub, ECDSA_PUB_SIZE);
             nvs_commit(nvs);
             s_ecdsa_ready = true;
-            ESP_LOGI(TAG, "Paire ECDSA P-256 générée et verrouillée en NVS.");
-        } else {
-            ESP_LOGE(TAG, "Échec génération ECDSA P-256 : -0x%04X", -rc);
         }
+#else
+        /* Production : jamais de clé improvisée. Le boîtier enregistre et fige quand
+         * même les accidents, mais sans signature tant qu'il n'est pas provisionné. */
+        mbedtls_platform_zeroize(s_ecdsa_priv, sizeof(s_ecdsa_priv));
+        memset(s_ecdsa_pub, 0, sizeof(s_ecdsa_pub));
+        s_ecdsa_ready = false;
+        ESP_LOGE(TAG, "Boîtier NON PROVISIONNÉ : aucune clé ECDSA en NVS, accidents non signés.");
+#endif
     }
 
     nvs_close(nvs);

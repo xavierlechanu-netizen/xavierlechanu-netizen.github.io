@@ -72,19 +72,24 @@ void esp_fill_random(void *buf, size_t len)
     fclose(f);
 }
 
-/* ---- NVS (en mémoire, survit au « redémarrage » simulé) ---- */
-static struct { char key[16]; uint8_t v[80]; size_t len; } s_nvs[8];
+/* ---- NVS (en mémoire, survit au « redémarrage » simulé) ; clé = espace/nom ---- */
+static struct { char key[40]; uint8_t v[80]; size_t len; } s_nvs[12];
 static int s_nvs_n = 0;
+static char s_ns[16] = "";
 
-esp_err_t nvs_open(const char *ns, int mode, nvs_handle_t *h) { (void)ns; (void)mode; *h = 1; return ESP_OK; }
+esp_err_t nvs_open(const char *ns, int mode, nvs_handle_t *h) { (void)mode; snprintf(s_ns, sizeof(s_ns), "%s", ns); *h = 1; return ESP_OK; }
 esp_err_t nvs_commit(nvs_handle_t h) { (void)h; return ESP_OK; }
 void nvs_close(nvs_handle_t h) { (void)h; }
+
+static void full_key(char out[40], const char *key) { snprintf(out, 40, "%s/%s", s_ns, key); }
 
 esp_err_t nvs_get_blob(nvs_handle_t h, const char *key, void *out, size_t *len)
 {
     (void)h;
+    char k[40];
+    full_key(k, key);
     for (int i = 0; i < s_nvs_n; i++) {
-        if (strcmp(s_nvs[i].key, key) == 0) {
+        if (strcmp(s_nvs[i].key, k) == 0) {
             if (*len < s_nvs[i].len) return ESP_FAIL;
             memcpy(out, s_nvs[i].v, s_nvs[i].len);
             *len = s_nvs[i].len;
@@ -97,13 +102,25 @@ esp_err_t nvs_get_blob(nvs_handle_t h, const char *key, void *out, size_t *len)
 esp_err_t nvs_set_blob(nvs_handle_t h, const char *key, const void *v, size_t len)
 {
     (void)h;
+    char k[40];
+    full_key(k, key);
     int i;
-    for (i = 0; i < s_nvs_n && strcmp(s_nvs[i].key, key) != 0; i++) {}
-    if (i == s_nvs_n) { if (s_nvs_n == 8 || len > 80) return ESP_FAIL; s_nvs_n++; }
-    snprintf(s_nvs[i].key, sizeof(s_nvs[i].key), "%s", key);
+    for (i = 0; i < s_nvs_n && strcmp(s_nvs[i].key, k) != 0; i++) {}
+    if (i == s_nvs_n) { if (s_nvs_n == 12 || len > 80) return ESP_FAIL; s_nvs_n++; }
+    memcpy(s_nvs[i].key, k, sizeof(k));
     memcpy(s_nvs[i].v, v, len);
     s_nvs[i].len = len;
     return ESP_OK;
+}
+
+/* Provisionnement « usine » simulé : comme le CSV de tools/provision_blackbox.py */
+void host_provision(const uint8_t aes[32], const uint8_t priv[32], const uint8_t pub[65])
+{
+    nvs_handle_t h;
+    nvs_open("storage", 1, &h);
+    nvs_set_blob(h, "aes_key", aes, 32);
+    nvs_set_blob(h, "ecdsa_priv", priv, 32);
+    nvs_set_blob(h, "ecdsa_pub", pub, 65);
 }
 
 /* ---- AES-256-GCM ---- */
