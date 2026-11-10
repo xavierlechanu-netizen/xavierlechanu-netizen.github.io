@@ -287,7 +287,7 @@ function isValidSerial(input) {
 
 /**
  * Génère un code Bluetooth unique et sécurisé (passkey 6 chiffres, 100000..999999).
- * Correspond au static passkey requis par l'ESP32 dans blackbox_ble.ino.
+ * Correspond au code d'appairage lu par le firmware (NVS « storage », clé ble_pin).
  * @returns {string} 6 chiffres
  */
 function generateBluetoothPasskey() {
