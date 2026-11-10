@@ -32,7 +32,7 @@
 #include "mbedtls/platform_util.h"
 
 #include "tamper.h"
-#include "blackbox_pins.h"
+#include "../../main/blackbox_pins.h"
 
 /* ---- Tag de log ---- */
 static const char *TAG = "TAMPER";

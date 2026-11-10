@@ -6,7 +6,7 @@ idf_component_register(
         esp_event
         esp_system
         esp_timer
-        esp_sleep
+        esp_hw_support
         nvs_flash
         esp_partition
         mbedtls
