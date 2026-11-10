@@ -24,7 +24,7 @@ const {
     signSovereignJwt,
     verifySovereignJwt
 } = require("./crypto-auth");
-const { SovereignWormStorage } = require("./storage-worm");
+const { resolveWormVault } = require("./storage-worm-s3");
 const { createMemoryStore } = require("./store-memory");
 const { createPgStore } = require("./store-pg");
 const { StoreError } = require("./store-errors");
@@ -81,7 +81,7 @@ function resolveStore(options, env = process.env) {
  * Crée une instance isolée du noyau souverain.
  */
 function createSovereignApp(options = {}) {
-    const wormVault = new SovereignWormStorage(options.wormDir);
+    const wormVault = resolveWormVault(options);
     const store = resolveStore(options);
 
     // Limitation des tentatives d'authentification (anti force brute, OWASP ASVS v5.0.0-6.3)
@@ -293,48 +293,75 @@ function createSovereignApp(options = {}) {
                 return;
             }
 
-            let finalFrames = payloads;
-            if (isCrashReport && typeof impactTimestamp === "number") {
-                finalFrames = blackboxCore.filterCrashWindowFrames(
+            // Preuve = trames chaînées ET signées par le boîtier. Rien de non signé n'est scellé :
+            // une trame sans signature n'est qu'une déclaration de l'utilisateur.
+            if (typeof merkleSeedHex !== "string" || !/^[0-9a-fA-F]{64}$/.test(merkleSeedHex) ||
+                typeof ecdsaSignature !== "string" || ecdsaSignature.length === 0) {
+                res.statusCode = 422;
+                res.end(JSON.stringify({ error: "Preuve non signée : graine de Merkle et signature ECDSA du boîtier obligatoires." }));
+                return;
+            }
+
+            // La vérification porte sur le lot COMPLET, tel que le boîtier l'a chaîné et signé.
+            // (Filtrer la fenêtre de l'accident avant de vérifier casserait la chaîne et ferait
+            // refuser une vraie preuve dès qu'une trame sort de la fenêtre.)
+            const merkleVerification = blackboxCore.verifyMerkleChain(payloads, merkleSeedHex);
+            if (!merkleVerification.valid) {
+                res.statusCode = 422;
+                res.end(JSON.stringify({ error: "Chaîne de trames rompue : " + merkleVerification.reason }));
+                return;
+            }
+            const ecdsaVerified = blackboxCore.verifyEcdsaP256Signature(
+                Buffer.from(merkleVerification.finalHashHex, "hex"),
+                ecdsaSignature,
+                unit.ecdsaPublicKey
+            );
+            if (!ecdsaVerified) {
+                res.statusCode = 422;
+                res.end(JSON.stringify({ error: "Signature ECDSA du boîtier invalide." }));
+                return;
+            }
+
+            // Fenêtre de l'accident (±30 s) : repérée pour le rapport, mais le lot signé est scellé
+            // en entier, sinon personne (assureur, expert, juge) ne pourrait revérifier la signature.
+            let crashWindow = null;
+            if (isCrashReport) {
+                if (typeof impactTimestamp !== "number") {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "Horodatage du choc requis pour un rapport d'accident." }));
+                    return;
+                }
+                const inWindow = blackboxCore.filterCrashWindowFrames(
                     payloads,
                     impactTimestamp,
                     blackboxCore.CRASH_WINDOW_SECONDS
                 );
-                if (finalFrames.length === 0) {
+                if (inWindow.length === 0) {
                     res.statusCode = 422;
                     res.end(JSON.stringify({ error: "Aucune trame dans la fenêtre de ±30 s autour du choc." }));
                     return;
                 }
+                crashWindow = {
+                    seconds: blackboxCore.CRASH_WINDOW_SECONDS,
+                    firstSeqId: inWindow[0].seqId,
+                    lastSeqId: inWindow[inWindow.length - 1].seqId,
+                    frameCount: inWindow.length
+                };
             }
+            const finalFrames = payloads;
 
-            let merkleVerification = null;
-            if (typeof merkleSeedHex === "string" && /^[0-9a-fA-F]{64}$/.test(merkleSeedHex)) {
-                merkleVerification = blackboxCore.verifyMerkleChain(finalFrames, merkleSeedHex);
-            }
-
-            let ecdsaVerified = false;
-            if (ecdsaSignature) {
-                ecdsaVerified = Boolean(merkleVerification && merkleVerification.finalHashHex) &&
-                    blackboxCore.verifyEcdsaP256Signature(
-                        Buffer.from(merkleVerification.finalHashHex, "hex"),
-                        ecdsaSignature,
-                        unit.ecdsaPublicKey
-                    );
-                // Une signature présente mais fausse = tentative de falsification : rien n'est scellé.
-                if (!ecdsaVerified) {
-                    res.statusCode = 422;
-                    res.end(JSON.stringify({ error: "Signature ECDSA du boîtier invalide." }));
-                    return;
-                }
-            }
-
-            const evidenceReceipt = wormVault.sealTelemetryEvidence(authUser.uid, {
+            const evidenceReceipt = await wormVault.sealTelemetryEvidence(authUser.uid, {
                 uid: authUser.uid,
                 hardwareId: unit.serial,
                 isCrashReport: Boolean(isCrashReport),
-                merkleVerified: merkleVerification ? merkleVerification.valid : null,
-                merkleRootHex: merkleVerification ? merkleVerification.finalHashHex : null,
-                ecdsaVerified,
+                impactTimestamp: typeof impactTimestamp === "number" ? impactTimestamp : null,
+                crashWindow,
+                merkleSeedHex: merkleSeedHex.toLowerCase(),
+                merkleRootHex: merkleVerification.finalHashHex,
+                ecdsaSignature,
+                ecdsaPublicKey: unit.ecdsaPublicKey,
+                merkleVerified: true,
+                ecdsaVerified: true,
                 frames: finalFrames
             });
 
@@ -345,9 +372,9 @@ function createSovereignApp(options = {}) {
                 isCrashReport: Boolean(isCrashReport),
                 impactTimestamp: typeof impactTimestamp === "number" ? Math.round(impactTimestamp) : null,
                 frameCount: finalFrames.length,
-                merkleVerified: merkleVerification ? merkleVerification.valid : null,
-                merkleRootHex: merkleVerification ? merkleVerification.finalHashHex : null,
-                ecdsaVerified,
+                merkleVerified: true,
+                merkleRootHex: merkleVerification.finalHashHex,
+                ecdsaVerified: true,
                 wormStoragePath: evidenceReceipt.storagePath,
                 wormSha256Hex: evidenceReceipt.sha256Hex,
                 sealedAt: evidenceReceipt.sealedAt
@@ -568,10 +595,16 @@ function createSovereignApp(options = {}) {
 
 if (require.main === module) {
     const port = Number(process.env.PORT) || 8080;
-    const { server, store } = createSovereignApp();
-    server.listen(port, () => {
-        console.log(`[SovereignCore] Serveur actif sur le port ${port} — stockage : ${store.kind === "postgres" ? "PostgreSQL" : "MÉMOIRE (développement uniquement)"}`);
+    const { server, store, wormVault } = createSovereignApp();
+    // Un coffre S3 sans Object Lock ne protège rien : le serveur refuse de démarrer.
+    const ready = typeof wormVault.assertBucketLocked === "function" ? wormVault.assertBucketLocked() : Promise.resolve();
+    ready.catch((err) => {
+        console.error("[SovereignCore] Démarrage refusé :", err.message);
+        process.exit(1);
     });
+    ready.then(() => server.listen(port, () => {
+        console.log(`[SovereignCore] Serveur actif sur le port ${port} — stockage : ${store.kind === "postgres" ? "PostgreSQL" : "MÉMOIRE (développement uniquement)"} — preuves : ${wormVault.kind || "fichiers locaux (développement uniquement)"}`);
+    }));
     const shutdown = () => server.close(() => store.close().finally(() => process.exit(0)));
     process.on("SIGTERM", shutdown);
     process.on("SIGINT", shutdown);
