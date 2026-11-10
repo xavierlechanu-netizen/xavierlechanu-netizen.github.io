@@ -8,6 +8,9 @@
 # ---- Cible matérielle ----
 CONFIG_IDF_TARGET="esp32c3"
 
+# ---- Flash 4 Mo (ESP32-C3-MINI-1) : nécessaire pour partitions.csv ----
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
 # ---- Table de partitions personnalisée ----
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
