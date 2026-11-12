@@ -42,7 +42,7 @@ describeIfPg("Sauvegarde et restauration de la base (VPS)", () => {
 
   const pg = (tool) => path.join(PG_BIN, tool);
   const psql = (sql) =>
-    execFileSync(pg("psql"), [...conn, "-d", "mon50ccetmoi", "-v", "ON_ERROR_STOP=1", "-At", "-c", sql], { encoding: "utf8" }).trim();
+    execFileSync(pg("psql"), [...conn, "-d", "mon50ccetmoi", "-v", "ON_ERROR_STOP=1", "-At", "-c", sql], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   const connStr = () => `-h ${sockDir} -p ${port} -U postgres`;
   const run = (script, args, extraEnv) =>
     spawnSync("bash", [path.join(DEPLOY, script), ...args], {
@@ -71,13 +71,19 @@ describeIfPg("Sauvegarde et restauration de la base (VPS)", () => {
       execFileSync("chown", ["-R", "postgres", tmp]);
       execFileSync("chmod", ["755", tmp]);
     }
-    const as = (cmd, args) => (asUser ? execFileSync("runuser", [...asUser, "--", cmd, ...args]) : execFileSync(cmd, args));
+    // stdio « ignore » + journal dans un fichier : sinon le serveur PostgreSQL lancé en
+    // arrière-plan garde le tube de sortie ouvert et execFileSync ne rend jamais la main.
+    const opts = { stdio: "ignore" };
+    const as = (cmd, args) =>
+      (asUser ? execFileSync("runuser", [...asUser, "--", cmd, ...args], opts) : execFileSync(cmd, args, opts));
     as(pg("initdb"), ["-D", dataDir, "-U", "postgres", "--auth=trust", "-E", "UTF8"]);
-    as(pg("pg_ctl"), ["-D", dataDir, "-o", `-p ${port} -k ${sockDir} -c listen_addresses=''`, "-w", "start"]);
+    as(pg("pg_ctl"), ["-D", dataDir, "-l", path.join(tmp, "pg.log"),
+      "-o", `-p ${port} -k ${sockDir} -c listen_addresses=''`, "-w", "start"]);
     execFileSync(pg("psql"), [...conn, "-d", "postgres", "-c", "CREATE DATABASE mon50ccetmoi"]);
     const schemaFile = path.join(tmp, "schema.sql");
     fs.writeFileSync(schemaFile, schemaWithoutPostgis());
-    execFileSync(pg("psql"), [...conn, "-d", "mon50ccetmoi", "-v", "ON_ERROR_STOP=1", "-q", "-f", schemaFile]);
+    execFileSync(pg("psql"), [...conn, "-d", "mon50ccetmoi", "-v", "ON_ERROR_STOP=1", "-q", "-f", schemaFile],
+      { env: { ...process.env, PGOPTIONS: "--client-min-messages=warning" } });
 
     envFile = path.join(tmp, ".env");
     fs.writeFileSync(envFile, [
@@ -200,5 +206,44 @@ describe("Envoi des sauvegardes vers l'Object Storage (backup-s3.js)", () => {
     await expect(S3.get(fakeS3([]), cfg, "../../etc/passwd", "/tmp/x")).rejects.toThrow(/invalide/);
     await expect(S3.prune(fakeS3([]), cfg, 0, now)).rejects.toThrow(/invalide/);
     expect(() => S3.configFromEnv({ BACKUP_S3_BUCKET: "b" })).toThrow(/manquant/);
+  });
+});
+
+describe("Création du fichier .env du VPS (make-env.sh)", () => {
+  const crypto = require("crypto");
+  const { loadJwtKeys } = require("../sovereign-core/server/crypto-auth");
+
+  test("secrets neufs, chacun sur une ligne, clés JWT utilisables, fichier lisible par son seul propriétaire", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mon50cc-env-"));
+    try {
+      const envFile = path.join(dir, ".env");
+      const run = () => spawnSync("bash", [path.join(DEPLOY, "make-env.sh")], { encoding: "utf8", env: { ...process.env, ENV_FILE: envFile } });
+      const r = run();
+      expect(r.status).toBe(0);
+      expect(fs.statSync(envFile).mode & 0o077).toBe(0);
+
+      const text = fs.readFileSync(envFile, "utf8");
+      expect(text).not.toMatch(/^-----/m); // aucune clé coupée sur plusieurs lignes
+      const get = (n) => {
+        const lines = text.split("\n").filter((l) => l.startsWith(n + "="));
+        expect(lines).toHaveLength(1);
+        return lines[0].slice(n.length + 1).replace(/^'|'$/g, "");
+      };
+      expect(get("DB_PASSWORD")).toMatch(/^[0-9a-f]{48}$/);
+      expect(get("BACKUP_PASSPHRASE").length).toBeGreaterThanOrEqual(40);
+      expect(r.stdout).toContain(get("BACKUP_PASSPHRASE"));
+
+      // Ce que Docker Compose passe à l'API (guillemets simples = texte brut) est accepté par l'API.
+      const keys = loadJwtKeys({ SOVEREIGN_JWT_PRIVATE_KEY: get("SOVEREIGN_JWT_PRIVATE_KEY"), SOVEREIGN_JWT_PUBLIC_KEY: get("SOVEREIGN_JWT_PUBLIC_KEY") });
+      const sig = crypto.sign("sha256", Buffer.from("test"), keys.privateKey);
+      expect(crypto.verify("sha256", Buffer.from("test"), keys.publicKey, sig)).toBe(true);
+
+      // Jamais d'écrasement d'un .env existant (il contient les vrais secrets).
+      const again = run();
+      expect(again.status).not.toBe(0);
+      expect(fs.readFileSync(envFile, "utf8")).toBe(text);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

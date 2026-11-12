@@ -74,31 +74,7 @@ log "6/6 Fichier .env et sauvegarde nocturne"
 if [ -e "$ENV_FILE" ]; then
     log "$ENV_FILE existe déjà : laissé tel quel."
 else
-    tmpdir="$(mktemp -d)"; trap 'rm -rf "$tmpdir"' EXIT
-    openssl ecparam -name prime256v1 -genkey -noout -out "$tmpdir/ec.pem"
-    openssl pkcs8 -topk8 -nocrypt -in "$tmpdir/ec.pem" -out "$tmpdir/priv.pem"
-    openssl ec -in "$tmpdir/ec.pem" -pubout -out "$tmpdir/pub.pem" 2>/dev/null
-    oneline() { awk 'BEGIN{ORS="\\n"} {print}' "$1" | sed 's/\\n$//'; }
-    priv="$(oneline "$tmpdir/priv.pem")"
-    pub="$(oneline "$tmpdir/pub.pem")"
-    dbpass="$(openssl rand -hex 24)"
-    passphrase="$(openssl rand -base64 33 | tr -d '\n')"
-    umask 077
-    awk -v dbpass="$dbpass" -v priv="$priv" -v pub="$pub" -v pp="$passphrase" '
-        /^DB_PASSWORD=/               { print "DB_PASSWORD=" dbpass; next }
-        /^SOVEREIGN_JWT_PRIVATE_KEY=/ { print "SOVEREIGN_JWT_PRIVATE_KEY=\x27" priv "\x27"; next }
-        /^SOVEREIGN_JWT_PUBLIC_KEY=/  { print "SOVEREIGN_JWT_PUBLIC_KEY=\x27" pub "\x27"; next }
-        /^BACKUP_PASSPHRASE=/         { print "BACKUP_PASSPHRASE=" pp; next }
-        { print }
-    ' "$CORE_DIR/deploy/env.vps.example" > "$ENV_FILE"
-    chmod 600 "$ENV_FILE"
-    log "$ENV_FILE créé avec des secrets neufs."
-    echo
-    echo "  >>> Recopiez MAINTENANT cette phrase dans un gestionnaire de mots de passe."
-    echo "  >>> Sans elle, aucune sauvegarde ne pourra être relue :"
-    echo
-    echo "      $passphrase"
-    echo
+    "$CORE_DIR/deploy/make-env.sh"
 fi
 
 cat > /etc/cron.d/mon50cc-backup <<EOF
