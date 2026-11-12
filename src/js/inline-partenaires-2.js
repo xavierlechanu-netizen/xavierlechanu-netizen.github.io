@@ -73,9 +73,9 @@ resultDiv.innerHTML = '<span style="color:#ff3333;">Le SIRET doit contenir exact
         }
 
         // Base de données sécurisée : Association Compte -> SIREN (9 premiers chiffres du SIRET)
-        // C'est ce qui empêche de taper le SIRET de Google pour pirater le compte de Nationale de Courtage !
+        // Contrôle d'ergonomie seulement : la vraie vérification doit être faite par le serveur.
         const partnerSirenDatabase = {
-          NATIONALE_COURTAGE: "834220556", // Remplacez par le vrai SIREN (9 chiffres) de Nationale de Courtage
+          NATIONALE_COURTAGE: "922669726", // National Assurance Courtage (Roubaix), ORIAS 23003285
           AMV_ASSURANCES: "330540907",
           MUTUELLE_MOTARDS: "327362703",
           AXA_PRO: "722057460",
