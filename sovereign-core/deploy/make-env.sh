@@ -20,15 +20,18 @@ openssl pkcs8 -topk8 -nocrypt -in "$tmpdir/ec.pem" -out "$tmpdir/priv.pem"
 openssl ec -in "$tmpdir/ec.pem" -pubout -out "$tmpdir/pub.pem" 2>/dev/null
 
 # Clé PEM sur une seule ligne, retours à la ligne écrits « \n » (l'API les remet).
-oneline() { awk 'BEGIN { ORS = "\\n" } { print }' "$1" | sed 's/\\n$//'; }
+# Les « \r » sont retirés : certains openssl (Windows) écrivent des fins de ligne CRLF.
+oneline() { tr -d '\r' < "$1" | awk 'BEGIN { ORS = "\\n" } { print }' | sed 's/\\n$//'; }
+# Secret aléatoire sur une ligne, sans fin de ligne parasite.
+secret() { openssl rand "$@" | tr -d '\r\n'; }
 
 # Les valeurs passent par l'environnement (ENVIRON) et non par « awk -v » :
 # « -v » interpréterait les « \n » et casserait les clés.
 umask 077
-MK_DBPASS="$(openssl rand -hex 24)" \
+MK_DBPASS="$(secret -hex 24)" \
 MK_PRIV="$(oneline "$tmpdir/priv.pem")" \
 MK_PUB="$(oneline "$tmpdir/pub.pem")" \
-MK_PASSPHRASE="$(openssl rand -base64 33 | tr -d '\n')" \
+MK_PASSPHRASE="$(secret -base64 33)" \
 awk '
     /^DB_PASSWORD=/               { print "DB_PASSWORD=" ENVIRON["MK_DBPASS"]; next }
     /^SOVEREIGN_JWT_PRIVATE_KEY=/ { print "SOVEREIGN_JWT_PRIVATE_KEY=\047" ENVIRON["MK_PRIV"] "\047"; next }

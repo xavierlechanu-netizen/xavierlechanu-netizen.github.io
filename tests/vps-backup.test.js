@@ -220,7 +220,8 @@ describe("Création du fichier .env du VPS (make-env.sh)", () => {
       const run = () => spawnSync("bash", [path.join(DEPLOY, "make-env.sh")], { encoding: "utf8", env: { ...process.env, ENV_FILE: envFile } });
       const r = run();
       expect(r.status).toBe(0);
-      expect(fs.statSync(envFile).mode & 0o077).toBe(0);
+      // Droits Unix (600) : sans objet sous Windows, qui ne les gère pas.
+      if (process.platform !== "win32") expect(fs.statSync(envFile).mode & 0o077).toBe(0);
 
       const text = fs.readFileSync(envFile, "utf8");
       expect(text).not.toMatch(/^-----/m); // aucune clé coupée sur plusieurs lignes
