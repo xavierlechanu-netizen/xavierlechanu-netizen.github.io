@@ -159,6 +159,14 @@ Tranche 5 (14/11/2026) — `app-map.js` : 602 → 140 lignes (reste : membres en
   durées réelles des trajets, par type de véhicule.
 - Suite : `app-features.js` (1 471 lignes).
 
+Hors tranche (14/11/2026) — `partenaires.html` devient un simple aiguillage vers `garage.html` et
+`assureur.html`, les deux vrais espaces professionnels. L'ancien « Partner Connect » n'était lié par
+aucune page (seulement par `sitemap.xml`) et tout y était simulé : boutons jamais enregistrés (aucun ne
+marchait), connexion qui aurait accepté n'importe quel compte, tableau de bord aux chiffres inventés,
+faux emails « envoyés » (SIRET, agents), faux paiement Stripe, campagnes publicitaires ciblées (contraires
+au choix « affiliation, pas de pub ») et un piège visant une société réelle (« Partenaire non recommandé »,
+10 000 € demandés). `inline-partenaires-1.js` et `-2.js` supprimés ; test `tests/partenaires-page.test.js`.
+
 ### Étape 6 — Dépendances et outillage (½ journée, puis en continu) — FAIT le 8/11/2026
 
 - `firebase-admin` 14 et `@simplewebauthn/server` 14 (serveur), `@firebase/rules-unit-testing` 6, Jest et ESLint (alertes « modérées » des outils de développement).
