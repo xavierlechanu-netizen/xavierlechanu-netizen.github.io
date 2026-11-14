@@ -109,3 +109,7 @@ playwright-report/
 
 # Clé de signature du démarrage sécurisé : jamais dans le dépôt
 hardware/firmware/secure_boot_signing_key.pem
+
+# Python compilé
+__pycache__/
+*.pyc

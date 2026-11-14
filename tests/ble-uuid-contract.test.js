@@ -8,9 +8,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const app = fs.readFileSync(path.join(__dirname, "../src/js/blackbox-ble.js"), "utf8");
-const fw = fs.readFileSync(path.join(__dirname, "../hardware/firmware/components/ble_comm/ble_comm.c"), "utf8");
-const fwHeader = fs.readFileSync(path.join(__dirname, "../hardware/firmware/components/ble_comm/ble_comm.h"), "utf8");
+// Fins de ligne Unix : sous Windows, git extrait les sources en CRLF (core.autocrlf)
+const lire = (relatif) => fs.readFileSync(path.join(__dirname, relatif), "utf8").replace(/\r\n/g, "\n");
+const app = lire("../src/js/blackbox-ble.js");
+const fw = lire("../hardware/firmware/components/ble_comm/ble_comm.c");
+const fwHeader = lire("../hardware/firmware/components/ble_comm/ble_comm.h");
 
 const suffix = /baseUuidSuffix\s*=\s*"([^"]+)"/.exec(app)[1];
 const appUuid = (shortHex) => `50cc${shortHex}${suffix}`;
