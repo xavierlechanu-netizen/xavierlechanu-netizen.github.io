@@ -167,33 +167,30 @@
       </ul>
     </div>
 
-    <div class="quote-box">
-      <h2 style="margin-top: 0; color: #ff0055">Devis Partenaire</h2>
+    <!-- Courtier partenaire : masqué tant que la convention n'est pas signée
+         (réglage ENABLED dans js/partner-broker.js). Aucune donnée personnelle collectée. -->
+    <div class="quote-box" id="partner-broker" hidden>
+      <h2 style="margin-top: 0; color: #ff0055">Trouver mon assurance</h2>
       <p>
-        Grâce à votre excellent score de conduite, vous économisez
-        <strong>-30%</strong> sur votre prime d'assurance !
+        Pour assurer votre 50 cc, votre scooter ou votre voiture sans permis,
+        nous vous mettons en relation avec un courtier indépendant :
+        <strong id="pb-name"></strong> (<span id="pb-city"></span>).
       </p>
-      <div
-        style="font-size: 3rem; font-weight: bold; color: #fff; margin: 10px 0"
-      >
-        19.99 € <span style="font-size: 1rem; color: #888">/ mois</span>
-      </div>
-      <p style="font-size: 0.8rem; color: #888">
-        Formule Tiers Étendu + Vol. Assureur :
-        <strong>Nationale de Courtage</strong> (Roubaix)
-        <span class="badge-fondateur" title="Partenaire Fondateur"
-          ><i class="fa-solid fa-shield"></i> Fondateur mon50ccetmoi</span
-        >.<br />
-        <span style="color: #00d2ff; margin-top: 5px; display: inline-block"
-          ><i class="fa-solid fa-phone"></i> 01 84 80 74 64</span
-        >
+      <p>
+        Donnez-lui votre code partenaire :
+        <strong id="pb-code" style="font-size: 1.4rem; color: #fff"></strong><br />
+        Avec ce code : <strong id="pb-benefit" style="color: #00d2ff"></strong>.
       </p>
-      <button
-        class="btn-action"
-        data-action="alert('Redirection vers le portail de signature électronique...')"
-      >
-        Souscrire maintenant
-      </button>
+      <a id="pb-quote" class="btn-action" target="_blank" rel="noopener noreferrer"
+        style="display: inline-block; text-decoration: none; margin: 6px">Demander un devis</a>
+      <a id="pb-call" class="btn-action" style="display: inline-block; text-decoration: none; margin: 6px"
+        ><i class="fa-solid fa-phone"></i> Appeler le cabinet (<span id="pb-phone"></span>)</a>
+      <p style="font-size: 0.75rem; color: #888; margin-top: 12px">
+        mon50ccetmoi n'est pas un intermédiaire d'assurance et ne transmet aucune donnée vous concernant.
+        Le devis et le contrat sont établis par le cabinet, courtier immatriculé à l'ORIAS
+        (n° <span id="pb-orias"></span>).
+      </p>
     </div>
+    <script type="module" src="/js/partner-broker.js"></script>
   </body>
 </html>
