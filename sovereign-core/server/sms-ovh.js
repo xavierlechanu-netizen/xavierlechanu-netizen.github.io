@@ -35,6 +35,10 @@ function toSmsText(text) {
         .trim();
 }
 
+// SHA-1 imposé par le protocole de signature de l'API OVHcloud (« $1$ » = SHA-1), on ne peut
+// pas en choisir un autre. Les collisions SHA-1 ne permettent ni de retrouver le secret ni de
+// forger une requête signée ; l'alerte CodeQL « weak cryptographic algorithm » est classée
+// « ne sera pas corrigée » pour cette raison.
 function ovhSignature({ appSecret, consumerKey, method, url, body, timestamp }) {
     const raw = [appSecret, consumerKey, method, url, body, timestamp].join("+");
     return "$1$" + crypto.createHash("sha1").update(raw).digest("hex");
