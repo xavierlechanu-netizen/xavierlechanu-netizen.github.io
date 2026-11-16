@@ -66,4 +66,31 @@ describe("CSP stricte : aucun script écrit dans les pages", () => {
     expect(scriptSrc).not.toBeNull();
     expect(scriptSrc[1]).not.toContain("unsafe-inline");
   });
+
+  // 16/11/2026 : ces sites servent n'importe quel paquet npm (ou une vieille version d'AngularJS) :
+  // les autoriser dans script-src suffit à contourner la CSP avec une seule balise injectée.
+  // Aucune page ne charge de script chez eux (cdnjs ne sert que les styles Font Awesome).
+  const OPEN_SCRIPT_HOSTS = ["unpkg.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com",
+    "connect.facebook.net", "translate.googleapis.com", "maps.googleapis.com", "axept.io"];
+
+  test("script-src n'autorise aucun CDN public de scripts (vite.config.js et firebase.json)", () => {
+    const vite = fs.readFileSync(path.join(ROOT, "vite.config.js"), "utf8").match(/'script-src':\s*\[([\s\S]*?)\]/)[1];
+    const fb = fs.readFileSync(path.join(ROOT, "firebase.json"), "utf8").match(/script-src([^;"]*)/)[1];
+    for (const host of OPEN_SCRIPT_HOSTS) {
+      expect({ host, vite: vite.includes(host) }).toEqual({ host, vite: false });
+      expect({ host, firebase: fb.includes(host) }).toEqual({ host, firebase: false });
+    }
+  });
+
+  test("aucune page ne charge un script depuis un de ces CDN", () => {
+    const found = [];
+    for (const f of files) {
+      const text = fs.readFileSync(f, "utf8");
+      for (const host of OPEN_SCRIPT_HOSTS) {
+        const re = new RegExp(`<script[^>]*src=["']https://[^"']*${host.replace(/\./g, "\\.")}`, "i");
+        if (re.test(text)) found.push(`${rel(f)} : ${host}`);
+      }
+    }
+    expect(found).toEqual([]);
+  });
 });

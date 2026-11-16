@@ -44,6 +44,15 @@ const SOS_TOKEN_PURPOSE = "sos";
 const SOS_TOKEN_TTL_SEC = 30 * 24 * 3600;
 const issueSosToken = (uid) => signSovereignJwt({ uid, purpose: SOS_TOKEN_PURPOSE }, { expiresInSec: SOS_TOKEN_TTL_SEC });
 
+// Inscription et connexion (audit du 16/11/2026)
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Phrases de passe acceptées jusqu'à la limite du hachage (crypto-auth.js : 256). Au-delà, l'inscription
+// plantait (erreur 500) au lieu de répondre clairement ; à la connexion, rien n'est envoyé au hachage.
+const PASSWORD_MAX_LENGTH = 256;
+// Le pseudo est affiché aux autres membres : ni balise, ni guillemet, ni caractère de contrôle
+// eslint-disable-next-line no-control-regex
+const UNSAFE_USERNAME_RE = /[<>"'&`\u0000-\u001f\u007f]/;
+
 const HAZARD_TYPES = ["pothole", "accident", "police", "roadwork", "obstacle", "weather", "other"];
 const HAZARDS_PER_DAY = 30;
 const isLat = (v) => typeof v === "number" && Number.isFinite(v) && v >= -90 && v <= 90;
@@ -130,6 +139,13 @@ function createSovereignApp(options = {}) {
         return recent.length > authLimit.maxAttempts;
     }
 
+    // Empreinte d'un mot de passe aléatoire, calculée une fois : sert de leurre quand l'email est inconnu
+    let dummyHash = null;
+    function dummyPasswordHash() {
+        if (!dummyHash) dummyHash = hashPassword(crypto.randomBytes(24).toString("hex"));
+        return dummyHash;
+    }
+
     function rejectTooManyAttempts(res) {
         res.statusCode = 429;
         res.setHeader("Retry-After", String(Math.ceil(authLimit.windowMs / 1000)));
@@ -205,9 +221,15 @@ function createSovereignApp(options = {}) {
             }
             const cleanEmail = String(email).trim().toLowerCase();
             const cleanUsername = String(username).trim();
-            if (cleanEmail.length > 255 || cleanUsername.length < 2 || cleanUsername.length > 64) {
+            if (cleanEmail.length > 255 || !EMAIL_RE.test(cleanEmail) ||
+                cleanUsername.length < 2 || cleanUsername.length > 64 || UNSAFE_USERNAME_RE.test(cleanUsername)) {
                 res.statusCode = 400;
-                res.end(JSON.stringify({ error: "Email (255 car. max) ou pseudonyme (2 à 64 car.) invalide." }));
+                res.end(JSON.stringify({ error: "Email (255 car. max) ou pseudonyme (2 à 64 car., sans < > \" ' & `) invalide." }));
+                return;
+            }
+            if (String(password).length > PASSWORD_MAX_LENGTH) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: `Mot de passe trop long (${PASSWORD_MAX_LENGTH} caractères au plus).` }));
                 return;
             }
 
@@ -258,8 +280,13 @@ function createSovereignApp(options = {}) {
                 return;
             }
             const user = await store.findUserByEmail(cleanEmail);
+            const plainPassword = String(password || "");
+            // Même calcul (scrypt) que le compte existe ou non : le temps de réponse ne doit pas
+            // révéler quels emails sont inscrits (OWASP ASVS v5.0.0 V6, énumération des comptes).
+            const passwordOk = plainPassword.length <= PASSWORD_MAX_LENGTH &&
+                verifyPassword(plainPassword, user ? user.passwordHash : dummyPasswordHash());
 
-            if (!user || !verifyPassword(String(password || ""), user.passwordHash)) {
+            if (!user || !passwordOk) {
                 res.statusCode = 401;
                 res.end(JSON.stringify({ error: "Identifiants invalides." }));
                 return;
