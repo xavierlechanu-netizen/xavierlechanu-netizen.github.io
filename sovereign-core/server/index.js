@@ -37,6 +37,12 @@ const pointsRules = require("../../functions/api/points-rules");
 const SOS_MAX_CONTACTS = 3;
 const SOS_MAX_ALERTS = 3;
 const SOS_WINDOW_MS = 10 * 60 * 1000;
+// Plafonds sur 24 h (audit du 16/11/2026, D2) : les numéros sont libres et les SMS payants.
+// Par pilote : 10 alertes. Pour tout le serveur : un budget de SMS (SOS_DAILY_SMS_BUDGET, 300 par défaut),
+// pour qu'un abus (comptes créés en série) ne vide pas le crédit SMS. Au-delà : « Appelez le 112 ».
+const SOS_MAX_ALERTS_PER_DAY = 10;
+const SOS_DAY_MS = 24 * 3600 * 1000;
+const SOS_DEFAULT_DAILY_SMS_BUDGET = 300;
 // Jeton SOS : n'ouvre QUE l'alerte SOS (jamais une session). Une chute peut arriver des jours après
 // la dernière saisie du mot de passe, alors que le jeton de session ne vit qu'une heure : l'appli
 // garde ce jeton et le renouvelle (POST /api/v1/auth/sos-token) tant qu'elle est utilisée.
@@ -109,6 +115,10 @@ function createSovereignApp(options = {}) {
     // Envoi des SMS d'urgence (OVHcloud) ; null si non configuré : la route SOS répond alors 503.
     const smsClient = options.smsClient !== undefined ? options.smsClient : smsClientFromEnv();
     const sosHits = new Map();
+    // SMS envoyés par le serveur sur 24 h glissantes : [{ t, n }]
+    let sosSmsLog = [];
+    const sosDailySmsBudget = options.sosDailySmsBudget ||
+        Number(process.env.SOS_DAILY_SMS_BUDGET) || SOS_DEFAULT_DAILY_SMS_BUDGET;
 
     // Limitation des tentatives d'authentification (anti force brute, OWASP ASVS v5.0.0-6.3)
     const authLimit = {
@@ -650,10 +660,19 @@ function createSovereignApp(options = {}) {
                 return;
             }
             const now = Date.now();
-            const recent = (sosHits.get(authUser.uid) || []).filter((t) => now - t < SOS_WINDOW_MS);
-            if (recent.length >= SOS_MAX_ALERTS) {
+            const today = (sosHits.get(authUser.uid) || []).filter((t) => now - t < SOS_DAY_MS);
+            const recent = today.filter((t) => now - t < SOS_WINDOW_MS);
+            if (recent.length >= SOS_MAX_ALERTS || today.length >= SOS_MAX_ALERTS_PER_DAY) {
                 res.statusCode = 429;
                 res.end(JSON.stringify({ error: "Trop d'alertes SOS rapprochées. Appelez le 112.", sent: 0 }));
+                return;
+            }
+            sosSmsLog = sosSmsLog.filter((e) => now - e.t < SOS_DAY_MS);
+            const smsToday = sosSmsLog.reduce((sum, e) => sum + e.n, 0);
+            if (smsToday + numbers.length > sosDailySmsBudget) {
+                console.error(`[SOS] Budget SMS du jour atteint (${smsToday}/${sosDailySmsBudget}) : abus possible, vérifier les journaux.`);
+                res.statusCode = 429;
+                res.end(JSON.stringify({ error: "Envoi de SMS momentanément indisponible. Appelez le 112 et prévenez vos proches.", sent: 0 }));
                 return;
             }
             if (!smsClient) {
@@ -661,8 +680,9 @@ function createSovereignApp(options = {}) {
                 res.end(JSON.stringify({ error: "Envoi de SMS non configuré sur ce serveur.", sent: 0 }));
                 return;
             }
-            recent.push(now);
-            sosHits.set(authUser.uid, recent);
+            today.push(now);
+            sosHits.set(authUser.uid, today);
+            sosSmsLog.push({ t: now, n: numbers.length });
 
             const pseudo = String(user.username || "Un pilote").slice(0, 30);
             const where = `${lat.toFixed(5)},${lng.toFixed(5)}`;
