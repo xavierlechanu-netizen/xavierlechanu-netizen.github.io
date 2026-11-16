@@ -71,7 +71,7 @@ describe("CSP stricte : aucun script écrit dans les pages", () => {
   // les autoriser dans script-src suffit à contourner la CSP avec une seule balise injectée.
   // Aucune page ne charge de script chez eux (cdnjs ne sert que les styles Font Awesome).
   const OPEN_SCRIPT_HOSTS = ["unpkg.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com",
-    "connect.facebook.net", "translate.googleapis.com", "maps.googleapis.com", "axept.io"];
+    "connect.facebook.net", "translate.googleapis.com", "maps.googleapis.com"];
 
   test("script-src n'autorise aucun CDN public de scripts (vite.config.js et firebase.json)", () => {
     const vite = fs.readFileSync(path.join(ROOT, "vite.config.js"), "utf8").match(/'script-src':\s*\[([\s\S]*?)\]/)[1];
