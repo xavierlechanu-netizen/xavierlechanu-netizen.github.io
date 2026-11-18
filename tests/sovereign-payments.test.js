@@ -111,8 +111,9 @@ const status = (app, caseId, uid = PILOTE) =>
   call(app, "GET", `/api/v1/payments/orders?case_id=${encodeURIComponent(caseId)}`, { auth: token(uid) });
 
 describe("Réglages", () => {
-  test("produits ouverts : garage par défaut ; seulement ce que le serveur sait livrer", () => {
-    expect(openProductsFromEnv({})).toEqual(["GARAGE_FEE"]);
+  test("produits ouverts : AUCUN par défaut, même avec la clé ; seulement ce que le serveur sait livrer", () => {
+    expect(openProductsFromEnv({})).toEqual([]);
+    expect(openProductsFromEnv({ PAYMENTS_OPEN_PRODUCTS: "GARAGE_FEE" })).toEqual(["GARAGE_FEE"]);
     expect(openProductsFromEnv({ PAYMENTS_OPEN_PRODUCTS: "GARAGE_FEE, POINTS_250,SIMPLE,BLACKBOX_CARE_MONTHLY,INCONNU" }))
       .toEqual(["GARAGE_FEE", "POINTS_250"]);
     expect(openProductsFromEnv({ PAYMENTS_OPEN_PRODUCTS: "" })).toEqual([]);
@@ -122,6 +123,20 @@ describe("Réglages", () => {
     expect(revolutClientFromEnv({})).toBeNull();
     expect(revolutClientFromEnv({ REVOLUT_SECRET_KEY: "sk_x" }).mode).toBe("prod");
     expect(revolutClientFromEnv({ REVOLUT_SECRET_KEY: "sk_x", REVOLUT_ENV: "sandbox" }).mode).toBe("sandbox");
+  });
+
+  test("clé Revolut en place mais aucun produit ouvert : rien ne se vend, Revolut n'est pas appelé", async () => {
+    const { app, api } = setup({ open: [] });
+    const r = await order(app, "GARAGE_FEE");
+    expect(r.status).toBe(400);
+    expect(r.body.error).toMatch(/pas en vente/);
+    expect(api.calls).toHaveLength(0);
+  });
+
+  test("compose du VPS : produits fermés si .env ne dit rien", () => {
+    const compose = fs.readFileSync(path.join(__dirname, "..", "sovereign-core", "docker-compose.vps.yml"), "utf8");
+    expect(compose).toMatch(/PAYMENTS_OPEN_PRODUCTS: \$\{PAYMENTS_OPEN_PRODUCTS:-\}/);
+    expect(compose).toMatch(/REVOLUT_SECRET_KEY: \$\{REVOLUT_SECRET_KEY:-\}/);
   });
 
   test("sans clé Revolut, la commande répond « pas encore ouvert »", async () => {

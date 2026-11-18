@@ -7,7 +7,7 @@
  * Règles :
  * - le prix vient du catalogue (functions/api/payments-catalog.js), jamais de la demande ;
  * - seuls les produits que ce serveur sait livrer, et ouverts à la vente, sont acceptés
- *   (PAYMENTS_OPEN_PRODUCTS ; par défaut le droit d'entrée garage) ;
+ *   (PAYMENTS_OPEN_PRODUCTS ; par défaut AUCUN : la vente s'ouvre sur décision de l'utilisateur) ;
  * - une commande n'est livrée qu'une fois, et seulement après avoir relu la commande CHEZ REVOLUT :
  *   état « completed », même montant, même devise. Un webhook bien signé ne suffit pas à lui seul ;
  * - si le webhook n'arrive pas, le suivi de la commande par l'appli relit Revolut et livre aussi.
@@ -31,9 +31,10 @@ const { ORDER_ID_RE } = require("./revolut-merchant");
 
 // Ce que ce serveur sait livrer aujourd'hui (les autres produits restent refusés)
 const DELIVERABLE_CATEGORIES = new Set([CATEGORIES.GARAGE, CATEGORIES.POINTS]);
-// Ouverts par défaut : le droit d'entrée garage. Les packs de points attendent que l'appli lise le
-// solde sur ce serveur (domaine « points » de CONFIG.BACKEND_MODE).
-const DEFAULT_OPEN_PRODUCTS = ["GARAGE_FEE"];
+// Rien n'est en vente tant que l'utilisateur ne l'a pas décidé (PAYMENTS_OPEN_PRODUCTS sur le VPS),
+// même si la clé Revolut est déjà en place. Premier produit prévu : GARAGE_FEE. Les packs de points
+// attendent que l'appli lise le solde sur ce serveur (domaine « points » de CONFIG.BACKEND_MODE).
+const DEFAULT_OPEN_PRODUCTS = [];
 // Une commande en attente est reprise (double clic, fenêtre fermée) pendant 30 minutes
 const REUSE_PENDING_MS = 30 * 60 * 1000;
 // Relecture chez Revolut lors du suivi : au plus une fois toutes les 5 secondes par commande

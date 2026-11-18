@@ -53,7 +53,7 @@ plan OVHcloud) : on bascule un domaine à la fois, et on peut revenir en arrièr
 | **1. Petits cartons sans risque** | Polices hébergées sur le site (fin de Google Fonts), retrait de Firebase Analytics | Rapide, utile pour le RGPD, ne dépend pas du VPS |
 | **2. Comptes** | Connexion par le serveur souverain ; vérification des mots de passe Firebase (voir § 3) ; comptes Google ; clés d'accès FIDO. **Interrupteur prêt** (18/11/2026, voir § 6) : connexion, inscription, déconnexion et les 11 suivis de session passent par `src/js/comptes.js` ; reste sur `"FIREBASE"` jusqu'à l'import des comptes | Tout le reste en dépend |
 | **3. Dangers, points, classement** | Routes déjà écrites : brancher l'appli dessus | Le cœur de l'appli, déjà prêt côté serveur |
-| **4. Paiements et assureurs** | Création de commande Revolut, rapports et litiges, abonnements. **Paiements codés** (18/11/2026, § 7) : droit d'entrée garage d'abord, interrupteur `paiements` sur `"FIREBASE"` | Les paiements sont coupés aujourd'hui : c'est de l'argent qui ne rentre pas |
+| **4. Paiements et assureurs** | Création de commande Revolut, rapports et litiges, abonnements. **Paiements codés** (18/11/2026, § 7) : rien en vente tant que vous ne l'avez pas décidé, droit d'entrée garage d'abord, interrupteur `paiements` sur `"FIREBASE"` | Les paiements sont coupés aujourd'hui : c'est de l'argent qui ne rentre pas |
 | **5. Boîte Noire** | Télémétrie signée (prête), boîtiers, certificats batterie | Indépendant du lancement du boîtier, mais prêt pour lui |
 | **6. Temps réel** | WebSocket sur le VPS (Caddy le gère déjà) : cortège, convois, chats, radar, SOS | Le plus gros chantier technique |
 | **7. Garages, bourse, roadbooks** | Routes simples de lecture et d'écriture | Peu de risques |
@@ -189,7 +189,8 @@ pas bougé. Un pilote inscrit pendant la bascule a aussi son compte Firebase, gr
     paiement (même format qu'avant, pour Kolecto).
   - Administrateur : `GET /api/v1/admin/payments` (commandes, et ce qu'il reste à faire à la main) et
     `GET /api/v1/admin/payments/invoices.csv` (factures à émettre).
-  - Produits en vente : `PAYMENTS_OPEN_PRODUCTS`, par défaut **le droit d'entrée garage seulement**.
+  - Produits en vente : `PAYMENTS_OPEN_PRODUCTS`, **vide par défaut** : même avec la clé Revolut en place,
+    rien ne se vend tant que vous ne l'avez pas décidé. Premier produit prévu : `GARAGE_FEE`.
   - Sans `REVOLUT_SECRET_KEY`, tout répond « paiement pas encore ouvert ». `REVOLUT_ENV=sandbox` :
     essais avec le compte de test de Revolut (l'appli ouvre alors la fenêtre de paiement de test).
 - **Appli** : interrupteur `paiements` (reste sur `"FIREBASE"`). Les 4 écrans qui vendent passent par
@@ -214,9 +215,9 @@ pas bougé. Un pilote inscrit pendant la bascule a aussi son compte Firebase, gr
 | # | Étape | Qui |
 | :--- | :--- | :--- |
 | 1 | Importer les comptes (`docs/IMPORT_COMPTES_FIREBASE.md`) | Vous, puis Claude avec votre accord |
-| 2 | Compte de test Revolut (sandbox-business.revolut.com, gratuit) : clé secrète de test et webhook de test vers `https://api.mon50ccetmoi.com/api/v1/webhooks/revolut` | Vous |
+| 2 | Dire si la clé déjà saisie sur le VPS (18/11/2026) est de **production** ou de **test**. Pour les essais : compte de test Revolut (sandbox-business.revolut.com, gratuit), clé secrète de test et webhook de test vers `https://api.mon50ccetmoi.com/api/v1/webhooks/revolut` | Vous |
 | 3 | Les deux secrets de test dans la fenêtre : `saisir-cles.cmd -Groupe revolut` | Vous |
-| 4 | `REVOLUT_ENV=sandbox` sur le VPS et API reconstruite | Claude, avec votre accord |
+| 4 | `REVOLUT_ENV=sandbox` et `PAYMENTS_OPEN_PRODUCTS=GARAGE_FEE` sur le VPS, API reconstruite | Claude, avec votre accord |
 | 5 | Sur votre téléphone : `mon50ccetmoi.com/app.html?essai-souverain=paiements`, achat du droit d'entrée garage avec une carte de test Revolut | Vous |
 | 6 | Production : nouvelle clé secrète dans Revolut Business, **ancienne révoquée** (elle était chez Google), webhook de production vers la même adresse, les deux secrets dans la fenêtre | Vous |
 | 7 | `REVOLUT_ENV=prod`, API reconstruite, un vrai achat d'essai (remboursable dans Revolut) | Vous et Claude |
