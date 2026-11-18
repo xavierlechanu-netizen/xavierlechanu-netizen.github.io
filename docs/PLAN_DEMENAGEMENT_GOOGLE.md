@@ -51,7 +51,7 @@ plan OVHcloud) : on bascule un domaine à la fois, et on peut revenir en arrièr
 | :--- | :--- | :--- |
 | **0. Installer le VPS** | Guide `sovereign-core/deploy/README.md` : Object Storage, DNS `api`, installation, `check.sh` | Prêt, attend la livraison |
 | **1. Petits cartons sans risque** | Polices hébergées sur le site (fin de Google Fonts), retrait de Firebase Analytics | Rapide, utile pour le RGPD, ne dépend pas du VPS |
-| **2. Comptes** | Connexion par le serveur souverain ; vérification des mots de passe Firebase (voir § 3) ; comptes Google ; clés d'accès FIDO | Tout le reste en dépend |
+| **2. Comptes** | Connexion par le serveur souverain ; vérification des mots de passe Firebase (voir § 3) ; comptes Google ; clés d'accès FIDO. **Interrupteur prêt** (18/11/2026, voir § 6) : connexion, inscription, déconnexion et les 11 suivis de session passent par `src/js/comptes.js` ; reste sur `"FIREBASE"` jusqu'à l'import des comptes | Tout le reste en dépend |
 | **3. Dangers, points, classement** | Routes déjà écrites : brancher l'appli dessus | Le cœur de l'appli, déjà prêt côté serveur |
 | **4. Paiements et assureurs** | Création de commande Revolut, rapports et litiges, abonnements | Les paiements sont coupés aujourd'hui : c'est de l'argent qui ne rentre pas |
 | **5. Boîte Noire** | Télémétrie signée (prête), boîtiers, certificats batterie | Indépendant du lancement du boîtier, mais prêt pour lui |
@@ -115,3 +115,57 @@ Amen, zone DNS recopiée **avant** (surtout les **MX** de l'email), environ une 
 - **Le domaine** `mon50ccetmoi.com` (chez Amen.fr pour l'instant, voir § 4).
 - **Les cartes** sont déjà sans Google (IGN + Leaflet + OpenStreetMap).
 - **L'appli Android** (TWA) ouvre le site : elle suit sans nouvelle publication, sauf changement de domaine.
+
+## 6. Phase A : l'interrupteur des comptes (18/11/2026)
+
+### Ce qui est fait
+
+- **L'interrupteur** : `CONFIG.BACKEND_MODE` dans `src/js/config.js`, domaine par domaine
+  (`comptes` aujourd'hui ; `dangers`, `points`, `paiements` ensuite). Valeur `"FIREBASE"` : rien ne
+  change. Valeur `"SOVEREIGN"` : le serveur du VPS (`api.mon50ccetmoi.com`) fait le travail.
+  Logique : `src/js/backend-mode.js`.
+- **Les comptes** (`src/js/comptes.js`, logique dans `comptes-core.js`) : connexion, inscription,
+  déconnexion et « qui est connecté » passent tous par ce module. Ça couvre `auth.js`, les 11 suivis
+  de session (`onAuthStateChanged`), les portails assureurs et garages et la page profil.
+- **En mode `"SOVEREIGN"`**, le serveur du VPS est **seul juge** du mot de passe. Tant que les données
+  (profil, points, dangers…) sont encore dans Firestore, l'appli ouvre aussi Firebase avec le même
+  email et le même mot de passe : c'est le **pont Firebase** (`CONFIG.PONT_FIREBASE`). Il disparaîtra
+  quand plus rien ne lira Firestore. Sans pont, le pilote reste connecté avec un profil réduit.
+- **Rester connecté** : le serveur donne une session d'une heure et un jeton de renouvellement de
+  30 jours (route `POST /api/v1/auth/refresh`). Le jeton est refusé si le compte a été effacé (RGPD)
+  ou banni. Le mot de passe n'est jamais gardé sur le téléphone.
+- **Dès maintenant, en mode `"FIREBASE"`**, la connexion au serveur du VPS (faite en parallèle pour
+  l'alerte SOS) est gardée. À la bascule, les pilotes déjà connectés n'auront rien à retaper.
+- **Corrigé au passage** : si un deuxième pilote se connectait sur le même téléphone alors que le
+  serveur du VPS ne répondait pas, l'alerte SOS restait au nom du premier.
+- **Tests** : `tests/comptes-souverains.test.js` (31 cas, contre un vrai serveur souverain), plus le
+  renouvellement de session sur un vrai PostgreSQL (`tests/sovereign-pg.test.js`). Vérifié aussi
+  dans l'appli, en local : connexion, changement de page, déconnexion, garde des pages admin, mauvais
+  mot de passe, inscription.
+
+### Essayer sur un seul téléphone, sans rien changer pour les autres
+
+Une fois les comptes importés, ouvrir
+`https://mon50ccetmoi.com/login.html?essai-souverain=comptes`, puis se connecter normalement. Le
+choix est gardé sur ce téléphone. Pour revenir : `https://mon50ccetmoi.com/?essai-souverain=non`.
+
+### Avant de basculer tout le monde
+
+1. **Importer les comptes Firebase** sur le serveur : `sovereign-core/deploy/README.md`, étape 11.
+   Il faut le faire **avant** : sinon le serveur ne connaît personne. Le refaire juste avant la
+   bascule, pour les derniers inscrits.
+2. **Comptes Google** : en mode `"SOVEREIGN"`, le bouton Google explique qu'il faut se connecter avec
+   l'adresse Gmail et un mot de passe. Ces comptes n'ont pas encore de mot de passe : il faut un
+   moyen d'en choisir un. Gratuit : le leur faire choisir dans l'appli **tant qu'on est encore en
+   mode `"FIREBASE"`**, pour qu'il parte dans l'export.
+3. **Administrateurs** : l'import crée tous les comptes avec le rôle « user ». Remettre « admin » à
+   la main sur le VPS pour les comptes qui l'ont dans Firestore.
+4. **Clé d'accès (empreinte)** : en mode `"SOVEREIGN"`, elle affiche « revient bientôt ». Elle passait
+   déjà par les Cloud Functions, coupées depuis le 14/11.
+5. **Effacement du compte (RGPD)** : il passe encore par une Cloud Function (coupée). Aujourd'hui, la
+   demande part donc par email. Brancher l'effacement sur `DELETE /api/v1/rgpd/account` du serveur.
+6. Essai sur un téléphone (ci-dessus), puis bascule : `comptes: "SOVEREIGN"` dans `config.js`,
+   `CACHE_NAME` incrémenté dans `src/public/sw.js`, publication du site.
+
+**Retour arrière** : remettre `comptes: "FIREBASE"` et republier le site. Les comptes Firebase n'ont
+pas bougé. Un pilote inscrit pendant la bascule a aussi son compte Firebase, grâce au pont.
