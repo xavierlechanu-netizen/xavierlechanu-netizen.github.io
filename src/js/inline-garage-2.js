@@ -28,9 +28,11 @@ btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connexion en cours.
 
         try {
           // Firebase ou serveur souverain selon CONFIG.BACKEND_MODE.comptes (comptes.js)
-          const { firebaseUser } = await comptes.seConnecter(email, pass);
-          // Le statut de garage certifié est encore dans Firestore : sans pont Firebase, pas d'accès
-          const uid = firebaseUser ? firebaseUser.uid : null;
+          await comptes.seConnecter(email, pass);
+          // Le statut de garage certifié est encore dans Firestore : sans pont Firebase, pas d'accès.
+          // L'identifiant vient de « qui est connecté », jamais de la réponse de connexion (jetons).
+          const current = comptes.utilisateurActuel();
+          const uid = current && !current.isSovereign ? current.uid : null;
 
           // Vérifier le statut garage certifié dans Firestore
           const doc = uid ? await firebase.firestore().collection("users").doc(uid).get() : null;

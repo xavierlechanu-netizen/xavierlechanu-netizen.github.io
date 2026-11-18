@@ -151,9 +151,9 @@ choix est gardé sur ce téléphone. Pour revenir : `https://mon50ccetmoi.com/?e
 
 ### Avant de basculer tout le monde
 
-1. **Importer les comptes Firebase** sur le serveur : `sovereign-core/deploy/README.md`, étape 11.
-   Il faut le faire **avant** : sinon le serveur ne connaît personne. Le refaire juste avant la
-   bascule, pour les derniers inscrits.
+1. **Importer les comptes Firebase** sur le serveur : `docs/IMPORT_COMPTES_FIREBASE.md` (qui fait
+   quoi) et `sovereign-core/deploy/README.md`, étape 11. Il faut le faire **avant** : sinon le serveur
+   ne connaît personne. Le refaire juste avant la bascule, pour les derniers inscrits.
 2. **Comptes Google** : en mode `"SOVEREIGN"`, le bouton Google explique qu'il faut se connecter avec
    l'adresse Gmail et un mot de passe. Ces comptes n'ont pas encore de mot de passe : il faut un
    moyen d'en choisir un. Gratuit : le leur faire choisir dans l'appli **tant qu'on est encore en
@@ -169,3 +169,69 @@ choix est gardé sur ce téléphone. Pour revenir : `https://mon50ccetmoi.com/?e
 
 **Retour arrière** : remettre `comptes: "FIREBASE"` et republier le site. Les comptes Firebase n'ont
 pas bougé. Un pilote inscrit pendant la bascule a aussi son compte Firebase, grâce au pont.
+
+## 7. Paiements Revolut : plan proposé (18/11/2026, rien de fait encore)
+
+**Situation** : plus aucun paiement depuis le 14/11. Les commandes passaient par deux Cloud
+Functions, `createRevolutOrder` et `revolutWebhook`, coupées avec la facturation Google. Côté
+serveur du VPS, le webhook ne fait aujourd'hui que vérifier la signature. La table `revolut_orders`
+existe déjà dans `db/schema.sql`.
+
+**Ce qui peut vraiment rapporter tout de suite** (catalogue `functions/api/payments-catalog.js`) :
+
+| Produit | Prix | Vendable tout de suite ? |
+| :--- | :--- | :--- |
+| Droit d'entrée Garage Partenaire | 50 € | Oui |
+| Packs de points | 2,99 à 24,99 € | Oui. Le grand livre des points existe déjà sur le serveur |
+| Rapports assureurs | 49,99 à 199,99 € HT | Seulement quand il y aura des dossiers de sinistre (il faut les boîtiers) |
+| Boîte Noire+ | 4,99 €/mois ou 50 €/an | Non : le boîtier n'est pas encore fabriqué |
+| Diagnostic IA | 4,99 € | Non : le copilote IA est coupé |
+
+### Option A, tout de suite et sans code serveur : liens de paiement Revolut
+
+- Vous créez dans Revolut Business un lien de paiement à montant fixe : droit d'entrée garage, ou
+  rapport assureur sur demande. Ce lien n'est pas secret.
+- L'appli l'affiche à la place du bouton en panne (`CONFIG.REVOLUT.PAYMENT_LINK` existe déjà).
+- À chaque paiement, Revolut vous prévient ; vous débloquez le garage à la main.
+- Coût : seulement la commission Revolut, comme avant.
+- Limite : tout se fait à la main. C'est bien pour quelques garages, pas pour des packs de points.
+
+### Option B, recommandée : commandes par le serveur du VPS (2 petites PR)
+
+1. **Serveur** :
+   - `POST /api/v1/payments/orders` : le prix est lu dans le catalogue, jamais dans la demande.
+     Appel à l'API Merchant de Revolut, commande gardée dans `revolut_orders`.
+   - `GET /api/v1/payments/orders/{id}` : suivre l'état d'une commande.
+   - Le webhook marque la commande payée une seule fois, puis livre :
+     - **points** : dans le grand livre du serveur ;
+     - **garage, assureur** : alerte à l'administrateur et déblocage à la main, tant que leurs
+       données sont dans Firestore.
+   - Une table des factures à émettre (aujourd'hui `invoices_to_issue` dans Firestore).
+2. **Appli** :
+   - interrupteur `paiements` dans `api-client.js`, pour les 4 écrans qui vendent : `app-features.js`,
+     `assureur.js`, `blackbox-shop.js`, `insurance-portal.js` ;
+   - la fenêtre de paiement Revolut ne change pas (clé publique `pk_…` dans `config.js`).
+3. **Prérequis** :
+   - les comptes importés (une commande appartient à un compte du serveur) ;
+   - un pilote qui s'est reconnecté une fois depuis l'import. Pas besoin d'avoir basculé les comptes.
+
+**Ce que vous faites vous-même** (jamais de clé dans la conversation) :
+
+1. **Clé secrète Merchant** (`sk_…`, production) : Revolut Business › Merchant API. Elle va sur le
+   VPS par la fenêtre de saisie des clés. Il faut d'abord y ajouter le nom `REVOLUT_SECRET_KEY`,
+   comme pour `FIREBASE_SCRYPT_*` (dossier `deploy/`).
+2. **Webhook** :
+   - remplacer l'adresse de l'ancienne Cloud Function par
+     `https://api.mon50ccetmoi.com/api/v1/webhooks/revolut` ;
+   - copier le **secret de signature** dans la fenêtre de saisie, groupe `revolut`
+     (`REVOLUT_WEBHOOK_SECRET`).
+3. **Choisir** ce qu'on remet en vente d'abord. Proposition : packs de points et droit d'entrée garage.
+4. **Un achat d'essai réel** à 2,99 € (pack de 100 points), remboursable ensuite depuis Revolut.
+5. **Votre accord** pour fusionner, reconstruire l'API sur le VPS, puis basculer `paiements`.
+
+**Coût** : aucun abonnement. Seulement la commission Revolut par paiement, inchangée.
+
+### Option C, déconseillée : réactiver la facturation Google
+
+Elle relancerait les Cloud Functions telles quelles. Mais elle remet une carte bancaire chez Google,
+au rebours du déménagement, et le coût mensuel n'est pas garanti.
