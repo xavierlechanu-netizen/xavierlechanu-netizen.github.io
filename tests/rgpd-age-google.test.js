@@ -50,7 +50,8 @@ describe("D-4 : Google n'est chargé qu'au clic", () => {
         <div id="google-signin-slot"></div>
         <p id="google-signin-status">info</p>`;
     }
-    const gsiScripts = () => [...document.head.querySelectorAll("script")].filter((s) => s.src.includes("accounts.google.com"));
+    const gsiScripts = () => [...document.head.querySelectorAll("script[src]")]
+      .filter((s) => new URL(s.src).hostname === "accounts.google.com");
 
     beforeEach(() => {
       // Module rechargé à chaque test : l'état « chargement en cours » repart de zéro
