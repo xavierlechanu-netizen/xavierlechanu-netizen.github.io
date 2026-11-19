@@ -6,7 +6,6 @@ const fs = require("fs");
 const path = require("path");
 
 const code = fs.readFileSync(path.join(__dirname, "..", "src", "js", "recorded-voice.js"), "utf8").replace(/^export /gm, "");
-// eslint-disable-next-line no-new-func
 const R = new Function(`${code}; return { normalizeVoiceText, indexManifest, createRecordedVoice, RECORDED_VOICE_BASE };`)();
 
 const MANIFEST = {
@@ -87,13 +86,42 @@ describe("Lecture", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(AudioCtor.made[0].pause).toHaveBeenCalled();
   });
+
+  test("« en train de parler » tant que l'enregistrement joue (le guidage attend)", async () => {
+    const AudioCtor = fakeAudio();
+    const v = R.createRecordedVoice({ fetchImpl: okFetch(), AudioCtor });
+    expect(v.isPlaying()).toBe(false);
+    await v.play("Recalcul de l'itinéraire en cours.");
+    expect(v.isPlaying()).toBe(true);
+    AudioCtor.made[0].ended = true;
+    expect(v.isPlaying()).toBe(false);
+    await v.play("Recalcul de l'itinéraire en cours.");
+    v.stop();
+    expect(v.isPlaying()).toBe(false);
+  });
+
+  test("une phrase plus récente est arrivée pendant la recherche : rien n'est joué", async () => {
+    const AudioCtor = fakeAudio();
+    const v = R.createRecordedVoice({ fetchImpl: okFetch(), AudioCtor });
+    expect(await v.play("Recalcul de l'itinéraire en cours.", () => true)).toBe(false);
+    expect(AudioCtor.made).toHaveLength(0);
+  });
 });
 
 describe("Branchement", () => {
   test("voice-engine.js joue l'enregistrement d'abord, en français seulement", () => {
     const src = fs.readFileSync(path.join(__dirname, "..", "src", "js", "voice-engine.js"), "utf8");
     expect(src).toMatch(/import \{ createRecordedVoice \} from '\.\/recorded-voice\.js';/);
-    expect(src).toMatch(/targetLang === "fr" && \(await recordedVoice\.play\(finalMsg\)\)/);
+    expect(src).toMatch(/if \(targetLang === "fr"\) \{/);
+    expect(src).toMatch(/await recordedVoice\.play\(finalMsg, outdated\)\) \|\| outdated\(\)\) return;/);
+  });
+
+  test("le guidage n'enchaîne pas pendant un enregistrement (isVoiceBusy)", () => {
+    const engine = fs.readFileSync(path.join(__dirname, "..", "src", "js", "voice-engine.js"), "utf8");
+    expect(engine).toMatch(/export function isVoiceBusy\(\)[\s\S]{0,200}recordedVoice\.isPlaying\(\)/);
+    const guidance = fs.readFileSync(path.join(__dirname, "..", "src", "js", "route-guidance.js"), "utf8");
+    expect(guidance).toMatch(/import \{ speak, isVoiceBusy \} from "\.\/voice-engine\.js";/);
+    expect(guidance).toMatch(/const isSpeaking = \(\) => isVoiceBusy\(\);/);
   });
 
   test("manifeste valide, chaque fichier cité existe", () => {

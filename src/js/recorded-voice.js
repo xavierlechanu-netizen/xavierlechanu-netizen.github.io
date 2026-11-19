@@ -71,6 +71,11 @@ export function createRecordedVoice({ fetchImpl = (u) => fetch(u), AudioCtor = t
       return (await load()).get(normalizeVoiceText(text)) || null;
     },
 
+    /** Vrai pendant qu'un enregistrement joue (le guidage attend la fin avant la phrase suivante). */
+    isPlaying() {
+      return !!current && !current.paused && !current.ended;
+    },
+
     /** Coupe l'enregistrement en cours (une nouvelle phrase arrive). */
     stop() {
       if (current) {
@@ -86,11 +91,12 @@ export function createRecordedVoice({ fetchImpl = (u) => fetch(u), AudioCtor = t
     /**
      * Joue l'enregistrement de la phrase s'il existe. Vrai s'il a pu démarrer ; faux sinon (la voix
      * du téléphone prend alors le relais).
+     * @param {() => boolean} [outdated]  vrai si une phrase plus récente est arrivée entre-temps : on ne joue rien
      */
-    async play(text) {
+    async play(text, outdated = () => false) {
       if (!AudioCtor) return false;
       const url = await this.find(text);
-      if (!url) return false;
+      if (!url || outdated()) return false;
       this.stop();
       try {
         const audio = new AudioCtor(url);
