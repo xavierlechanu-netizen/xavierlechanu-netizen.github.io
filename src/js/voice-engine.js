@@ -7,6 +7,10 @@
  * - vibrate(ms) : vibration, seulement après une première interaction (règle des navigateurs).
  */
 import { voiceLanguage, translateForVoice, personalizeVoiceText } from './voice-phrases.js';
+import { createRecordedVoice } from './recorded-voice.js';
+
+// Phrases lues par de vraies personnes (src/public/voix/), servies par le site : voir recorded-voice.js
+const recordedVoice = createRecordedVoice();
 
 /** Pseudo du pilote connecté (vide si personne n'est connecté). */
 export function pilotName() {
@@ -400,7 +404,8 @@ window.OracleEngine = {
  * @param {{greet?: boolean}} [opts]  greet : commence par « Bonjour <pseudo>. »
  */
 export async function speak(phraseKey, opts = {}) {
-  if (!("speechSynthesis" in window)) return;
+  const canSynthesize = "speechSynthesis" in window;
+  if (!canSynthesize && typeof Audio === "undefined") return;
 
   // Les navigateurs refusent de parler tant que la personne n'a pas touché la page : le
   // message (ex. « Content de vous revoir ») était perdu. On garde le dernier et on le dit
@@ -442,6 +447,13 @@ export async function speak(phraseKey, opts = {}) {
   }
   const targetLang = voiceText.lang;
   const finalMsg = personalizeVoiceText(voiceText.text, targetLang, pilotName(), opts);
+
+  // Voix enregistrée (recorded-voice.js) : la phrase exacte lue par une vraie personne, si elle existe.
+  // Sinon, ou si elle ne peut pas être jouée : voix de synthèse du téléphone, comme avant.
+  if (canSynthesize) window.speechSynthesis.cancel();
+  recordedVoice.stop();
+  if (targetLang === "fr" && (await recordedVoice.play(finalMsg))) return;
+  if (!canSynthesize) return;
 
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(finalMsg);
