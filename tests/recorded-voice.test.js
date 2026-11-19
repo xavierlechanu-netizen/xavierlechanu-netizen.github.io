@@ -134,4 +134,27 @@ describe("Branchement", () => {
     }
     expect(R.indexManifest(m).size).toBe(m.phrases.length);
   });
+
+  test("chaque phrase enregistrée est encore dite mot pour mot par l'appli (sinon elle ne serait jamais jouée)", () => {
+    const spoken = new Set();
+    const STR = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g;
+    const walk = (dir) => {
+      for (const f of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, f.name);
+        if (f.isDirectory()) walk(p);
+        else if (f.name.endsWith(".js")) {
+          for (const line of fs.readFileSync(p, "utf8").split(/\r?\n/)) {
+            for (const s of line.matchAll(STR)) {
+              const text = s[1] ?? s[2] ?? s[3];
+              if (!text.includes("${")) spoken.add(R.normalizeVoiceText(text.replace(/\\'/g, "'")));
+            }
+          }
+        }
+      }
+    };
+    walk(path.join(__dirname, "..", "src", "js"));
+    const m = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "src", "public", "voix", "xavier", "manifest.json"), "utf8"));
+    const silent = m.phrases.filter((p) => !spoken.has(R.normalizeVoiceText(p.text))).map((p) => `${p.id} ${p.text}`);
+    expect(silent).toEqual([]);
+  });
 });
