@@ -256,6 +256,15 @@ describe("Appli : Nexus Atlas d'abord", () => {
     expect(askServer).not.toHaveBeenCalled();
   });
 
+  test("texte de loi : jamais de balise HTML en sortie, même mal formée ou encodée", () => {
+    const pt = new Function(`${localCode}; return plainText;`)(); // eslint-disable-line no-new-func
+    for (const piege of ["<scr<script>ipt>alert(1)</script>", "&lt;script&gt;alert(1)&lt;/script&gt;", "<img src=x onerror=alert(1)",
+      "&amp;lt;script&amp;gt;", "Casque <strong>obligatoire</strong> &amp; gants"]) {
+      expect(pt(piege)).not.toMatch(/[<>]/);
+    }
+    expect(pt("Casque <strong>obligatoire</strong> &amp; gants")).toBe("Casque obligatoire & gants");
+  });
+
   test("« police » seul n'est pas une urgence : la question continue son chemin", async () => {
     const localEngine = { processQuery: () => ({ action: "EMERGENCY_CALL", reply: "Mode urgence" }), executeAction: jest.fn() };
     const askServer = jest.fn(async () => ({ source: "mistral", reply: "Prudence au rond-point.", action: "CHAT" }));

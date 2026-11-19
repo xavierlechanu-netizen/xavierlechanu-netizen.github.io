@@ -51,13 +51,20 @@ export function isEmergency(text) {
 // Réponses de nexus-atlas-voice.js qui ne sont pas des commandes : on les affiche, rien à exécuter
 const INFO_ACTIONS = new Set(["JOKE", "IDENTITY", "DRUGS_WARNING"]);
 
-/** Texte simple à partir d'un extrait HTML de la base juridique (<strong>, <br>…). */
-function plainText(html) {
+/**
+ * Texte simple à partir d'un extrait HTML de la base juridique (<strong>, <br>…).
+ * Le résultat ne contient jamais « < » ni « > » : aucune balise ne peut en sortir, même mal formée.
+ */
+export function plainText(html) {
   return String(html || "")
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[<>]/g, "")
+    .replace(/&nbsp;/g, " ").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/&(lt|gt);/g, "")
+    .replace(/&amp;/g, "&")
     .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
     .trim();
 }
 
