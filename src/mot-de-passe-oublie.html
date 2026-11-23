@@ -16,7 +16,7 @@
       .reset-box a.btn-auth { display: block; text-align: center; text-decoration: none; box-sizing: border-box; }
       .reset-back { display: block; margin-top: 16px; color: #ffb300; text-align: center; }
       .reset-rule { font-size: 0.9rem; }
-      .reset-error { color: #ff6b6b; min-height: 1.2em; margin: 8px 0; }
+      .reset-box p.reset-error { color: #ff6b6b; min-height: 1.2em; margin: 8px 0; }
     </style>
     <script type="module" src="/js/mot-de-passe-oublie.js"></script>
   </head>
@@ -28,11 +28,11 @@
 
         <section id="reset-demande" class="reset-box">
           <p>Écris-nous en indiquant ton pseudo. Après vérification, tu recevras un lien pour choisir un nouveau mot de passe. Il sert une seule fois et reste valable une heure.</p>
-          <a class="btn-auth" href="mailto:contact@mon50ccetmoi.com?subject=Mot%20de%20passe%20oubli%C3%A9&amp;body=Mon%20pseudo%20%3A%20">ÉCRIRE À CONTACT@MON50CCETMOI.COM</a>
+          <a class="btn-auth" href="mailto:contact@mon50ccetmoi.com?subject=Mot%20de%20passe%20oubli%C3%A9&amp;body=Mon%20pseudo%20%3A%20">NOUS ÉCRIRE</a>
           <a class="reset-back" href="login.html">Retour à la connexion</a>
         </section>
 
-        <form id="reset-form" class="reset-box" hidden>
+        <form id="reset-form" class="auth-form reset-box" hidden>
           <p class="reset-rule">Au moins 1 majuscule, 7 minuscules et 2 caractères spéciaux.</p>
           <label for="reset-pass" class="sr-only">Nouveau mot de passe</label>
           <input type="password" id="reset-pass" placeholder="Nouveau mot de passe" autocomplete="new-password" required />
