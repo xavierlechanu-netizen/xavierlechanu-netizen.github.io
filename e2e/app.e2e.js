@@ -132,3 +132,23 @@ test("itinéraire sans autoroute : tracé, bandeau de guidage, puis arrêt", asy
   expect(await paths()).toBe(before);
   expect(pageErrors).toEqual([]);
 });
+
+test("Bourse et Marketplace : aucun point retiré, aucun faux achat", async ({ page }) => {
+  const dialogs = [];
+  page.on("dialog", (d) => { dialogs.push(d.message()); d.dismiss().catch(() => {}); });
+  await page.goto("/marketplace.html", { waitUntil: "load" });
+  await page.waitForFunction(() => window.ExchangeMarket);
+  const retraits = await page.evaluate(async () => {
+    let n = 0;
+    window.session = { uid: "acheteur", username: "acheteur" };
+    window.BVCManager = { deduct: async () => { n++; return true; } };
+    window.ExchangeMarket.userBvc = 100;
+    window.ExchangeMarket.listings = [{ id: "l1", title: "Galets", seller: "vendeur", status: "active" }];
+    await window.ExchangeMarket.reserveListing("l1", 10, "bvc");
+    return n;
+  });
+  expect(retraits).toBe(0);
+  expect(dialogs.join(" ")).toContain("Aucun point n'a été retiré");
+  await expect(page.locator("button:disabled", { hasText: "Bientôt disponible" })).toHaveCount(5);
+  expect(await page.locator('[data-action*="Achat validé"], [data-action*="buyVoiceMode"]').count()).toBe(0);
+});
