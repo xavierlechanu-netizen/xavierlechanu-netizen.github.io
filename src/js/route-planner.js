@@ -139,6 +139,14 @@ export function maneuverIcon(step) {
   return ICONS[maneuverKind(step)];
 }
 
+function showManeuverIcon(step) {
+  const icon = document.querySelector("#nav-instruction .nav-icon i");
+  if (!icon) return;
+  const { className, transform } = maneuverIcon(step);
+  icon.className = className;
+  icon.style.transform = transform;
+}
+
 /** Étapes qui traversent en ferry (alerte à l'approche : checkFerryProximity, app-features.js). */
 export function ferrySteps(steps) {
   return (steps || []).filter((s) => instructionText(s).toLowerCase().includes("ferry"));
@@ -266,12 +274,7 @@ function showRoute(ticket, route, destination, { reroute = false } = {}) {
     const dist = formatDistance(first.distanceMeters);
     setText("next-step-name", text);
     setText("next-step-dist", dist);
-    const icon = document.querySelector("#nav-instruction .nav-icon i");
-    if (icon) {
-      const { className, transform } = maneuverIcon(first);
-      icon.className = className;
-      icon.style.transform = transform;
-    }
+    showManeuverIcon(first);
     // Après l'annonce de l'heure d'arrivée. La consigne 0 se fait au départ : « Dans … » viendra
     // avec le premier virage (route-guidance.js).
     if (!reroute) later(ticket, 6000, () => speak(`Guidage démarré. ${text}.`));
@@ -293,6 +296,13 @@ function showRoute(ticket, route, destination, { reroute = false } = {}) {
     textOf: instructionText,
     onReroute: () => rerouteFromHere(destination),
     onArrive: () => cancelRoute({ silent: true }),
+    onProgress: ({ stepIndex, toNextM, remainingM }) => {
+      const step = stepIndex === null ? null : leg.steps[stepIndex];
+      setText("next-step-name", step ? instructionText(step) : "Arrivée");
+      setText("next-step-dist", formatDistance(toNextM));
+      setText("nav-dist", formatDistance(remainingM));
+      if (step) showManeuverIcon(step);
+    },
   });
 
   if (window.SafeRide?.checkWeatherForRoute) showWeatherDelay(ticket, durationSec, destination);
