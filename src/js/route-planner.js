@@ -18,6 +18,7 @@
 import { registerAction } from "./actionRegistry.js";
 import { readLatLng, formatDistance, formatDuration } from "./map-engine.js";
 import { speak } from "./voice-engine.js";
+import { routeColor } from "./season-theme.js";
 import { departureMessage, rerouteMessage, startGuidance, stopGuidance, isGuiding, announce } from "./route-guidance.js";
 
 /** Vitesse moyenne réaliste d'un 50 cc, arrêts compris (32 km/h). */
@@ -245,7 +246,7 @@ function showRoute(ticket, route, destination, { reroute = false } = {}) {
   const g = window.google.maps;
   const map = window.map;
 
-  routeLayers.push(new g.Polyline({ path, map, strokeColor: "#00d2ff", strokeOpacity: 0.8, strokeWeight: 6 }));
+  routeLayers.push(new g.Polyline({ path, map, strokeColor: routeColor("#00d2ff"), strokeOpacity: 0.8, strokeWeight: 6 }));
   if (path.length > 0) {
     const bounds = new g.LatLngBounds();
     path.forEach((p) => bounds.extend(p));
