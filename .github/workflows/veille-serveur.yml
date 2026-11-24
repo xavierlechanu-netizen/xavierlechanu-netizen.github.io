@@ -1,38 +1,26 @@
-# Veille du serveur (24/11/2026) : vérifie depuis l'extérieur, toutes les 5 minutes, que le site
-# et l'API répondent. Sinon, SMS par OVHcloud (France) : un au début, un rappel toutes les 3 h, un au retour.
-# Secrets (Settings > Secrets and variables > Actions) : OVH_SMS_APP_KEY, OVH_SMS_APP_SECRET,
-# OVH_SMS_CONSUMER_KEY, OVH_SMS_SERVICE, ALERTE_SMS_NUMERO. Saisie : sovereign-core/deploy/windows/saisir-cles-github.cmd.
-# Une veille en échec envoie aussi l'e-mail habituel de GitHub (filet de secours gratuit).
+# Veille du serveur (24/11/2026) : GitHub vérifie depuis l'extérieur, toutes les 30 minutes, que le site
+# et l'API répondent. Sinon la veille « échoue » et GitHub envoie son e-mail habituel (rien d'autre : pas de
+# sonnerie, la nuit on dort). 3 essais à 90 s : un redémarrage normal de l'API (≈ 90 s) ne déclenche rien.
+# Réglage de l'e-mail : github.com/settings/notifications > Actions (« Failed workflows only », par e-mail).
 # shortcut: GitHub peut retarder les tâches planifiées de quelques minutes ; un service de veille dédié si ça ne suffit plus.
 name: Veille du serveur
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
-    inputs:
-      essai:
-        description: "Envoyer un SMS d'essai (rien n'est cassé)"
-        type: boolean
-        default: false
 
-permissions:
-  contents: read
-  actions: read # lire le résultat de la veille précédente
+permissions: {}
 
 jobs:
   veille:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
       - name: Site et API
-        env:
-          OVH_SMS_APP_KEY: ${{ secrets.OVH_SMS_APP_KEY }}
-          OVH_SMS_APP_SECRET: ${{ secrets.OVH_SMS_APP_SECRET }}
-          OVH_SMS_CONSUMER_KEY: ${{ secrets.OVH_SMS_CONSUMER_KEY }}
-          OVH_SMS_SERVICE: ${{ secrets.OVH_SMS_SERVICE }}
-          ALERTE_SMS_NUMERO: ${{ secrets.ALERTE_SMS_NUMERO }}
-          GITHUB_TOKEN: ${{ github.token }}
-          ESSAI: ${{ inputs.essai }}
-        run: node scripts/veille-serveur.js
+        run: |
+          panne=0
+          ok() { curl -fsS -m 15 --retry 2 --retry-delay 90 --retry-all-errors -o /dev/null "$1"; }
+          ok https://mon50ccetmoi.com/ || { echo "::error::Le site ne répond plus"; panne=1; }
+          ok https://api.mon50ccetmoi.com/api/v1/health || { echo "::error::L'API (SOS) ne répond plus"; panne=1; }
+          exit $panne
