@@ -222,6 +222,8 @@ function createSovereignApp(options = {}) {
     // SOS communautaire et groupes de balade : positions toutes les 5 s, plus quelques gestes
     const live = options.live || createLive();
     const liveLimit = { maxAttempts: 40, windowMs: 60 * 1000, hits: new Map() };
+    // Liste d'attente (route publique) : 5 inscriptions par adresse IP et par heure
+    const waitlistLimit = { maxAttempts: 5, windowMs: 60 * 60 * 1000, hits: new Map() };
 
     // Paiements Revolut (payments.js) : REVOLUT_SECRET_KEY absente → « pas encore ouvert » (503)
     const revolut = options.revolut !== undefined ? options.revolut : revolutClientFromEnv();
@@ -893,6 +895,24 @@ function createSovereignApp(options = {}) {
                 return send(200, result);
             }
             return send(405, { error: "Méthode non autorisée." });
+        }
+
+        // 4c quater. LISTE D'ATTENTE de la Boîte Noire : adresse + consentement, sans compte
+        if (req.method === "POST" && pathname === "/api/v1/waitlist") {
+            if (isRateLimited(`waitlist:${clientIp(req)}`, waitlistLimit)) {
+                rejectTooManyAttempts(res, waitlistLimit);
+                return;
+            }
+            const email = String(body.email || "").trim().toLowerCase();
+            if (body.consent !== true || email.length > 254 || !/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: "Adresse invalide ou consentement manquant." }));
+                return;
+            }
+            await store.addToWaitlist(email);
+            res.statusCode = 200; // même réponse si l'adresse y était déjà : ne dit pas qui est inscrit
+            res.end(JSON.stringify({ ok: true }));
+            return;
         }
 
         // 4c bis. ALERTE SOS : SMS réels aux anges gardiens, par OVHcloud.
