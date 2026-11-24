@@ -184,6 +184,16 @@ describe("loadHazards : affichage sur la carte", () => {
     expect(markers.map((m) => m.opts.position)).toEqual([{ lat: north(300), lng: LILLE.lng }]);
   });
 
+  test("points sur le VPS, serveur muet (hors réseau, sans session) : les marqueurs restent, Firestore n'est pas lu", async () => {
+    setupMap([]);
+    const old = { setMap: jest.fn() };
+    window.hazardMarkers = [old];
+    const H = loadModule({ db: { collection: () => { throw new Error("Firestore lu"); } }, dangersAutour: async () => undefined });
+    await H.loadHazards();
+    expect(old.setMap).not.toHaveBeenCalled();
+    expect(window.hazardMarkers).toEqual([old]);
+  });
+
   test("un marqueur par danger, y compris au format {pos}, sans doublon", async () => {
     const shared = { id: "a", type: "trou", lat: north(200), lon: LILLE.lng };
     const { markers, db } = setupMap([

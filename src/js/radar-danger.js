@@ -342,6 +342,7 @@ function loadDangers(userGeohash) {
     const refresh = async () => {
       if (!currentPosition) return;
       const list = await dangersAutour(currentPosition.lat, currentPosition.lng, 25);
+      if (!list) return; // serveur muet : on garde la liste affichée
       render({
         size: list.length,
         forEach: (cb) => list.forEach((h) => cb({ id: h.id, data: () => ({ ...h, created_at: { toMillis: () => Date.parse(h.date) } }) })),

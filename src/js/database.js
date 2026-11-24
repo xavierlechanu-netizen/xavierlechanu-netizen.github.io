@@ -46,7 +46,9 @@ function syncHazards() {
     const refresh = async () => {
       const pos = window.currentPosition;
       if (!pos) return;
-      secureSetItem("hazards", JSON.stringify(await dangersAutour(pos.lat, pos.lng, 25)));
+      const list = await dangersAutour(pos.lat, pos.lng, 25);
+      if (!list) return; // serveur muet : on garde les dangers déjà connus
+      secureSetItem("hazards", JSON.stringify(list));
       if (typeof loadHazards === "function") loadHazards();
     };
     setInterval(refresh, 60000);

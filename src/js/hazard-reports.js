@@ -164,7 +164,7 @@ export async function loadHazards() {
   if (!center) return;
 
   let records = await dangersAutour(center.lat, center.lng, HAZARD_SEARCH_RADIUS_M / 1000);
-  if (!records) records = await firestoreHazardsAround(center);
+  if (records === null) records = await firestoreHazardsAround(center);
   if (!records) return;
 
   (window.hazardMarkers || []).forEach((m) => m.setMap(null));

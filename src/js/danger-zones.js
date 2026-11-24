@@ -115,6 +115,7 @@ window.DangerZones = {
         const pos = this.currentPos || window.currentPosition;
         if (!pos) return;
         const list = await dangersAutour(pos.lat, pos.lng, 25);
+        if (!list) return; // serveur muet : on garde les dangers déjà affichés
         const ids = new Set(list.map((h) => h.id));
         for (const id of Object.keys(this.mapMarkers)) {
           if (!ids.has(id) && typeof map !== "undefined" && map) map.removeLayer(this.mapMarkers[id]);
