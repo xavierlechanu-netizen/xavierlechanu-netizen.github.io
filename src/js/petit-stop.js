@@ -2,15 +2,16 @@
  * « Petit Stop » : un clin d'œil sur la carte, au Garage du Petit Fontenay (Pars-lès-Chavanges, Aube), qui a
  * dépanné le fondateur en essence en juillet 2025, en pleine campagne. Le panneau raconte, il ne promet aucun service.
  *
- * ⚠️ Éteint tant que le garage n'a pas accepté PAR ÉCRIT d'être affiché sur la carte : son accord oral (23/11/2026)
- * couvre seulement la citation de son nom. Ce jour-là : passer ENABLED à true, monter CACHE_NAME (sw.js), publier.
+ * Allumé le 24/11/2026 sur décision de Xavier : le garage lui a dit de vive voix qu'on peut citer son nom et qu'il
+ * le referait avec plaisir ; pas d'accord écrit reçu à ce jour. S'il demande à être retiré : ENABLED à false,
+ * monter CACHE_NAME (sw.js), publier.
  *
  * Distance : la station la plus proche (Brienne-le-Château, base officielle des stations) est à 13 km à vol d'oiseau,
  * environ 15 km par la route (24/11/2026).
  */
 
 export const PETIT_STOP = Object.freeze({
-  ENABLED: false,
+  ENABLED: true,
   NAME: "Garage du Petit Fontenay",
   PLACE: "Pars-lès-Chavanges (Aube)",
   LAT: 48.516713,

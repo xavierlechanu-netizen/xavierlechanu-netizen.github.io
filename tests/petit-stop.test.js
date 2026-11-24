@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  *
- * « Petit Stop » (Garage du Petit Fontenay) : éteint tant que le garage n'a pas accepté par écrit ;
- * allumé, un marqueur avec un panneau qui raconte, sans HTML injecté et sans promettre de service.
+ * « Petit Stop » (Garage du Petit Fontenay) : un marqueur avec un panneau qui raconte, sans HTML injecté et sans
+ * promettre de service ; il s'éteint d'un seul réglage si le garage le demande.
  */
 const fs = require("fs");
 const path = require("path");
@@ -33,17 +33,11 @@ function fakeLeaflet() {
 describe("Petit Stop", () => {
   const M = loadModule();
 
-  test("livré éteint : aucun marqueur tant que le garage n'a pas accepté par écrit", () => {
-    expect(M.PETIT_STOP.ENABLED).toBe(false);
-    const { L, calls } = fakeLeaflet();
-    expect(M.initPetitStop({ map: {}, L })).toBe(false);
-    expect(calls.markers).toHaveLength(0);
-  });
-
-  test("allumé : un marqueur au garage, avec la distance annoncée et sans promesse de service", () => {
+  test("livré allumé : un marqueur au garage, avec la distance annoncée et sans promesse de service", () => {
+    expect(M.PETIT_STOP.ENABLED).toBe(true);
     const { L, calls } = fakeLeaflet();
     const map = {};
-    expect(M.initPetitStop({ map, L, stop: { ...M.PETIT_STOP, ENABLED: true } })).toBe(true);
+    expect(M.initPetitStop({ map, L })).toBe(true);
     const [marker] = calls.markers;
     expect(marker.latlng).toEqual([48.516713, 4.513603]);
     expect(marker.map).toBe(map);
@@ -53,9 +47,15 @@ describe("Petit Stop", () => {
     expect(text).toMatch(/Ce n'est pas un service de dépannage/);
   });
 
+  test("éteint d'un seul réglage : aucun marqueur", () => {
+    const { L, calls } = fakeLeaflet();
+    expect(M.initPetitStop({ map: {}, L, stop: { ...M.PETIT_STOP, ENABLED: false } })).toBe(false);
+    expect(calls.markers).toHaveLength(0);
+  });
+
   test("sans carte ou sans Leaflet : rien, sans erreur", () => {
-    expect(M.initPetitStop({ stop: { ...M.PETIT_STOP, ENABLED: true } })).toBe(false);
-    expect(M.initPetitStop({ map: {}, L: null, stop: { ...M.PETIT_STOP, ENABLED: true } })).toBe(false);
+    expect(M.initPetitStop({})).toBe(false);
+    expect(M.initPetitStop({ map: {}, L: null })).toBe(false);
   });
 
   test("le panneau n'est que du texte : une balise dans un champ ne devient pas du HTML", () => {
