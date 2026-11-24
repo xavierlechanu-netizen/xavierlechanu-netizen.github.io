@@ -1,11 +1,11 @@
 import { db, auth, CONFIG, secureGetItem, secureSetItem } from './config.js';
 import { registerAction } from './actionRegistry.js';
 import { escapeHtml } from './html-escape.js';
+import { sovereignRequest } from './sovereign.js';
 
 /**
  * 🗺️ MODE CONVOI
- * Système de balades en groupe avec partage de position en temps réel via Firebase Firestore.
- * Sécurité : request.auth.uid vérifié côté Firestore Rules.
+ * Balades en groupe avec partage de position par le serveur souverain (pilotes connectés seulement).
  */
 
 window.ConvoyManager = {
@@ -13,123 +13,61 @@ window.ConvoyManager = {
   isLeader: false,
   membersList: [],
   syncInterval: null,
-  firestoreUnsubscribe: null,
 
-  /**
-   * Génère un code convoi aléatoire de 4 caractères alphanumériques.
-   * @returns {string}
-   */
-  generateCode: function () {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Sans I/O/0/1 pour éviter confusion
-    let code = "";
-    const array = new Uint8Array(4);
-    crypto.getRandomValues(array);
-    for (let i = 0; i < 4; i++) {
-      code += chars[array[i] % chars.length];
-    }
-    return code;
-  },
+  // Convoi sur le serveur souverain (sovereign-core/server/live.js), comme le cortège : chaque
+  // envoi de position (toutes les 3 s) rend les positions des autres membres. 20 pilotes au plus.
 
   /**
    * Crée un nouveau convoi. L'utilisateur devient le leader.
    */
   createConvoy: async function () {
-    if (!window.db) {
-      alert("Connexion Firestore requise.");
-      return;
-    }
     if (!window.session) {
       alert("Vous devez être connecté pour créer un convoi.");
       return;
     }
-
-    const code = this.generateCode();
-    this.convoyId = code;
-    this.isLeader = true;
-
     try {
-      await window.db
-        .collection("convoys")
-        .doc(code)
-        .set({
-          leaderUid: window.session.uid,
-          leader: window.session.username,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          members: [window.session.username],
-          status: "active",
-        });
-
-      this.startPositionSharing();
-      this.listenToConvoy();
-      this.renderUI();
-
-      if (typeof speak === "function")
+      const { code } = await sovereignRequest("/groupes", { method: "POST" });
+      this.isLeader = true;
+      await this.joinConvoy(code, true);
+      if (this.convoyId && typeof speak === "function")
         speak(`Convoi créé ! Le code est : ${code.split("").join(", ")}.`);
     } catch (e) {
       console.error("[Convoy] Création échouée :", e);
-      alert("Erreur lors de la création du convoi.");
+      alert(e.status === 401 ? e.message : "Erreur lors de la création du convoi.");
     }
   },
 
   /**
-   * Rejoint un convoi existant via son code.
+   * Rejoint un convoi existant via son code (en y envoyant sa position).
    * @param {string} code
    */
-  joinConvoy: async function (code) {
-    if (!window.db) {
-      alert("Connexion Firestore requise.");
-      return;
-    }
+  joinConvoy: async function (code, created = false) {
     if (!window.session) {
       alert("Vous devez être connecté.");
       return;
     }
-    if (!code || code.length !== 4) {
+    code = String(code || "").toUpperCase().trim();
+    if (code.length !== 4) {
       alert("Code convoi invalide (4 caractères).");
       return;
     }
-
-    code = code.toUpperCase().trim();
+    if (!window.currentPosition) {
+      alert("Position GPS introuvable : active la localisation, puis réessaie.");
+      return;
+    }
+    if (!created) this.isLeader = false;
 
     try {
-      const docRef = window.db.collection("convoys").doc(code);
-      const doc = await docRef.get();
-
-      if (!doc.exists || doc.data().status !== "active") {
-        alert("Convoi introuvable ou expiré.");
-        return;
-      }
-
-      const members = doc.data().members || [];
-      if (members.length >= 20) {
-        alert("Ce convoi est complet (20 membres max).");
-        return;
-      }
-      if (members.includes(window.session.username)) {
-        alert("Vous êtes déjà dans ce convoi !");
-        this.convoyId = code;
-        this.isLeader = false;
-        this.listenToConvoy();
-        this.startPositionSharing();
-        this.renderUI();
-        return;
-      }
-
-      members.push(window.session.username);
-      await docRef.update({ members: members });
-
       this.convoyId = code;
-      this.isLeader = false;
-
+      await this.sharePosition();
       this.startPositionSharing();
-      this.listenToConvoy();
       this.renderUI();
-
-      if (typeof speak === "function")
+      if (!created && typeof speak === "function")
         speak(`Vous avez rejoint le convoi ${code}.`);
     } catch (e) {
+      this.convoyId = null;
       console.error("[Convoy] Erreur joinConvoy :", e);
-      alert("Erreur lors de la connexion au convoi.");
+      alert(e.status === 404 ? "Convoi introuvable ou expiré." : e.message || "Erreur lors de la connexion au convoi.");
     }
   },
 
@@ -137,44 +75,37 @@ window.ConvoyManager = {
    * Quitte le convoi en cours.
    */
   leaveConvoy: async function () {
-    if (!this.convoyId || !window.db) return;
-
+    if (!this.convoyId) return;
     try {
-      const docRef = window.db.collection("convoys").doc(this.convoyId);
-
-      // Supprimer sa position du sous-document
-      await window.db
-        .collection("convoys")
-        .doc(this.convoyId)
-        .collection("positions")
-        .doc(window.session.username)
-        .delete();
-
-      const doc = await docRef.get();
-      if (doc.exists) {
-        let members = doc.data().members || [];
-        members = members.filter((m) => m !== window.session.username);
-
-        if (members.length === 0 || this.isLeader) {
-          // Si leader ou dernier membre, supprimer le convoi
-          await docRef.delete();
-        } else {
-          await docRef.update({ members: members });
-        }
-      }
+      await sovereignRequest(`/groupes/${encodeURIComponent(this.convoyId)}`, { method: "DELETE" });
     } catch (e) {
       console.warn("[Convoy] Erreur leaveConvoy :", e);
     }
 
     // Nettoyage local
     if (this.syncInterval) clearInterval(this.syncInterval);
-    if (this.firestoreUnsubscribe) this.firestoreUnsubscribe();
     this.convoyId = null;
     this.isLeader = false;
     this.membersList = [];
+    this.renderConvoyMarkers();
     this.renderUI();
 
     if (typeof speak === "function") speak("Vous avez quitté le convoi.");
+  },
+
+  /** Envoie notre position et affiche celles des autres membres. */
+  sharePosition: async function () {
+    const pos = window.currentPosition;
+    if (!this.convoyId || !pos) return;
+    const { members } = await sovereignRequest(`/groupes/${encodeURIComponent(this.convoyId)}`, {
+      method: "POST",
+      body: { lat: pos.lat, lng: pos.lng },
+    });
+    const myUid = window.session && window.session.uid;
+    this.membersList = (members || [])
+      .filter((m) => m.uid !== myUid)
+      .map((m) => ({ username: m.name, lat: m.lat, lng: m.lng }));
+    this.renderConvoyMarkers();
   },
 
   /**
@@ -182,59 +113,9 @@ window.ConvoyManager = {
    */
   startPositionSharing: function () {
     if (this.syncInterval) clearInterval(this.syncInterval);
-
-    const sharePosition = async () => {
-      if (!this.convoyId || !window.db || !navigator.geolocation) return;
-
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          try {
-            await window.db
-              .collection("convoys")
-              .doc(this.convoyId)
-              .collection("positions")
-              .doc(window.session.username)
-              .set({
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude,
-                speed: pos.coords.speed || 0,
-                username: window.session.username,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-              });
-          } catch (e) {}
-        },
-        null,
-        { enableHighAccuracy: true, timeout: 5000 },
-      );
-    };
-
-    sharePosition();
-    this.syncInterval = setInterval(sharePosition, 3000);
-  },
-
-  /**
-   * Écoute en temps réel les positions des membres du convoi.
-   */
-  listenToConvoy: function () {
-    if (this.firestoreUnsubscribe) this.firestoreUnsubscribe();
-    if (!this.convoyId || !window.db) return;
-
-    this.firestoreUnsubscribe = window.db
-      .collection("convoys")
-      .doc(this.convoyId)
-      .collection("positions")
-      .onSnapshot((snapshot) => {
-        this.membersList = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.username !== window.session?.username) {
-            this.membersList.push(data);
-          }
-        });
-
-        // Afficher les marqueurs sur la carte Leaflet si disponible
-        this.renderConvoyMarkers();
-      });
+    this.syncInterval = setInterval(() => {
+      this.sharePosition().catch((e) => console.warn("[Convoy] position non envoyée :", e && e.message));
+    }, 3000);
   },
 
   /**
