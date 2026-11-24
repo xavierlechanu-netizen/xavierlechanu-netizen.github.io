@@ -1,0 +1,46 @@
+# Veille du serveur (24/11/2026) : vérifie depuis l'extérieur, toutes les 5 minutes, que le site
+# et l'API répondent. Sinon, alerte urgente (sonnerie) sur le téléphone par ntfy.sh (gratuit).
+# Abonnement : appli ntfy, sujet = secret NTFY_TOPIC. Aucune donnée personnelle n'est envoyée.
+# shortcut: GitHub peut retarder les tâches planifiées de quelques minutes ; un service de veille dédié si ça ne suffit plus.
+name: Veille du serveur
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      essai:
+        description: "Envoyer une alerte d'essai"
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  veille:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Site et API
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ESSAI: ${{ inputs.essai }}
+        run: |
+          ok() { curl -fsS -m 15 -o /dev/null "$1"; }
+          panne=""
+          # 3 essais sur 3 minutes : un redémarrage normal de l'API (≈ 90 s) ne déclenche pas d'alerte
+          for essai in 1 2 3; do
+            panne=""
+            ok https://mon50ccetmoi.com/ || panne="le site"
+            ok https://api.mon50ccetmoi.com/api/v1/health || panne="${panne:+$panne et }l'API (SOS)"
+            [ -z "$panne" ] && break
+            [ "$essai" -lt 3 ] && sleep 90
+          done
+          [ "$ESSAI" = "true" ] && panne="ESSAI : rien de cassé"
+          [ -z "$panne" ] && { echo "Tout répond."; exit 0; }
+          echo "En panne : $panne"
+          [ -n "$NTFY_TOPIC" ] || { echo "::error::Secret NTFY_TOPIC absent"; exit 1; }
+          curl -fsS -m 15 -H "Title: mon50ccetmoi en panne" -H "Priority: urgent" -H "Tags: rotating_light" \
+            -d "Ne répond plus : $panne. Bilan : ssh ubuntu@159.173.138.133 'sudo /opt/mon50cc/sovereign-core/deploy/check.sh'" \
+            "https://ntfy.sh/$NTFY_TOPIC"
+          exit 1
