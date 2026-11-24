@@ -186,10 +186,28 @@ modal.innerHTML = `
                     <button data-action="window.CortegeSystem.sendSignal('👮', 'Danger signalé')" style="background:#111; color:#fff; border:1px solid #ffeb3b; padding:15px; border-radius:10px; font-size:1.1rem; cursor:pointer; font-family:'Outfit', sans-serif;"><i class="fa-solid fa-triangle-exclamation" style="color:#ffeb3b;"></i> Danger</button>
                 </div>
                 
+                <p style="color:#aaa; margin-bottom:10px;">Code du cortège : <b style="color:#00ffcc;">${escapeHtml(this.sessionId)}</b></p>
+                <button data-action="window.CortegeSystem.leaveSession()" style="width:100%; background:transparent; border:1px solid #ff0055; color:#ff0055; padding:10px; border-radius:20px; cursor:pointer; font-family:'Outfit', sans-serif; margin-bottom:10px;">Quitter le cortège</button>
                 <button data-action="document.getElementById('cortege-signals-modal').style.display='none'" style="width:100%; background:transparent; border:1px solid #aaa; color:#fff; padding:10px; border-radius:20px; cursor:pointer; font-family:'Outfit', sans-serif;">Fermer</button>
             </div>
         `;
     modal.style.display = "flex";
+  },
+
+  leaveSession: async function () {
+    const code = this.sessionId;
+    if (!code) return;
+    if (this.shareInterval) clearInterval(this.shareInterval);
+    this.sessionId = null;
+    this.applyMembers([]); // retire les marqueurs des autres membres
+    const modal = document.getElementById("cortege-signals-modal");
+    if (modal) modal.style.display = "none";
+    try {
+      await sovereignRequest(`/groupes/${encodeURIComponent(code)}`, { method: "DELETE" });
+    } catch (e) {
+      console.warn("[CortegeSystem] départ non transmis :", e && e.message); // le serveur l'oublie seul après 2 min
+    }
+    if (typeof speak === "function") speak("Vous avez quitté le cortège.");
   },
 
   sendSignal: async function (icon, text) {

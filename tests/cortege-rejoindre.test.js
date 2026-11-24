@@ -66,4 +66,14 @@ describe("Rejoindre un cortège", () => {
     system.applyMembers([]);
     expect(system.members).toEqual({});
   });
+
+  test("quitter : le serveur est prévenu et les autres disparaissent de la carte", async () => {
+    window.currentPosition = { lat: 45, lng: 4 };
+    const { system, calls } = load((endpoint, o) => (o.method === "DELETE" ? { ok: true } : { members: [{ uid: "ami", name: "Ami", lat: 45, lng: 4 }] }));
+    await system.joinSession("AB2C");
+    await system.leaveSession();
+    expect(calls[1]).toEqual(["/groupes/AB2C", { method: "DELETE" }]);
+    expect(system.sessionId).toBeNull();
+    expect(system.members).toEqual({});
+  });
 });
