@@ -297,6 +297,13 @@ describe("Serveur souverain sur PostgreSQL", () => {
     expect(await pg.getProfile(u.uid)).toBeNull();
   });
 
+  test("liste d'attente de la Boîte Noire : une ligne par adresse", async () => {
+    const pg = createPgStore({ pool });
+    expect(await pg.addToWaitlist("attente-pg@exemple.fr")).toBe(true);
+    expect(await pg.addToWaitlist("attente-pg@exemple.fr")).toBe(false);
+    expect((await pool.query("SELECT count(*)::int AS n FROM blackbox_waitlist WHERE email = 'attente-pg@exemple.fr'")).rows[0].n).toBe(1);
+  });
+
   test("outils du VPS (check.sh, rgpd-firebase.sh) : leurs requêtes SQL marchent sur la vraie base", async () => {
     const deploy = (f) => fs.readFileSync(path.join(__dirname, "../sovereign-core/deploy", f), "utf8");
     const check = deploy("check.sh");
@@ -385,6 +392,25 @@ describe("Serveur souverain sur PostgreSQL", () => {
     expect(near.body.hazards[1].distanceM).toBeGreaterThan(900);
     expect(near.body.hazards[1].distanceM).toBeLessThan(1100);
     expect((await call(app, "GET", "/api/v1/hazards?lat=48.85&lng=2.35")).status).toBe(401);
+
+    // Type de l'appli gardé ; votes : un par pilote, retiré à -2
+    const animal = await post({ type: "obstacle", appType: "animal", lat: 47.1, lng: 2.1 });
+    expect((await post({ type: "obstacle", appType: "<b>", lat: 47.1, lng: 2.1 })).status).toBe(400);
+    // Second pilote créé en base (une inscription de plus dépasserait la limite par adresse du serveur)
+    const { rows: [b] } = await pool.query("INSERT INTO users (email, username, password_hash) VALUES ('danger2@example.com', 'DangerPG2', '!') RETURNING uid");
+    const authB = { Authorization: `Bearer ${signSovereignJwt({ uid: b.uid, role: "user", username: "DangerPG2" })}` };
+    const vote = (v, h) => call(app, "POST", `/api/v1/hazards/${animal.body.hazardId}/vote`, { vote: v }, h);
+    expect((await vote("confirm", auth)).body).toEqual({ votes: 1, active: true });
+    expect((await vote("resolve", authB)).body).toEqual({ votes: 0, active: true });
+    expect((await vote("resolve", authB)).body).toEqual({ votes: 0, active: true });
+    expect((await vote("resolve", auth)).body).toEqual({ votes: -2, active: false });
+    expect((await vote("confirm", auth)).status).toBe(404);
+    const here = await call(app, "GET", "/api/v1/hazards?lat=47.1&lng=2.1&radiusKm=1", null, auth);
+    expect(here.body.hazards).toEqual([]);
+    const pg = createPgStore({ pool });
+    expect((await pg.findHazardsNear({ lat: 48.8566, lng: 2.3522, radiusM: 5000 }))[0].appType).toBeNull();
+    await pg.anonymizeUser(b.uid);
+    expect((await pool.query("SELECT count(*)::int AS n FROM hazard_votes WHERE user_uid = $1", [b.uid])).rows[0].n).toBe(0);
   });
 
   test("points : preuve exigée, gain unique par danger, plafonds, solde, classement, grand livre immuable", async () => {

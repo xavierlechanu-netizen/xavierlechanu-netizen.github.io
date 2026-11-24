@@ -9,7 +9,7 @@ import 'firebase/compat/firestore';
 // (points, achat de rapports, envoi de la boîte noire, profil assureur) étaient ignorés en silence.
 import 'firebase/compat/functions';
 import localforage from 'localforage';
-import { installServiceGuard } from './service-guard.js';
+import { installServiceGuard, installFirestorePause } from './service-guard.js';
 import { showCookieBanner } from './cookie-consent.js';
 
 export const CONFIG = {
@@ -34,19 +34,40 @@ export const CONFIG = {
   // qu'APRÈS l'import des comptes Firebase sur le serveur (docs/PLAN_DEMENAGEMENT_GOOGLE.md, § 6).
   BACKEND_MODE: {
     comptes: "SOVEREIGN",
-    // Paiements Revolut par le serveur souverain (§ 7 du plan). "SOVEREIGN" seulement une fois la clé
-    // Revolut sur le VPS, le webhook redirigé et un achat d'essai réussi. Les acheteurs doivent avoir
-    // une session sur le serveur souverain (comptes importés, reconnexion depuis).
-    paiements: "FIREBASE",
+    // Paiements Revolut par le serveur souverain (§ 7 du plan), depuis le 24/11/2026 : les Cloud
+    // Functions de paiement sont coupées depuis le 14/11. Rien n'est en vente tant que
+    // PAYMENTS_OPEN_PRODUCTS est vide sur le VPS ; un achat d'essai précédera toute ouverture.
+    paiements: "SOVEREIGN",
     // Points, historique et classement par le serveur souverain (§ 8 du plan). "SOVEREIGN" en même
     // temps que les comptes, APRÈS la reprise des soldes (scripts/import-firebase-points.js) : sans
     // session sur le serveur, on ne gagne pas de points.
     points: "SOVEREIGN",
   },
-  // Comptes sur "SOVEREIGN" : tant que les données sont dans Firestore, la connexion souveraine ouvre
-  // aussi une session Firebase (même email, même mot de passe) pour les lire. À couper (false) quand
-  // plus rien ne lit Firestore.
-  PONT_FIREBASE: import.meta.env?.VITE_PONT_FIREBASE !== "0",
+  // Pont Firebase (session Firebase ouverte en plus de la session souveraine) : coupé le 24/11/2026,
+  // plus rien d'utile ne lit Firestore. Pour le rallumer le temps d'un essai : VITE_PONT_FIREBASE=1.
+  PONT_FIREBASE: import.meta.env?.VITE_PONT_FIREBASE === "1",
+  // Collections Firestore vides (comptage du 23/11/2026) : leurs fonctions sont « Bientôt
+  // disponible », plus aucune lecture ni écriture (service-guard.js). Pour en rallumer une :
+  // la retirer d'ici… ou mieux, la porter sur le serveur souverain.
+  COLLECTIONS_EN_PAUSE: [
+    // Équipes, territoires et leur messagerie
+    "crews", "territory_sectors", "crew_chats",
+    // Troc, échanges entre membres, Marketplace
+    "exchange_listings", "exchange_messages", "garage_trades", "marketplace",
+    // Roadbooks, butin, parrainage, statistiques de jeu, classement Firestore (le VPS le tient)
+    "roadbooks", "community_roadbooks", "loot_drops", "referral_rewards", "gamification_stats", "leaderboard",
+    // Carnet d'entretien et garages partenaires
+    "maintenance_logs", "garage_registrations", "garage_evaluations", "stats",
+    // Radar social, Pit Stops partagés, sessions OBD, stations signalées
+    "social_radar", "pit_stops", "obd_sessions", "blacklist_stations",
+    // Trajets et semaines du tableau de bord (sous-collections de users)
+    "trips", "weekly_stats",
+    // Litiges et rapports assureurs, ventes et console des boîtiers (aucune vente ouverte)
+    "litigation_previews", "litigation_proposals", "insurer_reports",
+    "payment_confirmations", "blackbox_sales", "blackbox_registry", "blackbox_units",
+    // Inscriptions bêta
+    "beta_testers",
+  ],
 
   // Auth Configuration
   AUTH: {
@@ -109,6 +130,7 @@ installServiceGuard({
   firebaseNs: firebase,
   actif: CONFIG.SERVICES_SERVEUR_ACTIFS,
 });
+installFirestorePause(firebase.firestore, CONFIG.COLLECTIONS_EN_PAUSE);
 
 export const db = firebase.firestore();
 export const auth = firebase.auth();

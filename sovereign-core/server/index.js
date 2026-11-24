@@ -39,6 +39,11 @@ const { createPaymentsService, openProductsFromEnv, PaymentError } = require("./
 const { invoicesToCsv } = require("../../functions/api/invoicing");
 const { createNexusBrain, llmFromEnv } = require("./nexus-brain");
 const { createNexusVerifier } = require("./nexus-verifier");
+const { createLive } = require("./live");
+// Signaux rapides du cortège : texte envoyé par l'appli → icône (rien d'autre n'est accepté)
+const GROUP_SIGNALS = Object.freeze({
+    "Besoin d'essence": "⛽", "Pause demandée": "📸", "Problème technique": "🔧", "Danger signalé": "👮",
+});
 const pointsRules = require("../../functions/api/points-rules");
 
 // Signalement des failles de sécurité (RFC 9116), même texte que src/public/.well-known/security.txt.
@@ -105,6 +110,9 @@ const UNSAFE_USERNAME_RE = /[<>"'&`\u0000-\u001f\u007f]/;
 
 const HAZARD_TYPES = ["pothole", "accident", "police", "roadwork", "obstacle", "weather", "other"];
 const HAZARDS_PER_DAY = 30;
+const HAZARD_MAX_AGE_MS = 24 * 3600 * 1000; // au-delà, un danger n'est plus montré
+/** Type affiché par l'appli (« Route Dégradée », « animal »…) : texte court, sans balise. */
+const isAppType = (v) => typeof v === "string" && v.length <= 40 && /^[\p{L}\p{N} _'-]+$/u.test(v);
 const isLat = (v) => typeof v === "number" && Number.isFinite(v) && v >= -90 && v <= 90;
 const isLng = (v) => typeof v === "number" && Number.isFinite(v) && v >= -180 && v <= 180;
 const blackboxCore = require("../../functions/api/blackbox-core");
@@ -211,6 +219,11 @@ function createSovereignApp(options = {}) {
     // Paiements : 20 commandes par pilote et par 10 min ; suivi d'une commande toutes les 2 s au plus
     const paymentOrderLimit = { maxAttempts: 20, windowMs: 10 * 60 * 1000, hits: new Map() };
     const paymentPollLimit = { maxAttempts: 30, windowMs: 60 * 1000, hits: new Map() };
+    // SOS communautaire et groupes de balade : positions toutes les 5 s, plus quelques gestes
+    const live = options.live || createLive();
+    const liveLimit = { maxAttempts: 40, windowMs: 60 * 1000, hits: new Map() };
+    // Liste d'attente (route publique) : 5 inscriptions par adresse IP et par heure
+    const waitlistLimit = { maxAttempts: 5, windowMs: 60 * 60 * 1000, hits: new Map() };
 
     // Paiements Revolut (payments.js) : REVOLUT_SECRET_KEY absente → « pas encore ouvert » (503)
     const revolut = options.revolut !== undefined ? options.revolut : revolutClientFromEnv();
@@ -771,8 +784,8 @@ function createSovereignApp(options = {}) {
                 return;
             }
             if (req.method === "POST") {
-                const { type, lat, lng, description } = body;
-                if (!HAZARD_TYPES.includes(type) || !isLat(lat) || !isLng(lng) ||
+                const { type, lat, lng, description, appType } = body;
+                if (!HAZARD_TYPES.includes(type) || !isLat(lat) || !isLng(lng) || (appType !== undefined && !isAppType(appType)) ||
                     (description !== undefined && (typeof description !== "string" || description.length > 500))) {
                     res.statusCode = 400;
                     res.end(JSON.stringify({ error: "Type de danger, position ou description invalide." }));
@@ -788,7 +801,7 @@ function createSovereignApp(options = {}) {
                     res.end(JSON.stringify({ error: `Limite de ${HAZARDS_PER_DAY} signalements par jour atteinte.` }));
                     return;
                 }
-                const hazard = await store.createHazard({ uid: authUser.uid, type, lat, lng, description: description || "" });
+                const hazard = await store.createHazard({ uid: authUser.uid, type, lat, lng, description: description || "", appType: appType || null });
                 res.statusCode = 201;
                 res.end(JSON.stringify(hazard));
                 return;
@@ -801,9 +814,104 @@ function createSovereignApp(options = {}) {
                 res.end(JSON.stringify({ error: "Position invalide (lat, lng)." }));
                 return;
             }
-            const hazards = await store.findHazardsNear({ lat, lng, radiusM: radiusKm * 1000 });
+            const hazards = await store.findHazardsNear({ lat, lng, radiusM: radiusKm * 1000, sinceMs: Date.now() - HAZARD_MAX_AGE_MS });
             res.statusCode = 200;
             res.end(JSON.stringify({ radiusKm, count: hazards.length, hazards }));
+            return;
+        }
+
+        // 4c ter. VOTE sur un danger : toujours là (1) ou disparu (-1), un vote par pilote
+        const voteMatch = req.method === "POST" && pathname.match(/^\/api\/v1\/hazards\/([0-9a-f-]{36})\/vote$/);
+        if (voteMatch) {
+            const authUser = extractBearerUser(req);
+            if (!authUser || !(await store.findUserById(authUser.uid))) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: "Authentification requise." }));
+                return;
+            }
+            const vote = { confirm: 1, resolve: -1 }[body.vote];
+            if (!vote) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: "Vote invalide (confirm ou resolve)." }));
+                return;
+            }
+            const result = await store.voteHazard({ hazardId: voteMatch[1], uid: authUser.uid, vote });
+            res.statusCode = result ? 200 : 404;
+            res.end(JSON.stringify(result || { error: "Danger introuvable ou déjà retiré." }));
+            return;
+        }
+
+        // 4b ter. SOS COMMUNAUTAIRE et GROUPES DE BALADE (cortège, convoi), en mémoire (live.js).
+        const sosMatch = pathname.match(/^\/api\/v1\/sos-communaute(?:\/([0-9a-f-]{36})\/(aide|fin))?$/);
+        const groupMatch = pathname.match(/^\/api\/v1\/groupes(?:\/([A-Z0-9]{4}))?$/);
+        if (sosMatch || groupMatch) {
+            const send = (status, data) => { res.statusCode = status; res.end(JSON.stringify(data)); };
+            const authUser = extractBearerUser(req);
+            if (!authUser) return send(401, { error: "Authentification requise." });
+            if (isRateLimited(`live:${authUser.uid}`, liveLimit)) return rejectTooManyAttempts(res, liveLimit);
+            const user = await store.findUserById(authUser.uid);
+            if (!user) return send(401, { error: "Compte introuvable ou supprimé." });
+            const { uid } = authUser;
+            const name = user.username || "Pilote";
+
+            if (sosMatch && sosMatch[1]) {
+                if (req.method !== "POST") return send(405, { error: "Méthode non autorisée." });
+                const ok = sosMatch[2] === "aide"
+                    ? live.helpSos({ id: sosMatch[1], uid, name })
+                    : live.closeSos({ id: sosMatch[1], uid });
+                return send(ok ? 200 : 404, ok ? { ok } : { error: "Alerte introuvable ou terminée." });
+            }
+            if (sosMatch && req.method === "POST") {
+                const { type, lat, lng } = body;
+                if (!live.SOS_TYPES.includes(type) || !isLat(lat) || !isLng(lng)) {
+                    return send(400, { error: "Type d'alerte ou position invalide." });
+                }
+                const result = live.createSos({ uid, author: name, type, lat, lng });
+                if (result.error) return send(429, { error: "Une alerte SOS toutes les 5 minutes au plus." });
+                return send(201, result);
+            }
+            if (sosMatch && req.method === "GET") {
+                const lat = Number(url.searchParams.get("lat"));
+                const lng = Number(url.searchParams.get("lng"));
+                if (!isLat(lat) || !isLng(lng)) return send(400, { error: "Position invalide (lat, lng)." });
+                return send(200, { alerts: live.sosNear({ uid, lat, lng }) });
+            }
+            if (groupMatch && !groupMatch[1] && req.method === "POST") return send(201, { code: live.createGroup() });
+            if (groupMatch && groupMatch[1] && req.method === "DELETE") {
+                live.leaveGroup({ code: groupMatch[1], uid });
+                return send(200, { ok: true });
+            }
+            if (groupMatch && groupMatch[1] && req.method === "POST") {
+                const { lat, lng, signal } = body;
+                if (!isLat(lat) || !isLng(lng) || (signal !== undefined && !Object.hasOwn(GROUP_SIGNALS, signal))) {
+                    return send(400, { error: "Position ou signal invalide." });
+                }
+                const result = live.updateMember({
+                    code: groupMatch[1], uid, name, lat, lng,
+                    signal: signal ? { text: signal, icon: GROUP_SIGNALS[signal] } : undefined,
+                });
+                if (result.error === "introuvable") return send(404, { error: "Groupe introuvable ou terminé." });
+                if (result.error) return send(409, { error: "Ce groupe est complet (20 pilotes)." });
+                return send(200, result);
+            }
+            return send(405, { error: "Méthode non autorisée." });
+        }
+
+        // 4c quater. LISTE D'ATTENTE de la Boîte Noire : adresse + consentement, sans compte
+        if (req.method === "POST" && pathname === "/api/v1/waitlist") {
+            if (isRateLimited(`waitlist:${clientIp(req)}`, waitlistLimit)) {
+                rejectTooManyAttempts(res, waitlistLimit);
+                return;
+            }
+            const email = String(body.email || "").trim().toLowerCase();
+            if (body.consent !== true || email.length > 254 || !/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email)) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: "Adresse invalide ou consentement manquant." }));
+                return;
+            }
+            await store.addToWaitlist(email);
+            res.statusCode = 200; // même réponse si l'adresse y était déjà : ne dit pas qui est inscrit
+            res.end(JSON.stringify({ ok: true }));
             return;
         }
 
