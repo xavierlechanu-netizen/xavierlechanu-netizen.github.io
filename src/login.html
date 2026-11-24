@@ -22,12 +22,8 @@
 
     <!-- Firebase SDK (v9 Compat) -->
     <script type="module" src="/js/config.js" charset="utf-8"></script>
-    <script type="module" src="/js/inline-login-1.js"></script>
     <!-- CryptoJS -->
     <script type="module" src="/js/crypto-native.js" charset="utf-8"></script>
-    <script type="module" src="/js/gsi-callback.js"></script>
-    <!-- Google n'est chargé qu'au clic sur « Continuer avec Google » (RGPD : rien envoyé à Google avant) -->
-    <script type="module" src="/js/google-signin-loader.js"></script>
     <script type="module" src="/js/inline-login-2.js"></script>
     <script type="module" src="/js/error-tracking.js?v=1008000"></script>
   </head>
@@ -202,32 +198,11 @@
             <i class="fa-solid fa-building-shield"></i> Accès Portail Assureur
           </button>
 
-          <!-- Connexion Google : bouton du site ; le script de Google n'est chargé qu'au clic
-               (google-signin-loader.js), puis le vrai bouton Google s'affiche dans le cadre ci-dessous. -->
-          <button
-            type="button"
-            id="google-signin-trigger"
-            class="btn-auth"
-            data-action="startGoogleSignIn()"
-            data-client-id="618915667828-ebv4uc1ehq7mhks9l1qajrtg7k833jab.apps.googleusercontent.com"
-            style="
-              background: #131314;
-              color: #e3e3e3;
-              border: 1px solid #8e918f;
-              margin-bottom: 6px;
-            "
-          >
-            <!-- Mêmes couleurs que la version noire du bouton Google affichée après le clic -->
-            <i class="fa-brands fa-google"></i> Continuer avec Google
-          </button>
-          <div id="google-signin-slot" style="display: flex; justify-content: center"></div>
-          <p
-            id="google-signin-status"
-            aria-live="polite"
-            style="font-size: 0.75rem; color: #888; margin: 6px 0 20px"
-          >
-            Google n'est contacté que si vous cliquez sur ce bouton
-            (<a href="cookies.html" target="_blank" style="color: #aaa">en savoir plus</a>).
+          <!-- Inscrit avec Google avant le 24/11/2026 : la connexion Google n'existe plus, il faut un mot de passe -->
+          <p style="font-size: 0.8rem; color: #aaa; margin: 0 0 20px">
+            Inscrit avec Google ? La connexion Google n'existe plus : écrivez-nous avec votre pseudo pour
+            recevoir un lien et choisir un mot de passe
+            (<a href="mot-de-passe-oublie.html" style="color: #aaa">Mot de passe oublié</a>).
           </p>
           <p class="switch-link" data-action="toggleForm('register')">
             Pas encore membre ? <strong>Rejoindre</strong>
