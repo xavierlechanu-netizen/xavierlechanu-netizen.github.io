@@ -25,6 +25,12 @@ describe("Pages légales fidèles au service réel", () => {
     expect(read("mentions-legales")).toMatch(/Hébergeur du site et de l'application/);
   });
 
+  test("ORIAS en attente : aucun contrat d'assurance proposé, RC Pro pas encore annoncée comme acquise", () => {
+    const m = read("mentions-legales");
+    expect(m).toMatch(/ne présente, ne propose et ne conclut aucun contrat d'assurance/);
+    expect(m).not.toMatch(/l'activité est couverte par une assurance/);
+  });
+
   test("le recours contre une sanction est gratuit", () => {
     for (const p of ["cgv", "terms", "moderation"]) expect(read(p)).toMatch(/gratuitement/);
   });
