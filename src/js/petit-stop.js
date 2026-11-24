@@ -16,7 +16,13 @@ export const PETIT_STOP = Object.freeze({
   PLACE: "Pars-lès-Chavanges (Aube)",
   LAT: 48.516713,
   LNG: 4.513603,
-  STORY: "En juillet 2025, ce garage a dépanné notre fondateur en essence, en pleine campagne.",
+  // Récit du fondateur : le trajet est « déclaré », jamais présenté comme mesuré
+  STORY_TITLE: "Notre histoire",
+  STORY:
+    "En juillet 2025, notre fondateur a ramené son premier scooter de Bruges à Aurec-sur-Loire : 850 km en 48 heures, " +
+    "en 50 cc, d'après son récit. Des GPS qui l'envoyaient sur des routes dangereuses, des pompes introuvables, le froid, " +
+    "la fatigue… puis la panne d'essence, en pleine campagne. Ce garage l'a dépanné. " +
+    "C'est de cette galère qu'est née mon50ccetmoi.",
   NEXT_STATION: "La prochaine station est à environ 15 km (Brienne-le-Château).",
   ADVICE: "Ce n'est pas un service de dépannage : fais ton plein avant de t'aventurer dans la campagne.",
 });
@@ -28,11 +34,15 @@ export function buildPetitStopPopup(stop = PETIT_STOP, doc = document) {
   title.textContent = `⛽ Petit Stop : ${stop.NAME}`;
   const place = doc.createElement("div");
   place.textContent = stop.PLACE;
+  const storyTitle = doc.createElement("em");
+  storyTitle.textContent = stop.STORY_TITLE;
   const story = doc.createElement("p");
-  story.textContent = `${stop.STORY} ${stop.NEXT_STATION}`;
+  story.textContent = stop.STORY;
+  const station = doc.createElement("p");
+  station.textContent = stop.NEXT_STATION;
   const advice = doc.createElement("small");
   advice.textContent = stop.ADVICE;
-  box.append(title, place, story, advice);
+  box.append(title, place, storyTitle, story, station, advice);
   return box;
 }
 
@@ -47,7 +57,7 @@ export function initPetitStop({ map, L, stop = PETIT_STOP, doc = document } = {}
   });
   L.marker([stop.LAT, stop.LNG], { icon, title: `Petit Stop : ${stop.NAME}` })
     .addTo(map)
-    .bindPopup(buildPetitStopPopup(stop, doc));
+    .bindPopup(buildPetitStopPopup(stop, doc), { maxWidth: 300 });
   return true;
 }
 

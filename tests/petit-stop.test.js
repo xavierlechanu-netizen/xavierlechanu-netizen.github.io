@@ -45,6 +45,11 @@ describe("Petit Stop", () => {
     expect(text).toMatch(/Garage du Petit Fontenay/);
     expect(text).toMatch(/environ 15 km/);
     expect(text).toMatch(/Ce n'est pas un service de dépannage/);
+    // L'histoire du fondateur, présentée comme un récit (« d'après son récit »), pas comme une mesure
+    expect(text).toMatch(/Notre histoire/);
+    expect(text).toMatch(/Bruges à Aurec-sur-Loire/);
+    expect(text).toMatch(/850 km en 48 heures.*d'après son récit/);
+    expect(text).toMatch(/ce garage l'a dépanné/i);
   });
 
   test("éteint d'un seul réglage : aucun marqueur", () => {
