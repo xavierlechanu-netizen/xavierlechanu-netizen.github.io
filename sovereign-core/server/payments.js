@@ -250,7 +250,9 @@ function createPaymentsService({ store, revolut, audit, openProducts = DEFAULT_O
                 }
             }
             return { status: 200, body: { ignored: true } };
-        },        /** Administrateur : dernières commandes. */
+        },
+
+        /** Administrateur : dernières commandes. */
         async listForAdmin(limit = 100) {
             return store.listPaymentOrders({ limit });
         },

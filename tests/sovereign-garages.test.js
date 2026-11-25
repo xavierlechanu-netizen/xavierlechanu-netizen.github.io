@@ -6,7 +6,8 @@
  * - seul un garage certifié (droit d'entrée payé) ouvre l'espace garage ;
  * - un garage n'écrit dans le carnet d'un pilote qu'avec son code (accord), que le pilote peut retirer ;
  * - la carte ne montre que les garages certifiés, sans identifiant interne ;
- * - tout part avec l'export RGPD et s'efface avec le compte.
+ * - une intervention d'un garage est une preuve : scellée dans le coffre AVANT d'être écrite,
+ *   et gardée même quand le pilote supprime son compte ; le reste s'efface avec le compte.
  */
 const { createSovereignApp } = require("../sovereign-core/server/index");
 const { createMemoryStore } = require("../sovereign-core/server/store-memory");
@@ -19,7 +20,20 @@ const PAS_CERTIFIE = "55555555-5555-4555-8555-555555555555";
 
 const token = (uid) => signSovereignJwt({ uid, role: "user", username: uid.slice(0, 8) });
 
-function setup() {
+/** Coffre des preuves simulé (le vrai : Object Lock 5 ans, rien à effacer après un test). */
+function fakeVault({ fail = false } = {}) {
+  const sealed = [];
+  return {
+    sealed,
+    async sealTelemetryEvidence(uid, payload) {
+      if (fail) throw new Error("coffre indisponible");
+      sealed.push({ uid, payload });
+      return { storagePath: `worm://${uid}/${sealed.length}.json`, sha256Hex: String(sealed.length).padStart(64, "0") };
+    },
+  };
+}
+
+function setup({ vault = fakeVault() } = {}) {
   const store = createMemoryStore({
     users: [
       { uid: PILOTE, username: "Pilote" },
@@ -28,7 +42,7 @@ function setup() {
       { uid: PAS_CERTIFIE, username: "PasCertifie" },
     ],
   });
-  return { app: createSovereignApp({ store, smsClient: null }), store };
+  return { app: createSovereignApp({ store, smsClient: null, wormVault: vault }), store, vault };
 }
 
 function call(app, method, url, { body, uid } = {}) {
@@ -124,18 +138,36 @@ describe("Espace garage", () => {
     expect((await call(app, "POST", "/api/v1/garage/clients", { uid: GARAGE, body: { code: "000000" } })).status).toBe(429);
   });
 
-  test("RGPD : carnet et garages dans l'export, effacés avec le compte du pilote", async () => {
+  test("intervention scellée dans le coffre avant d'être écrite ; coffre en panne : rien n'est écrit", async () => {
+    const { app, vault } = setup();
+    await lier(app);
+    await call(app, "POST", "/api/v1/garage/maintenance", { uid: GARAGE, body: { pilotUid: PILOTE, category: "Vidange", km: 9000 } });
+    expect(vault.sealed).toEqual([{ uid: PILOTE, payload: expect.objectContaining(
+      { kind: "maintenance", pilotUid: PILOTE, garageUid: GARAGE, category: "Vidange", km: 9000 }) }]);
+    const carnet = await call(app, "GET", "/api/v1/maintenance", { uid: PILOTE });
+    expect(carnet.body.logs[0].proofSha256).toMatch(/^0+1$/);
+
+    const panne = setup({ vault: fakeVault({ fail: true }) });
+    await lier(panne.app);
+    await expect(call(panne.app, "POST", "/api/v1/garage/maintenance",
+      { uid: GARAGE, body: { pilotUid: PILOTE, category: "Vidange", km: 9000 } })).rejects.toThrow("coffre indisponible");
+    expect((await call(panne.app, "GET", "/api/v1/maintenance", { uid: PILOTE })).body.logs).toEqual([]);
+  });
+
+  test("RGPD : export complet ; compte supprimé : accès et fiches effacés, interventions scellées gardées", async () => {
     const { app, store } = setup();
     await lier(app);
     await call(app, "POST", "/api/v1/garage/maintenance", { uid: GARAGE, body: { pilotUid: PILOTE, category: "Vidange", km: 9000 } });
+    await store.addMaintenanceLog({ pilotUid: PILOTE, category: "Note perso", km: 9100 });
     const exp = await store.exportUserData(PILOTE);
-    expect(exp.maintenance).toHaveLength(1);
+    expect(exp.maintenance).toHaveLength(2);
     expect(exp.garagesAuthorized).toHaveLength(1);
 
     await store.anonymizeUser(PILOTE);
     const tableau = await call(app, "GET", "/api/v1/garage/dashboard", { uid: GARAGE });
     expect(tableau.body.clients).toEqual([]);
     expect(tableau.body.logs).toEqual([]);
-    expect(await store.listMaintenanceByPilot(PILOTE)).toEqual([]);
+    // La preuve reste, sous l'identifiant devenu anonyme ; la note du pilote est effacée
+    expect((await store.listMaintenanceByPilot(PILOTE)).map((l) => [l.category, l.certified])).toEqual([["Vidange", true]]);
   });
 });

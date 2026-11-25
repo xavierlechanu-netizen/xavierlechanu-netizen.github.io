@@ -231,7 +231,7 @@ window.GarageClient = {
 
   /** Code à montrer au garage ; le kilométrage au compteur sert à ses rappels d'entretien. */
   giveAccess: async function () {
-    const answer = prompt("Kilométrage au compteur de votre véhicule (facultatif, pour les rappels d'entretien du garage) :", "");
+    const answer = prompt("Votre garage pourra noter ses interventions dans votre carnet. Chacune est gardée 5 ans comme preuve : elle ne pourra plus être modifiée ni effacée, même si vous supprimez votre compte.\n\nKilométrage au compteur (facultatif, pour les rappels d'entretien) :", "");
     if (answer === null) return;
     const km = answer.replace(/\s/g, "");
     try {

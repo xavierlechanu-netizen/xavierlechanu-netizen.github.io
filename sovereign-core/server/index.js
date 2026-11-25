@@ -240,7 +240,7 @@ function createSovereignApp(options = {}) {
     const NEXUS_DECISIONS = { valider: "valide", corriger: "valide", refuser: "refuse" };
 
     // Espace garage et carnet d'entretien (garages.js). Codes d'accord : 10 essais par heure et par garage.
-    const garages = createGaragesService({ store });
+    const garages = createGaragesService({ store, wormVault });
     const garageCodeLimit = { maxAttempts: 10, windowMs: 60 * 60 * 1000, hits: new Map() };
     const GARAGE_ROUTES = {
         "GET /api/v1/garages": (u) => garages.publicList(u),

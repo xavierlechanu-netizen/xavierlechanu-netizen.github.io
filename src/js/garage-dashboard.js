@@ -218,7 +218,7 @@ async function submitMaintenance() {
     description: $("maint-desc").value.trim(),
     km: km === "" ? null : Number(km),
   };
-  if (!confirm("Sceller cette intervention dans le carnet du pilote ? Elle ne pourra plus être modifiée.")) return;
+  if (!confirm("Sceller cette intervention dans le carnet du pilote ? Elle sera gardée 5 ans comme preuve : ni modifiable ni effaçable.")) return;
   try {
     await sovereignRequest("/garage/maintenance", { method: "POST", body });
     $("maint-desc").value = "";

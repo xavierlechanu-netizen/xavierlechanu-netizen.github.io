@@ -652,9 +652,18 @@ const carnet = (await call(app, "GET", "/api/v1/maintenance", null, auth(pilote)
 
     const store = createPgStore({ pool });
     expect((await store.exportUserData(pilote)).maintenance).toHaveLength(2);
+    // Intervention du garage = preuve : scellée dans le coffre, ni modifiable ni effaçable en SQL
+    const { rows: [scellee] } = await pool.query(
+      "SELECT id, worm_storage_path, worm_sha256_hex FROM maintenance_logs WHERE pilot_uid = $1 AND garage_uid IS NOT NULL", [pilote]);
+    expect(scellee.worm_storage_path).toMatch(/^worm:\/\//);
+    expect(scellee.worm_sha256_hex).toMatch(/^[0-9a-f]{64}$/);
+    await expect(pool.query("UPDATE maintenance_logs SET description = 'x' WHERE id = $1", [scellee.id])).rejects.toThrow(/scellée/);
+    await expect(pool.query("DELETE FROM maintenance_logs WHERE id = $1", [scellee.id])).rejects.toThrow(/scellée/);
+
+    // Compte supprimé : la note du pilote part, la preuve reste (identifiant devenu anonyme)
     await store.anonymizeUser(pilote);
-    const { rows } = await pool.query("SELECT COUNT(*)::int AS n FROM maintenance_logs WHERE pilot_uid = $1", [pilote]);
-    expect(rows[0].n).toBe(0);
+    const { rows } = await pool.query("SELECT category FROM maintenance_logs WHERE pilot_uid = $1", [pilote]);
+    expect(rows.map((r) => r.category)).toEqual(["Pneus"]);
     expect((await call(app, "GET", "/api/v1/garage/dashboard", null, auth(garage))).body.clients).toEqual([]);
   });
 });

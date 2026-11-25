@@ -3,9 +3,12 @@
  *
  * - Un garage certifié (droit d'entrée payé : payments.js) remplit sa fiche et apparaît sur la carte.
  * - Le pilote donne son accord en montrant un code à 6 chiffres (15 minutes, un seul usage) ;
- *   le garage peut alors inscrire ses interventions dans le carnet du pilote. Le pilote voit ses *   garages et peut retirer l'accord à tout moment (les interventions déjà notées restent à lui).
- * - Une intervention notée par un garage ne se modifie pas (carnet « scellé »). La table accepte
- *   aussi des entretiens notés par le pilote (garage_uid NULL), sans écran pour l'instant.
+ *   le garage peut alors inscrire ses interventions dans le carnet du pilote. Le pilote voit ses
+ *   garages et peut retirer l'accord à tout moment (les interventions déjà notées restent à lui).
+ * - Une intervention notée par un garage est une PREUVE : scellée dans le coffre des preuves
+ *   (Object Lock 5 ans, comme la Boîte Noire) avant d'être enregistrée, puis jamais modifiée ni
+ *   effacée, même avec le compte (migration 009, RGPD art. 17.3.e). La table accepte aussi des
+ *   entretiens notés par le pilote (garage_uid NULL), sans écran pour l'instant.
  */
 "use strict";
 
@@ -58,7 +61,7 @@ function logFromBody(body) {
     return { category, description, km: kilometres };
 }
 
-function createGaragesService({ store, now = () => Date.now() }) {
+function createGaragesService({ store, wormVault, now = () => Date.now() }) {
     async function connectedUser(authUser) {
         const user = authUser ? await store.findUserById(authUser.uid) : null;
         if (!user) throw new GarageError(401, "Connectez-vous pour continuer.");
@@ -118,7 +121,12 @@ function createGaragesService({ store, now = () => Date.now() }) {
             if (!(await store.isGarageClient(garage.uid, pilotUid))) {
                 throw new GarageError(403, "Ce pilote ne vous a pas donné son accord (ou l'a retiré).");
             }
-            return { log: await store.addMaintenanceLog({ pilotUid, garageUid: garage.uid, ...log }) };
+            // Scellée d'abord : sans preuve dans le coffre, rien n'est écrit au carnet
+            const proof = await wormVault.sealTelemetryEvidence(pilotUid, {
+                kind: "maintenance", pilotUid, garageUid: garage.uid, ...log, sealedAt: new Date(now()).toISOString(),
+            });
+            return { log: await store.addMaintenanceLog({ pilotUid, garageUid: garage.uid, ...log,
+                wormStoragePath: proof.storagePath, wormSha256Hex: proof.sha256Hex }) };
         },
 
         async pilotCarnet(authUser) {

@@ -177,10 +177,9 @@ function createPgStore({ connectionString, pool } = {}) {
                 await client.query("DELETE FROM pilot_achievements WHERE user_uid = $1", [uid]);
                 await client.query("DELETE FROM pilot_profiles WHERE user_uid = $1", [uid]);
                 await client.query("DELETE FROM password_reset_tokens WHERE user_uid = $1", [uid]);
-                // Carnet et espace garage (migration 009) : le carnet du pilote est effacé ; les
-                // interventions d'un garage supprimé restent dans le carnet de ses clients, sans lui.
-                await client.query("DELETE FROM maintenance_logs WHERE pilot_uid = $1", [uid]);
-                await client.query("UPDATE maintenance_logs SET garage_uid = NULL WHERE garage_uid = $1", [uid]);
+                // Carnet et espace garage (migration 009) : les notes du pilote sont effacées ; les
+                // interventions scellées par un garage sont des preuves et restent (art. 17.3.e).
+                await client.query("DELETE FROM maintenance_logs WHERE pilot_uid = $1 AND garage_uid IS NULL", [uid]);
                 await client.query("DELETE FROM garage_clients WHERE pilot_uid = $1 OR garage_uid = $1", [uid]);
                 await client.query("DELETE FROM garage_access_codes WHERE pilot_uid = $1", [uid]);
                 await client.query("DELETE FROM garage_profiles WHERE user_uid = $1", [uid]);
@@ -324,26 +323,28 @@ function createPgStore({ connectionString, pool } = {}) {
             return rows.map((r) => ({ garageId: r.garage_uid, name: r.name || "Garage", linkedAt: iso(r.linked_at) }));
         },
 
-        async addMaintenanceLog({ pilotUid, garageUid = null, category, description = "", km = null }) {
+        async addMaintenanceLog({ pilotUid, garageUid = null, category, description = "", km = null, wormStoragePath = null, wormSha256Hex = null }) {
             const { rows: [m] } = await db.query(
-                `INSERT INTO maintenance_logs (pilot_uid, garage_uid, category, description, km) VALUES ($1, $2, $3, $4, $5)
-                 RETURNING id, created_at`,
-                [pilotUid, garageUid, category, description, km]
+                `INSERT INTO maintenance_logs (pilot_uid, garage_uid, category, description, km, worm_storage_path, worm_sha256_hex)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at`,
+                [pilotUid, garageUid, category, description, km, wormStoragePath, wormSha256Hex]
             );
             if (garageUid && Number.isInteger(km)) await this.linkGarageClient({ garageUid, pilotUid, km });
-            return { id: Number(m.id), category, description, km, createdAt: iso(m.created_at), certified: Boolean(garageUid) };
+            return { id: Number(m.id), category, description, km, createdAt: iso(m.created_at), certified: Boolean(garageUid),
+                proofSha256: wormSha256Hex };
         },
 
         async listMaintenanceByPilot(pilotUid, limit = 100) {
             if (!UUID_RE.test(String(pilotUid))) return [];
             const { rows } = await db.query(
-                `SELECT m.id, m.category, m.description, m.km, m.created_at, m.garage_uid, g.name AS garage_name
+                `SELECT m.id, m.category, m.description, m.km, m.created_at, m.garage_uid, m.worm_sha256_hex, g.name AS garage_name
                    FROM maintenance_logs m LEFT JOIN garage_profiles g ON g.user_uid = m.garage_uid
                   WHERE m.pilot_uid = $1 ORDER BY m.created_at DESC, m.id DESC LIMIT $2`,
                 [pilotUid, limit]
             );
             return rows.map((r) => ({ id: Number(r.id), category: r.category, description: r.description, km: r.km,
-                createdAt: iso(r.created_at), certified: Boolean(r.garage_uid), garageName: r.garage_uid ? (r.garage_name || "Garage") : null }));
+                createdAt: iso(r.created_at), certified: Boolean(r.garage_uid), garageName: r.garage_uid ? (r.garage_name || "Garage") : null,
+                proofSha256: r.worm_sha256_hex || null }));
         },
 
         async listMaintenanceByGarage(garageUid, limit = 200) {
