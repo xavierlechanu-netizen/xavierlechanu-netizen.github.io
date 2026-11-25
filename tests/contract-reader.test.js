@@ -7,7 +7,15 @@ const path = require("path");
 
 const code = fs.readFileSync(path.resolve(__dirname, "../src/js/contract-reader.js"), "utf8")
   .replace(/^export (const|function|async function) /gm, "$1 ");
-const C = new Function(`${code}\nreturn { analyseContract, contractSummary, findDeductibles, fold };`)();
+const C = new Function(`${code}\nreturn { analyseContract, contractSummary, findDeductibles, fold, findYesNo };`)();
+
+// Cas réel du 25/11/2026 (attestation + mémo d'un courtier), anonymisé : ni nom, ni adresse, ni numéro
+const ATTESTATION = `Attestation d'assurance. Assurance : SCOOTER. Certificat d'assurance.
+La Carte internationale d'assurance est toujours obligatoire si vous circulez avec votre véhicule dans l'un de ces pays.
+Validité territoriale : cette carte est valable pour les pays dont la case n'est pas rayée.
+- Accident : GARANTIE - Panne : GARANTIE - Véhicule de remplacement : NON GARANTIE Mondial Assistance 24h/24 7j/7.
+Mémo Véhicule Assuré. Ce document constitue une présomption d'assurance depuis la date de prise d'effet du contrat.
+Les garanties de votre contrat : - Accident : OUI - Panne : OUI - Véhicule de remplacement : NON`;
 
 const CONTRAT = `CONDITIONS PARTICULIERES - Cyclomoteur 50 cm3.
 Votre formule : Intermédiaire. Garanties souscrites : Responsabilité civile. Défense pénale et recours.
@@ -40,6 +48,27 @@ test("résumé : prudent, cite le contrat, rappelle que l'assureur fait foi", ()
   expect(s).toMatch(/❓ Protection juridique : pas trouvé/);
   expect(s).toMatch(/pas un avis juridique/);
   expect(s).not.toMatch(/vous êtes couvert/i);
+});
+
+test("attestation réelle : RC prouvée, cases oui/non lues, et conseil de demander le contrat", () => {
+  const r = C.analyseContract(ATTESTATION);
+  expect(r.attestation).toBe(true);
+  expect(byKey(r).rc.status).toBe("trouve");
+  expect(r.yesNo).toEqual([
+    { label: "Accident", yes: true },
+    { label: "Panne", yes: true },
+    { label: "Véhicule de remplacement", yes: false },
+  ]);
+  const s = C.contractSummary(r);
+  expect(s).toMatch(/attestation d'assurance, pas votre contrat/);
+  expect(s).toMatch(/Conditions particulières/);
+  expect(s).toMatch(/✅ Panne : oui/);
+  expect(s).toMatch(/❌ Véhicule de remplacement : non/);
+  expect(s).toMatch(/❓ Vol : pas trouvé/); // l'attestation ne dit rien du vol : on ne l'invente pas
+});
+
+test("« Validité territoriale : » ou « Assurance : SCOOTER » ne deviennent pas des cases oui/non", () => {
+  expect(C.findYesNo("Assurance : SCOOTER. Validité territoriale : cette carte. Vol : NON GARANTI")).toEqual([{ label: "Vol", yes: false }]);
 });
 
 test("PDF scanné (presque pas de texte) : on le dit, rien n'est inventé", () => {
