@@ -31,17 +31,21 @@ export function fold(text) {
   return String(text).toLowerCase().replace(/[À-ſ]/g, (c) => c.normalize("NFD")[0]).replace(/[’`]/g, "'");
 }
 
-/** Phrase autour d'une position, pour citer le contrat. */
+/** Phrase (ou ligne, pour une liste de garanties) autour d'une position, pour citer le contrat. */
 function sentenceAround(text, index, max = 220) {
-  const before = text.lastIndexOf(".", index);
-  let start = before === -1 ? 0 : before + 1;
-  let end = text.indexOf(".", index);
-  end = end === -1 ? text.length : end + 1;
+  const before = Math.max(text.lastIndexOf(".", index), text.lastIndexOf("\n", index));
+  let start = before + 1;
+  const stops = [text.indexOf(".", index), text.indexOf("\n", index)].filter((i) => i !== -1);
+  let end = stops.length ? Math.min(...stops) + 1 : text.length;
+  let cut = false;
   if (end - start > max) {
     start = Math.max(start, index - max / 2);
     end = Math.min(end, start + max);
+    cut = true;
   }
-  return text.slice(start, end).replace(/\s+/g, " ").trim();
+  let quote = text.slice(start, end).replace(/\s+/g, " ").trim();
+  if (cut) quote = `… ${quote.replace(/^\S*\s/, "").replace(/\s\S*$/, "")} …`; // jamais un mot coupé
+  return quote;
 }
 
 /** Montants de franchise cités (« franchise de 150 € »). */
@@ -128,7 +132,7 @@ export async function readPdfText(file, maxPages = 60) {
   const pages = [];
   for (let i = 1; i <= Math.min(doc.numPages, maxPages); i++) {
     const content = await (await doc.getPage(i)).getTextContent();
-    pages.push(content.items.map((x) => x.str).join(" "));
+    pages.push(content.items.map((x) => x.str + (x.hasEOL ? "\n" : " ")).join("")); // garde les lignes : citations propres
   }
   await doc.destroy();
   return pages.join("\n");

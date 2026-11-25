@@ -67,6 +67,32 @@ test("attestation réelle : RC prouvée, cases oui/non lues, et conseil de deman
   expect(s).toMatch(/❓ Vol : pas trouvé/); // l'attestation ne dit rien du vol : on ne l'invente pas
 });
 
+test("liste de garanties de l'espace client (sans points) : une ligne citée par garantie, franchises", () => {
+  const LISTE = `RESPONSABILITE CIVILE Consulter les Dispositions Particulières
+DEFENSE RECOURS Consulter les Dispositions Particulières
+VOL INCENDIE Franchise de 200€
+CATASTROPHES NATURELLES Franchise de 380€
+CATASTROPHES TECHNOLOGIQUES Consulter les Dispositions Particulières
+Assistance Accident 2 roues Consulter les Dispositions Particulières
+Protection Juridique Allianz Protexia Consulter les Dispositions Particulières
+OPTIONS
+Assistance Panne 2 roues Consulter les Dispositions Particulières`;
+  const g = byKey(C.analyseContract(LISTE));
+  expect(g.vol).toMatchObject({ status: "trouve", quote: "VOL INCENDIE Franchise de 200€" });
+  expect(g.juridique.quote).toBe("Protection Juridique Allianz Protexia Consulter les Dispositions Particulières");
+  expect(g.conducteur.status).toBe("absent");
+  expect(g.dommages.status).toBe("absent");
+  expect(C.analyseContract(LISTE).deductibles).toEqual(["200 €", "380 €"]);
+});
+
+test("citation trop longue : coupée entre deux mots, signalée par …", () => {
+  const long = `${"mot ".repeat(80)}le vol est garanti ${"suite ".repeat(80)}`;
+  const q = byKey(C.analyseContract(long)).vol.quote;
+  expect(q).toMatch(/^… .* …$/);
+  expect(q).toMatch(/le vol est garanti/);
+  expect(q.length).toBeLessThan(240);
+});
+
 test("« Validité territoriale : » ou « Assurance : SCOOTER » ne deviennent pas des cases oui/non", () => {
   expect(C.findYesNo("Assurance : SCOOTER. Validité territoriale : cette carte. Vol : NON GARANTI")).toEqual([{ label: "Vol", yes: false }]);
 });
